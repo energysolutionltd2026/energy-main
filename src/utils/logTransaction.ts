@@ -27,9 +27,9 @@ export interface PlatformTransaction {
 export function logTransaction(txn: Omit<PlatformTransaction, "id" | "timestamp" | "date">) {
   const now = new Date();
   const entry = {
-    reference:     `TXN-${now.getFullYear()}-${String(Date.now()).slice(-6)}`,
-    timestamp:     now.toISOString(),
+    txnId:         `TXN-${now.getFullYear()}-${String(Date.now()).slice(-6)}`,
     type:          txn.type,
+    user:          txn.user,
     userEmail:     txn.user,
     userRole:      txn.userRole,
     product:       txn.product,
@@ -38,7 +38,7 @@ export function logTransaction(txn: Omit<PlatformTransaction, "id" | "timestamp"
     status:        txn.status,
     paymentMethod: txn.paymentMethod,
     depot:         txn.depot,
-    originalRef:   txn.reference,
+    reference:     txn.reference,
   };
 
   import("@/lib/db-client")

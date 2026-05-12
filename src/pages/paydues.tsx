@@ -690,7 +690,7 @@ export default function PayDues() {
       product: selectedDues.join(" + ") || "Union Dues",
       totalAmount: `₦${total.toLocaleString()}`,
       status: "Pending",
-      paymentMethod: payment.paymentMethod || "Bank Transfer",
+      paymentMethod: payment.paymentMethod || "bank_transfer",
       depot: member.paymentDepot || undefined,
       reference: txnId,
     });
@@ -698,27 +698,20 @@ export default function PayDues() {
     // Persist to DB
     import("@/lib/db-client").then(({ api }) => {
       api.unionDues.create({
+        paymentId:     txnId,
         userEmail:     member.email,
         userRole:      "customer",
-        membershipId:  member.membershipId,
+        fullName:      member.fullName,
         companyName:   member.companyName,
-        depot:         member.paymentDepot,
-        amount:        total,
+        membershipId:  member.membershipId,
+        telephone:     member.telephone,
+        address:       member.address,
+        paymentDepot:  member.paymentDepot,
+        amountDue:     total,
         paymentMethod: payment.paymentMethod || "bank_transfer",
-        status:        "pending",
+        transactionRef: txnId,
+        status:        "Pending",
         duesPeriod:    txnDate.slice(0, 7),
-        reference:     txnId,
-      } as any).catch(() => null);
-
-      api.transactions.create({
-        reference:     txnId,
-        type:          "union_dues",
-        userEmail:     member.email,
-        userRole:      "customer",
-        totalAmount:   total,
-        status:        "pending",
-        paymentMethod: payment.paymentMethod || "bank_transfer",
-        depot:         member.paymentDepot,
       } as any).catch(() => null);
     });
   };

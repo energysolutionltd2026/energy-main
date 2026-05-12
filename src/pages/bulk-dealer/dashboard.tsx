@@ -946,16 +946,7 @@ function SectionAllocations() {
     };
     const updated = [newOrder, ...orders];
     setOrders(updated);
-    logTransaction({ type: "Allocation", user: _dealerName || "Bulk Dealer", userRole: "Bulk Dealer", product: form.product, quantity: `${qty.toLocaleString()} L`, totalAmount: `₦${amount.toLocaleString()}`, status: "Pending", depot: form.depot, reference: id });
-    // Persist to DB
-    import("@/lib/db-client").then(({ api }) => {
-      api.purchaseOrders.create({
-        dealer: _dealerEmail, depot: form.depot,
-        product: form.product as "PMS" | "AGO" | "ATK",
-        quantityLitres: qty, totalAmount: amount,
-        orderDate: form.date, status: "pending",
-      } as any).catch(() => null);
-    });
+    logTransaction({ type: "Purchase Order", user: _dealerName || "Bulk Dealer", userRole: "Bulk Dealer", product: form.product, quantity: `${qty.toLocaleString()} L`, totalAmount: `₦${amount.toLocaleString()}`, status: "Pending", depot: form.depot, reference: id });
     setShowForm(false);
     setForm({ product: "PMS", depot: "", qty: "", date: "" });
     setToast(`Allocation ${id} submitted successfully!`);
