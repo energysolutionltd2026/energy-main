@@ -7,26 +7,6 @@ import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
 import { startTracking } from "@/utils/onlineTracker";
 
-// ─── Mock station stock (mirrors station-manager data) ────────────────────────
-
-const STATION_STOCK = [
-  {
-    id: "STN-001", name: "Ikeja Central",
-    stock: [
-      { product: "PMS", current: 40800, capacity: 60000, status: "Available" },
-      { product: "AGO", current: 9000,  capacity: 45000, status: "Limited"   },
-      { product: "ATK", current: 0,     capacity: 30000, status: "Empty"     },
-    ],
-  },
-  {
-    id: "STN-002", name: "Lekki Junction",
-    stock: [
-      { product: "PMS", current: 28800, capacity: 90000, status: "Limited"   },
-      { product: "AGO", current: 48000, capacity: 60000, status: "Available" },
-      { product: "ATK", current: 36000, capacity: 45000, status: "Available" },
-    ],
-  },
-];
 
 const QUICK_ACTIONS = [
   { label: "Re-order Fuel",     href: "/buynow",                      icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15",                                                                                                color: "bg-orange-500/10 border-orange-500/30 text-orange-400 hover:bg-orange-500/20" },
@@ -88,6 +68,7 @@ export default function CustomerDashboard() {
   const [user, setUser]             = useState<any>(null);
   const [transactions, setTxns]     = useState<any[]>([]);
   const [supplyRequests, setSupply] = useState<any[]>([]);
+  const [stationStock, setStationStock] = useState<any[]>([]);
   const [greeting, setGreeting]     = useState("Good day");
 
   useEffect(() => {
@@ -108,6 +89,19 @@ export default function CustomerDashboard() {
           api.supplyRequests.list({ requestedBy: u.email, limit: 4 }).then(result => {
             if (result?.data?.length) setSupply(result.data);
           });
+          api.stationManagers.list({ userEmail: u.email, limit: 10 } as any).then((result: any) => {
+            if (result?.data?.length) {
+              setStationStock(result.data.map((sm: any) => ({
+                id: sm._id,
+                name: sm.name || sm.depot || "Station",
+                stock: [
+                  { product: "PMS", current: sm.pmsCurrent ?? 0, capacity: sm.pmsCapacity ?? 0, status: sm.pmsStatus || "Empty" },
+                  { product: "AGO", current: sm.agoCurrent ?? 0, capacity: sm.agoCapacity ?? 0, status: sm.agoStatus || "Empty" },
+                  { product: "ATK", current: sm.atkCurrent ?? 0, capacity: sm.atkCapacity ?? 0, status: sm.atkStatus || "Empty" },
+                ],
+              })));
+            }
+          }).catch(() => null);
         });
 
         const stopTracking = startTracking({ id: u.email, name: u.name, email: u.email, role: u.role, lastSeen: Date.now() });
@@ -127,9 +121,9 @@ export default function CustomerDashboard() {
   // Derived stats
   const totalTxns      = transactions.length;
   const pendingSupply  = supplyRequests.filter((r: any) => r.status === "Pending").length;
-  const allStock       = STATION_STOCK.flatMap((s) => s.stock);
+  const allStock       = stationStock.flatMap((s) => s.stock);
   const criticalStock  = allStock.filter((s) => s.status === "Empty" || s.status === "Limited").length;
-  const activeStations = STATION_STOCK.length;
+  const activeStations = stationStock.length;
 
   const STATS = [
     {
@@ -296,15 +290,26 @@ export default function CustomerDashboard() {
                   Manage →
                 </Link>
               </div>
+              {stationStock.length === 0 ? (
+                <div className="px-5 py-10 text-center">
+                  <svg className="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <p className="text-sm text-gray-500">No stations under management.</p>
+                  <Link href="/customer/station-manager" className="mt-3 inline-block text-xs text-orange-400 hover:underline font-semibold">
+                    Set up a station →
+                  </Link>
+                </div>
+              ) : (
               <div className="p-4 space-y-4">
-                {STATION_STOCK.map((station) => (
+                {stationStock.map((station) => (
                   <div key={station.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold text-white">{station.name}</p>
                       <span className="text-xs text-gray-500 font-mono">{station.id}</span>
                     </div>
                     <div className="space-y-1.5">
-                      {station.stock.map((s) => {
+                      {station.stock.map((s: any) => {
                         const p = pct(s.current, s.capacity);
                         return (
                           <div key={s.product} className="flex items-center gap-3">
@@ -321,6 +326,7 @@ export default function CustomerDashboard() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             {/* Pending Supply Requests */}
