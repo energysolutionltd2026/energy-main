@@ -35,71 +35,71 @@ interface DepotProviderProps {
 }
 
 export const DEPOTS = [
-  "Lagos Main Depot",
-  "Port Harcourt Terminal",
-  "Warri Storage Facility",
-  "Kaduna Distribution Center",
-  "Calabar Depot",
-  "Ibadan Storage Terminal",
-  "Kano Distribution Hub",
-  "Enugu Fuel Depot",
-  "Abuja Central Terminal",
-  "Benin Storage Depot",
+  "Atlas Cove",
+  "Mosimi",
+  "Warri",
+  "Port Harcourt",
+  "Kaduna",
+  "Ilorin",
+  "Ore",
+  "Enugu",
+  "Calabar",
+  "Kano",
 ];
 
 export const DepotProvider: React.FC<DepotProviderProps> = ({ children }) => {
   const depots = DEPOTS;
 
   const [depotProducts, setDepotProducts] = useState<Record<string, DepotData>>({
-    "Lagos Main Depot": {
-      PMS: { level: 72, quantity: "100,000 L/220,000 L", price: "₦897/L", status: "Available" },
-      ATK: { level: 48, quantity: "60,000 L/120,000 L", price: "₦1,095/L", status: "Limited" },
-      AGO: { level: 85, quantity: "150,000 L/260,000 L", price: "₦1,200/L", status: "Available" },
+    "Atlas Cove": {
+      PMS: { level: 75, quantity: "165,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 60, quantity: "156,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 45, quantity:  "54,000 L/120,000 L", price: "₦1,300/L", status: "Available"   },
     },
-    "Port Harcourt Terminal": {
-      PMS: { level: 60, quantity: "85,000 L/165,000 L", price: "₦892/L", status: "Available" },
-      ATK: { level: 25, quantity: "32,000 L/63,000 L", price: "₦1,088/L", status: "Limited" },
-      AGO: { level: 90, quantity: "180,000 L/320,000 L", price: "₦1,198/L", status: "Available" },
+    "Mosimi": {
+      PMS: { level: 82, quantity: "180,400 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 55, quantity: "143,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 0,  quantity:        "0 L/120,000 L", price: "₦1,300/L", status: "Unavailable" },
     },
-    "Warri Storage Facility": {
-      PMS: { level: 40, quantity: "45,000 L/105,000 L", price: "₦900/L", status: "Limited" },
-      ATK: { level: 0, quantity: "0 L/0 L", price: "—", status: "Unavailable" },
-      AGO: { level: 70, quantity: "110,000 L/190,000 L", price: "₦1,195/L", status: "Available" },
+    "Warri": {
+      PMS: { level: 90, quantity: "198,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 80, quantity: "208,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 30, quantity:  "36,000 L/120,000 L", price: "₦1,300/L", status: "Available"   },
     },
-    "Kaduna Distribution Center": {
-      PMS: { level: 55, quantity: "75,000 L/145,000 L", price: "₦898/L", status: "Available" },
-      ATK: { level: 35, quantity: "42,000 L/78,000 L", price: "₦1,092/L", status: "Limited" },
-      AGO: { level: 78, quantity: "140,000 L/240,000 L", price: "₦1,202/L", status: "Available" },
+    "Port Harcourt": {
+      PMS: { level: 65, quantity: "143,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 70, quantity: "182,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 50, quantity:  "60,000 L/120,000 L", price: "₦1,300/L", status: "Available"   },
     },
-    "Calabar Depot": {
-      PMS: { level: 45, quantity: "62,000 L/118,000 L", price: "₦902/L", status: "Limited" },
-      ATK: { level: 20, quantity: "25,000 L/50,000 L", price: "₦1,098/L", status: "Limited" },
-      AGO: { level: 82, quantity: "155,000 L/270,000 L", price: "₦1,205/L", status: "Available" },
+    "Kaduna": {
+      PMS: { level: 40, quantity:  "88,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 25, quantity:  "65,000 L/260,000 L", price: "₦1,900/L", status: "Limited"     },
+      ATK: { level: 0,  quantity:        "0 L/120,000 L", price: "₦1,300/L", status: "Unavailable" },
     },
-    "Ibadan Storage Terminal": {
-      PMS: { level: 68, quantity: "100,000 L/190,000 L", price: "₦894/L", status: "Available" },
-      ATK: { level: 42, quantity: "53,000 L/107,000 L", price: "₦1,090/L", status: "Available" },
-      AGO: { level: 88, quantity: "165,000 L/290,000 L", price: "₦1,197/L", status: "Available" },
+    "Ilorin": {
+      PMS: { level: 55, quantity: "121,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 48, quantity: "124,800 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 0,  quantity:        "0 L/120,000 L", price: "₦1,300/L", status: "Unavailable" },
     },
-    "Kano Distribution Hub": {
-      PMS: { level: 50, quantity: "68,000 L/132,000 L", price: "₦899/L", status: "Available" },
-      ATK: { level: 15, quantity: "18,000 L/37,000 L", price: "₦1,100/L", status: "Limited" },
-      AGO: { level: 75, quantity: "125,000 L/225,000 L", price: "₦1,200/L", status: "Available" },
+    "Ore": {
+      PMS: { level: 18, quantity:  "39,600 L/220,000 L", price: "₦1,300/L", status: "Limited"     },
+      AGO: { level: 35, quantity:  "91,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 0,  quantity:        "0 L/120,000 L", price: "₦1,300/L", status: "Unavailable" },
     },
-    "Enugu Fuel Depot": {
-      PMS: { level: 38, quantity: "50,000 L/95,000 L", price: "₦903/L", status: "Limited" },
-      ATK: { level: 28, quantity: "32,000 L/66,000 L", price: "₦1,096/L", status: "Limited" },
-      AGO: { level: 65, quantity: "105,000 L/190,000 L", price: "₦1,193/L", status: "Available" },
+    "Enugu": {
+      PMS: { level: 70, quantity: "154,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 60, quantity: "156,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 15, quantity:  "18,000 L/120,000 L", price: "₦1,300/L", status: "Limited"     },
     },
-    "Abuja Central Terminal": {
-      PMS: { level: 80, quantity: "125,000 L/235,000 L", price: "₦890/L", status: "Available" },
-      ATK: { level: 52, quantity: "65,000 L/130,000 L", price: "₦1,085/L", status: "Available" },
-      AGO: { level: 92, quantity: "190,000 L/330,000 L", price: "₦1,196/L", status: "Available" },
+    "Calabar": {
+      PMS: { level: 50, quantity: "110,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 45, quantity: "117,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 20, quantity:  "24,000 L/120,000 L", price: "₦1,300/L", status: "Limited"     },
     },
-    "Benin Storage Depot": {
-      PMS: { level: 62, quantity: "88,000 L/167,000 L", price: "₦896/L", status: "Available" },
-      ATK: { level: 38, quantity: "45,000 L/90,000 L", price: "₦1,091/L", status: "Available" },
-      AGO: { level: 72, quantity: "120,000 L/210,000 L", price: "₦1,199/L", status: "Available" },
+    "Kano": {
+      PMS: { level: 60, quantity: "132,000 L/220,000 L", price: "₦1,300/L", status: "Available"   },
+      AGO: { level: 55, quantity: "143,000 L/260,000 L", price: "₦1,900/L", status: "Available"   },
+      ATK: { level: 0,  quantity:        "0 L/120,000 L", price: "₦1,300/L", status: "Unavailable" },
     },
   });
 

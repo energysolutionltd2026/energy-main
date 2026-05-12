@@ -137,16 +137,16 @@ const BASE_TRUCKS: TruckRecord[] = [];
 const BASE_TRANSACTIONS: Transaction[] = [];
 
 const DEPOTS: Depot[] = [
-  { name: "Lagos Main Depot", location: "Lagos", PMS: { level: 72, price: "₦860/L", status: "Available" }, AGO: { level: 58, price: "₦1,200/L", status: "Available" }, ATK: { level: 45, price: "₦860/L", status: "Limited" } },
-  { name: "Port Harcourt Terminal", location: "Rivers", PMS: { level: 85, price: "₦855/L", status: "Available" }, AGO: { level: 30, price: "₦1,195/L", status: "Limited" }, ATK: { level: 60, price: "₦855/L", status: "Available" } },
-  { name: "Warri Storage Facility", location: "Delta", PMS: { level: 15, price: "₦858/L", status: "Limited" }, AGO: { level: 70, price: "₦1,198/L", status: "Available" }, ATK: { level: 80, price: "₦858/L", status: "Available" } },
-  { name: "Abuja Central Terminal", location: "FCT", PMS: { level: 90, price: "₦865/L", status: "Available" }, AGO: { level: 75, price: "₦1,205/L", status: "Available" }, ATK: { level: 50, price: "₦865/L", status: "Available" } },
-  { name: "Kaduna Distribution Center", location: "Kaduna", PMS: { level: 40, price: "₦870/L", status: "Limited" }, AGO: { level: 55, price: "₦1,210/L", status: "Available" }, ATK: { level: 18, price: "₦870/L", status: "Limited" } },
-  { name: "Kano Distribution Hub", location: "Kano", PMS: { level: 65, price: "₦872/L", status: "Available" }, AGO: { level: 80, price: "₦1,212/L", status: "Available" }, ATK: { level: 35, price: "₦872/L", status: "Limited" } },
-  { name: "Ibadan Storage Terminal", location: "Oyo", PMS: { level: 55, price: "₦858/L", status: "Available" }, AGO: { level: 45, price: "₦1,198/L", status: "Limited" }, ATK: { level: 70, price: "₦858/L", status: "Available" } },
-  { name: "Enugu Fuel Depot", location: "Enugu", PMS: { level: 8, price: "₦862/L", status: "Limited" }, AGO: { level: 60, price: "₦1,202/L", status: "Available" }, ATK: { level: 45, price: "₦862/L", status: "Available" } },
-  { name: "Calabar Depot", location: "Cross River", PMS: { level: 78, price: "₦856/L", status: "Available" }, AGO: { level: 88, price: "₦1,196/L", status: "Available" }, ATK: { level: 60, price: "₦856/L", status: "Available" } },
-  { name: "Benin Storage Depot", location: "Edo", PMS: { level: 50, price: "₦859/L", status: "Available" }, AGO: { level: 35, price: "₦1,199/L", status: "Limited" }, ATK: { level: 90, price: "₦859/L", status: "Available" } },
+  { name: "Atlas Cove",    location: "Apapa, Lagos",               PMS: { level: 75, price: "₦1,300/L", status: "Available"   }, AGO: { level: 60, price: "₦1,900/L", status: "Available"   }, ATK: { level: 45, price: "₦1,300/L", status: "Available"   } },
+  { name: "Mosimi",        location: "Sagamu, Ogun State",         PMS: { level: 82, price: "₦1,300/L", status: "Available"   }, AGO: { level: 55, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
+  { name: "Warri",         location: "Warri, Delta State",         PMS: { level: 90, price: "₦1,300/L", status: "Available"   }, AGO: { level: 80, price: "₦1,900/L", status: "Available"   }, ATK: { level: 30, price: "₦1,300/L", status: "Available"   } },
+  { name: "Port Harcourt", location: "Port Harcourt, Rivers State",PMS: { level: 65, price: "₦1,300/L", status: "Available"   }, AGO: { level: 70, price: "₦1,900/L", status: "Available"   }, ATK: { level: 50, price: "₦1,300/L", status: "Available"   } },
+  { name: "Kaduna",        location: "Kaduna, Kaduna State",       PMS: { level: 40, price: "₦1,300/L", status: "Available"   }, AGO: { level: 25, price: "₦1,900/L", status: "Limited"     }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
+  { name: "Ilorin",        location: "Ilorin, Kwara State",        PMS: { level: 55, price: "₦1,300/L", status: "Available"   }, AGO: { level: 48, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
+  { name: "Ore",           location: "Ore, Ondo State",            PMS: { level: 18, price: "₦1,300/L", status: "Limited"     }, AGO: { level: 35, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
+  { name: "Enugu",         location: "Enugu, Enugu State",         PMS: { level: 70, price: "₦1,300/L", status: "Available"   }, AGO: { level: 60, price: "₦1,900/L", status: "Available"   }, ATK: { level: 15, price: "₦1,300/L", status: "Limited"     } },
+  { name: "Calabar",       location: "Calabar, Cross River State", PMS: { level: 50, price: "₦1,300/L", status: "Available"   }, AGO: { level: 45, price: "₦1,900/L", status: "Available"   }, ATK: { level: 20, price: "₦1,300/L", status: "Limited"     } },
+  { name: "Kano",          location: "Kano, Kano State",           PMS: { level: 60, price: "₦1,300/L", status: "Available"   }, AGO: { level: 55, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
 ];
 
 // ─── Shared Components ────────────────────────────────────────────────────────
@@ -784,9 +784,9 @@ const AVAILABLE_PRODUCTS = ["PMS", "AGO", "ATK"];
 function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
   const [customProducts, setCustomProducts] = useState<string[]>([]);
   const [globalStock, setGlobalStock] = useState<Record<string, { level: number; price: string; status: "Available" | "Limited" | "Unavailable" }>>({
-    PMS: { level: 60, price: "₦897/L", status: "Available" },
-    AGO: { level: 60, price: "₦1,200/L", status: "Available" },
-    ATK: { level: 60, price: "₦1,095/L", status: "Available" },
+    PMS: { level: 60, price: "₦1,300/L", status: "Available" },
+    AGO: { level: 60, price: "₦1,900/L", status: "Available" },
+    ATK: { level: 60, price: "₦1,300/L", status: "Available" },
   });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<typeof globalStock>({});
@@ -1087,9 +1087,9 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
           name:     d.name,
           location: d.location || "",
           logo:     d.logo,
-          PMS: { level: d.pmsLevel ?? 60, price: d.pmsPrice || "₦897/L",   status: d.pmsLevel < 20 ? "Unavailable" : d.pmsLevel < 40 ? "Limited" : "Available" },
-          AGO: { level: d.agoLevel ?? 60, price: d.agoPrice || "₦1,200/L", status: d.agoLevel < 20 ? "Unavailable" : d.agoLevel < 40 ? "Limited" : "Available" },
-          ATK: { level: d.atkLevel ?? 60, price: d.atkPrice || "₦1,095/L", status: d.atkLevel < 20 ? "Unavailable" : d.atkLevel < 40 ? "Limited" : "Available" },
+          PMS: { level: d.pmsLevel ?? 60, price: d.pmsPrice || "₦1,300/L", status: d.pmsLevel < 20 ? "Unavailable" : d.pmsLevel < 40 ? "Limited" : "Available" },
+          AGO: { level: d.agoLevel ?? 60, price: d.agoPrice || "₦1,900/L", status: d.agoLevel < 20 ? "Unavailable" : d.agoLevel < 40 ? "Limited" : "Available" },
+          ATK: { level: d.atkLevel ?? 60, price: d.atkPrice || "₦1,300/L", status: d.atkLevel < 20 ? "Unavailable" : d.atkLevel < 40 ? "Limited" : "Available" },
           _id: d._id,
         })) as Depot[];
         setDepots((prev) => {
@@ -1354,7 +1354,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
                       className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Price (e.g. ₦860/L)</label>
+                    <label className="text-gray-400 text-xs block mb-1">Price (e.g. ₦1,300/L)</label>
                     <input type="text"
                       value={newDepot[p].price}
                       onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], price: e.target.value } }))}
@@ -1418,7 +1418,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
                       className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Price (e.g. ₦860/L)</label>
+                    <label className="text-gray-400 text-xs block mb-1">Price (e.g. ₦1,300/L)</label>
                     <input type="text"
                       value={draft[p].price}
                       onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], price: e.target.value } } : prev)}

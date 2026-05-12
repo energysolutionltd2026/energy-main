@@ -22,9 +22,9 @@ interface StockEntry { level: number; price: string; status: "Available" | "Limi
 type DepotStock = Record<string, StockEntry>;
 
 const DEFAULT_STOCK: DepotStock = {
-  PMS: { level: 60, price: "₦897/L", status: "Available" },
-  AGO: { level: 60, price: "₦1,200/L", status: "Available" },
-  ATK: { level: 60, price: "₦1,095/L", status: "Available" },
+  PMS: { level: 60, price: "₦1,300/L", status: "Available" },
+  AGO: { level: 60, price: "₦1,900/L", status: "Available" },
+  ATK: { level: 60, price: "₦1,300/L", status: "Available" },
 };
 
 // Dealer code → email lookup
@@ -80,9 +80,9 @@ export default function StationManagerDashboard() {
             const agoLvl = depot.agoLevel ?? 60;
             const atkLvl = depot.atkLevel ?? 60;
             setStock({
-              PMS: { level: pmsLvl, price: depot.pmsPrice || "₦897/L",   status: pmsLvl < 20 ? "Unavailable" : pmsLvl < 40 ? "Limited" : "Available" },
-              AGO: { level: agoLvl, price: depot.agoPrice || "₦1,200/L", status: agoLvl < 20 ? "Unavailable" : agoLvl < 40 ? "Limited" : "Available" },
-              ATK: { level: atkLvl, price: depot.atkPrice || "₦1,095/L", status: atkLvl < 20 ? "Unavailable" : atkLvl < 40 ? "Limited" : "Available" },
+              PMS: { level: pmsLvl, price: depot.pmsPrice || "₦1,300/L", status: pmsLvl < 20 ? "Unavailable" : pmsLvl < 40 ? "Limited" : "Available" },
+              AGO: { level: agoLvl, price: depot.agoPrice || "₦1,900/L", status: agoLvl < 20 ? "Unavailable" : agoLvl < 40 ? "Limited" : "Available" },
+              ATK: { level: atkLvl, price: depot.atkPrice || "₦1,300/L", status: atkLvl < 20 ? "Unavailable" : atkLvl < 40 ? "Limited" : "Available" },
             });
           });
         });
