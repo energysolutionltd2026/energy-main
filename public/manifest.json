@@ -1,0 +1,26 @@
+{
+  "name": "e-Nergy Solutions",
+  "short_name": "e-Nergy",
+  "description": "Nigeria's fuel distribution platform",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/eNnergy Logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/eNnergy Logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "finance"],
+  "lang": "en"
+}
