@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
-import { DEPOTS, useDepot, ProductKey } from "../../context/DepotContext";
+import { useDepot, ProductKey } from "../../context/DepotContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -219,7 +219,7 @@ const selectCls = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 
 
 export default function StationManager() {
   const router = useRouter();
-  const { depotProducts } = useDepot();
+  const { depots, depotProducts } = useDepot();
   const [user, setUser]           = useState<any>(null);
   const [stations, setStations]   = useState<Station[]>(STATIONS_INIT);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -782,7 +782,7 @@ export default function StationManager() {
             <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5 flex items-center justify-between">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Live Depot Availability</p>
-                <span className="text-xs text-gray-500">{DEPOTS.length} depots</span>
+                <span className="text-xs text-gray-500">{depots.length} depots</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -795,7 +795,7 @@ export default function StationManager() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800/50">
-                    {DEPOTS.map((depot) => (
+                    {depots.map((depot) => (
                       <tr key={depot} className="hover:bg-white/5 transition-colors">
                         <td className="px-4 py-3 text-sm text-white font-medium whitespace-nowrap">{depot}</td>
                         {(["PMS", "AGO", "ATK"] as ProductKey[]).map((pk) => {

@@ -5,7 +5,7 @@ import { getLgas } from "nigeria-state-lga-data";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
-import { DEPOTS } from "@/context/DepotContext";
+import { useDepot } from "@/context/DepotContext";
 import { logTransaction } from "@/utils/logTransaction";
 
 // ─── Geo Zones & Pricing ─────────────────────────────────────────────────────
@@ -43,6 +43,7 @@ const selectClass =
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CustomerRentTruck() {
+  const { depots } = useDepot();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [rentStep, setRentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -161,7 +162,7 @@ export default function CustomerRentTruck() {
                     <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Loading Depot</label>
                     <select className={selectClass} value={rentBook.depot} onChange={e => setRentBook(p => ({ ...p, depot: e.target.value }))}>
                       <option value="">— Select Depot —</option>
-                      {DEPOTS.map(d => <option key={d} value={d}>{d}</option>)}
+                      {depots.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                   <div>

@@ -136,18 +136,7 @@ const BASE_TRUCKS: TruckRecord[] = [];
 
 const BASE_TRANSACTIONS: Transaction[] = [];
 
-const DEPOTS: Depot[] = [
-  { name: "Atlas Cove",    location: "Apapa, Lagos",               PMS: { level: 75, price: "₦1,300/L", status: "Available"   }, AGO: { level: 60, price: "₦1,900/L", status: "Available"   }, ATK: { level: 45, price: "₦1,300/L", status: "Available"   } },
-  { name: "Mosimi",        location: "Sagamu, Ogun State",         PMS: { level: 82, price: "₦1,300/L", status: "Available"   }, AGO: { level: 55, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
-  { name: "Warri",         location: "Warri, Delta State",         PMS: { level: 90, price: "₦1,300/L", status: "Available"   }, AGO: { level: 80, price: "₦1,900/L", status: "Available"   }, ATK: { level: 30, price: "₦1,300/L", status: "Available"   } },
-  { name: "Port Harcourt", location: "Port Harcourt, Rivers State",PMS: { level: 65, price: "₦1,300/L", status: "Available"   }, AGO: { level: 70, price: "₦1,900/L", status: "Available"   }, ATK: { level: 50, price: "₦1,300/L", status: "Available"   } },
-  { name: "Kaduna",        location: "Kaduna, Kaduna State",       PMS: { level: 40, price: "₦1,300/L", status: "Available"   }, AGO: { level: 25, price: "₦1,900/L", status: "Limited"     }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
-  { name: "Ilorin",        location: "Ilorin, Kwara State",        PMS: { level: 55, price: "₦1,300/L", status: "Available"   }, AGO: { level: 48, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
-  { name: "Ore",           location: "Ore, Ondo State",            PMS: { level: 18, price: "₦1,300/L", status: "Limited"     }, AGO: { level: 35, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
-  { name: "Enugu",         location: "Enugu, Enugu State",         PMS: { level: 70, price: "₦1,300/L", status: "Available"   }, AGO: { level: 60, price: "₦1,900/L", status: "Available"   }, ATK: { level: 15, price: "₦1,300/L", status: "Limited"     } },
-  { name: "Calabar",       location: "Calabar, Cross River State", PMS: { level: 50, price: "₦1,300/L", status: "Available"   }, AGO: { level: 45, price: "₦1,900/L", status: "Available"   }, ATK: { level: 20, price: "₦1,300/L", status: "Limited"     } },
-  { name: "Kano",          location: "Kano, Kano State",           PMS: { level: 60, price: "₦1,300/L", status: "Available"   }, AGO: { level: 55, price: "₦1,900/L", status: "Available"   }, ATK: { level: 0,  price: "₦1,300/L", status: "Unavailable" } },
-];
+const DEPOTS: Depot[] = [];
 
 // ─── Shared Components ────────────────────────────────────────────────────────
 
@@ -216,6 +205,21 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
   const pendingPOs = BASE_PURCHASE_ORDERS.filter(p => p.status === "Pending").length;
   const suspended = users.filter(u => u.status === "Suspended").length;
 
+  const [overviewDepots, setOverviewDepots] = useState<Depot[]>([]);
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.depots.list({ limit: 50 } as any).then((result: any) => {
+        if (!result?.data?.length) return;
+        setOverviewDepots(result.data.map((d: any) => ({
+          name: d.name, location: d.location || "",
+          PMS: { level: d.PMS?.level ?? d.pmsLevel ?? 60, price: String(d.PMS?.price ?? d.pmsPrice ?? 1300), status: "Available" },
+          AGO: { level: d.AGO?.level ?? d.agoLevel ?? 60, price: String(d.AGO?.price ?? d.agoPrice ?? 1900), status: "Available" },
+          ATK: { level: d.ATK?.level ?? d.atkLevel ?? 60, price: String(d.ATK?.price ?? d.atkPrice ?? 1300), status: "Available" },
+        })));
+      });
+    });
+  }, []);
+
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   useEffect(() => {
     setOnlineUsers(getOnlineUsers());
@@ -268,7 +272,7 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
     return parts.join(" · ");
   };
 
-  const depotAlerts = DEPOTS.filter(d => d.PMS.level < 20 || d.AGO.level < 20 || d.ATK.level < 20);
+  const depotAlerts = overviewDepots.filter(d => d.PMS.level < 20 || d.AGO.level < 20 || d.ATK.level < 20);
 
   return (
     <div className="space-y-5">
@@ -1077,7 +1081,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
       .catch(() => {});
   }, []);
 
-  const [depots, setDepots] = useState<Depot[]>(DEPOTS);
+  const [depots, setDepots] = useState<Depot[]>([]);
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
@@ -2091,6 +2095,21 @@ function SectionReports({ users }: { users: AdminUser[] }) {
     suspended: users.filter(u => u.role === role && u.status === "Suspended").length,
   }));
 
+  const [reportDepots, setReportDepots] = useState<Depot[]>([]);
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.depots.list({ limit: 50 } as any).then((result: any) => {
+        if (!result?.data?.length) return;
+        setReportDepots(result.data.map((d: any) => ({
+          name: d.name, location: d.location || "",
+          PMS: { level: d.PMS?.level ?? d.pmsLevel ?? 60, price: String(d.PMS?.price ?? d.pmsPrice ?? 1300), status: "Available" },
+          AGO: { level: d.AGO?.level ?? d.agoLevel ?? 60, price: String(d.AGO?.price ?? d.agoPrice ?? 1900), status: "Available" },
+          ATK: { level: d.ATK?.level ?? d.atkLevel ?? 60, price: String(d.ATK?.price ?? d.atkPrice ?? 1300), status: "Available" },
+        })));
+      });
+    });
+  }, []);
+
   const [allTxns, setAllTxns] = useState<Transaction[]>(BASE_TRANSACTIONS);
 
   useEffect(() => {
@@ -2119,7 +2138,7 @@ function SectionReports({ users }: { users: AdminUser[] }) {
     failed: allTxns.filter(t => t.type === type && t.status === "Failed").length,
   }));
 
-  const depotAlerts = DEPOTS.flatMap(d => {
+  const depotAlerts = reportDepots.flatMap(d => {
     const out: { depot: string; product: string; level: number }[] = [];
     if (d.PMS.level < 20) out.push({ depot: d.name, product: "PMS", level: d.PMS.level });
     if (d.AGO.level < 20) out.push({ depot: d.name, product: "AGO", level: d.AGO.level });
@@ -2230,15 +2249,22 @@ interface StationManager {
 
 const BASE_STATION_MANAGERS: StationManager[] = [];
 
-function SectionStationManagers({ setToast, depots }: { setToast: (m: string) => void; depots: Depot[] }) {
+function SectionStationManagers({ setToast }: { setToast: (m: string) => void }) {
   const [managers, setManagers] = useState<StationManager[]>(BASE_STATION_MANAGERS);
   const [showCreate, setShowCreate] = useState(false);
   const [viewActivities, setViewActivities] = useState<StationManager | null>(null);
   const [activities, setActivities] = useState<any[]>([]);
   const [form, setForm] = useState({ name: "", email: "", password: "", depot: "" });
   const [formError, setFormError] = useState("");
+  const [allDepotNames, setAllDepotNames] = useState<string[]>([]);
 
-  const allDepotNames = depots.map(d => d.name);
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.depots.list({ limit: 50 } as any).then((result: any) => {
+        if (result?.data?.length) setAllDepotNames(result.data.map((d: any) => d.name));
+      });
+    });
+  }, []);
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
@@ -3776,7 +3802,7 @@ export default function AdminDashboard() {
             {active === "Purchase Orders" && <SectionPurchaseOrders setToast={setToast} />}
             {active === "Products" && <SectionProducts setToast={setToast} />}
             {active === "Depots" && <SectionDepots setToast={setToast} />}
-            {active === "Station Managers" && <SectionStationManagers setToast={setToast} depots={DEPOTS} />}
+            {active === "Station Managers" && <SectionStationManagers setToast={setToast} />}
             {active === "Trucks" && <SectionTrucks setToast={setToast} />}
             {active === "Transactions" && <SectionTransactions />}
             {active === "Activity Log" && <SectionActivityLog setToast={setToast} />}

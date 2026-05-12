@@ -5,7 +5,7 @@ import Link from "next/link";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
-import { DEPOTS, useDepot, ProductKey } from "../../context/DepotContext";
+import { useDepot, ProductKey } from "../../context/DepotContext";
 import { logTransaction } from "@/utils/logTransaction";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ const selectCls = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 
 
 export default function RequestSupply() {
   const router = useRouter();
-  const { depotProducts, updateProductData } = useDepot();
+  const { depots, depotProducts, updateProductData } = useDepot();
   const [user, setUser]       = useState<any>(null);
   const [submitted, setSubmitted] = useState(false);
   const [reqId, setReqId]     = useState("");
@@ -342,7 +342,7 @@ export default function RequestSupply() {
                   </label>
                   <select className={selectCls} value={form.depot} onChange={(e) => set("depot", e.target.value)}>
                     <option value="">Select depot</option>
-                    {DEPOTS.map((d) => (
+                    {depots.map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>

@@ -9,7 +9,7 @@ import { sanitizeString } from "@/lib/security/sanitize";
 import { logTransaction } from "@/utils/logTransaction";
 import Link from "next/link";
 import tower from "@/../public/tower.jpg";
-import { DEPOTS } from "@/context/DepotContext";
+import { useDepot } from "@/context/DepotContext";
 import truck1 from "@/../public/truck1.jpg";
 import truck2 from "@/../public/truck2.jpg";
 import truck3 from "@/../public/truck3.jpg";
@@ -266,6 +266,7 @@ const EditField = ({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function RentTruck() {
+  const { depots } = useDepot();
   const [activeTab, setActiveTab] = useState<"rent" | "register">("rent");
   const [tractorPreview, setTractorPreview] = useState<string | null>(null);
   const [tankPreview, setTankPreview] = useState<string | null>(null);
@@ -1001,7 +1002,7 @@ export default function RentTruck() {
                     <Field label="Loading Depot" className="md:col-span-2">
                       <select className={selectClass} value={rentBook.depot} onChange={e => setRentBook(p => ({ ...p, depot: e.target.value }))}>
                         <option value="">— Select Depot —</option>
-                        {DEPOTS.map(d => <option key={d} value={d}>{d}</option>)}
+                        {depots.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </Field>
                     <Field label="Tank Capacity">

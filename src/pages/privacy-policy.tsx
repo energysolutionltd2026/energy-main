@@ -72,7 +72,7 @@ const SECTIONS = [
     content: [
       {
         subtitle: "We Do Not Sell Your Data",
-        text: "Pipes & Barrels does not sell, rent, or trade your personal or business data to any third party for marketing or commercial purposes, under any circumstances.",
+        text: "e-Nergy Solutions Limited does not sell, rent, or trade your personal or business data to any third party for marketing or commercial purposes, under any circumstances.",
       },
       {
         subtitle: "Service Providers",
@@ -103,7 +103,7 @@ const SECTIONS = [
       },
       {
         subtitle: "Access Controls",
-        text: "Access to customer data is strictly limited to authorized Pipes & Barrels personnel on a need-to-know basis. All staff with data access are bound by confidentiality obligations.",
+        text: "Access to customer data is strictly limited to authorized e-Nergy Solutions Limited personnel on a need-to-know basis. All staff with data access are bound by confidentiality obligations.",
       },
       {
         subtitle: "Data Retention",
@@ -122,7 +122,7 @@ const SECTIONS = [
     content: [
       {
         subtitle: "Access & Correction",
-        text: "You have the right to request a copy of the personal data we hold about you, and to request corrections to any inaccurate information. Submit requests to info@pipesandbarrels.com.",
+        text: "You have the right to request a copy of the personal data we hold about you, and to request corrections to any inaccurate information. Submit requests to info@energy.ng.",
       },
       {
         subtitle: "Deletion",
@@ -172,7 +172,7 @@ const SECTIONS = [
       },
       {
         subtitle: "Contact Our Data Team",
-        text: "For any privacy-related queries, data access requests, or concerns, please contact us at info@pipesandbarrels.com or call (+234) 08087550875 during business hours (Mon–Fri, 8AM–6PM WAT).",
+        text: "For any privacy-related queries, data access requests, or concerns, please contact us at info@energy.ng or call (+234) 08087550875 during business hours (Mon–Fri, 8AM–6PM WAT).",
       },
     ],
   },
@@ -245,7 +245,7 @@ export default function PrivacyPolicy() {
             </nav>
 
             <p className="text-orange-300 text-[10px] italic mt-6 leading-relaxed">
-              Pipes &amp; Barrels Oil &amp; Gas Ltd is committed to protecting the privacy and
+              e-Nergy Solutions Limited is committed to protecting the privacy and
               security of your personal and business data.
             </p>
           </div>

@@ -103,7 +103,7 @@ const TEAM = [
 // ─── Milestones ───────────────────────────────────────────────────────────────
 
 const MILESTONES = [
-  { year: "2011", event: "Pipes & Barrels founded in Lagos with a single depot partnership." },
+  { year: "2011", event: "e-Nergy Solutions Limited founded in Lagos with a single depot partnership." },
   { year: "2014", event: "Expanded operations to Port Harcourt and Warri, covering the Niger Delta region." },
   { year: "2017", event: "Achieved DPR full licensing for AGO, PMS, and ATK distribution." },
   { year: "2019", event: "Launched nationwide depot network with 8 active distribution hubs." },
@@ -143,7 +143,7 @@ export default function AboutUs() {
           <div className="hidden md:flex flex-col px-6 py-8 min-w-[240px] max-w-[260px] bg-gradient-to-b from-orange-800 to-orange-500">
             <div className="mb-8">
               <h1 className="text-white text-xl font-extrabold uppercase leading-snug">
-                About<br />Pipes &amp;<br />Barrels
+                About<br />e-Nergy Solutions Limited
               </h1>
               <div className="mt-3 h-0.5 bg-orange-400 w-12 rounded" />
               <p className="text-orange-200 text-xs mt-3 leading-relaxed italic">
@@ -165,7 +165,7 @@ export default function AboutUs() {
             <div className="mt-auto space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-orange-300 text-base">✉</span>
-                <span className="text-orange-100 text-xs">info@pipesandbarrels.com</span>
+                <span className="text-orange-100 text-xs">info@energy.ng</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-orange-300 text-base">📞</span>
@@ -220,7 +220,7 @@ export default function AboutUs() {
 
                 <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                   <p>
-                    Pipes &amp; Barrels Oil &amp; Gas Ltd was founded in 2011 with a simple mission: to make the purchase and delivery of petroleum products in Nigeria faster, fairer, and more transparent. What began as a single depot partnership in Lagos has grown into a nationwide platform serving filling station operators, industrial buyers, aviation clients, and fleet managers across all six geopolitical zones.
+                    e-Nergy Solutions Limited was founded in 2011 with a simple mission: to make the purchase and delivery of petroleum products in Nigeria faster, fairer, and more transparent. What began as a single depot partnership in Lagos has grown into a nationwide platform serving filling station operators, industrial buyers, aviation clients, and fleet managers across all six geopolitical zones.
                   </p>
                   <p>
                     Nigeria&apos;s downstream petroleum sector has long been characterised by opacity — unpredictable pricing, unreliable depot availability, and manual, paper-heavy booking processes that cost businesses valuable time and money. We set out to change that. By building direct relationships with terminal operators and investing in digital infrastructure, we created a platform where buyers can see real-time product availability, transparent pricing, and book deliveries in minutes.
@@ -301,7 +301,7 @@ export default function AboutUs() {
                   <p className="font-semibold text-gray-800 mb-1">Join Our Team</p>
                   We&apos;re always looking for talented professionals passionate about Nigeria&apos;s energy sector.
                   Send your CV to{" "}
-                  <span className="font-semibold text-orange-600">careers@pipesandbarrels.com</span>
+                  <span className="font-semibold text-orange-600">careers@energy.ng</span>
                 </div>
               </div>
             )}
@@ -356,7 +356,7 @@ export default function AboutUs() {
             {/* Bottom CTA */}
             <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between">
               <p className="text-xs text-gray-400 italic">
-                Pipes &amp; Barrels Oil &amp; Gas Ltd · RC 123456 · DPR Licensed
+                e-Nergy Solutions Limited · RC 123456 · DPR Licensed
               </p>
               <a
                 href="/contact"
