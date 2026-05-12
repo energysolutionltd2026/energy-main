@@ -63,11 +63,14 @@ export default function RequestSupply() {
   });
 
   useEffect(() => {
-    const str = localStorage.getItem("user");
-    if (!str) { router.push("/auth/login"); return; }
-    const u = JSON.parse(str);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
+    fetch("/api/auth/me")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
+      })
+      .catch(() => router.push("/auth/login"));
 
     // Pre-fill station from query params
     const { station, name } = router.query;
@@ -141,9 +144,6 @@ export default function RequestSupply() {
       status:       "Pending",
     });
 
-    // localStorage fallback so offline and admin views still work
-    const existing = JSON.parse(localStorage.getItem("supply_requests") || "[]");
-    localStorage.setItem("supply_requests", JSON.stringify([entry, ...existing]));
 
     // Deduct requested quantity from the depot's live context data
     const prodKey = form.product as ProductKey;

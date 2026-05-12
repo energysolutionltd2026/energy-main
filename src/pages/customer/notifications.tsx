@@ -44,8 +44,6 @@ function fullDate(iso: string): string {
   });
 }
 
-const STORAGE_KEY = "customer_notifications";
-
 export default function NotificationsPage() {
   const router = useRouter();
   const [user, setUser]         = useState<any>(null);
@@ -54,31 +52,28 @@ export default function NotificationsPage() {
   const [selected, setSelected] = useState<Notification | null>(null);
 
   useEffect(() => {
-    const str = localStorage.getItem("user");
-    if (!str) { router.push("/auth/login"); return; }
-    const u = JSON.parse(str);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
-
-    import("@/lib/db-client").then(({ api }) => {
-      api.notifications.list({ recipientEmail: u.email, limit: 200 } as Parameters<typeof api.notifications.list>[0] & { limit: number }).then((result) => {
-        if (result && result.data.length > 0) {
-          const mapped: Notification[] = result.data.map((n: any) => ({
-            id: n._id, type: (n.type || "system") as NotifType,
-            title: n.title, message: n.message,
-            href: n.href || "/customer",
-            timestamp: n.createdAt || new Date().toISOString(),
-            read: !!n.read,
-          }));
-          mapped.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setNotifs(mapped);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-        } else {
-          const stored: Notification[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-          setNotifs(stored.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-        }
-      });
-    });
+    fetch("/api/auth/me")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
+        return import("@/lib/db-client").then(({ api }) =>
+          api.notifications.list({ recipientEmail: u.email, limit: 200 } as any)
+        );
+      })
+      .then(result => {
+        if (!result?.data) return;
+        const mapped: Notification[] = result.data.map((n: any) => ({
+          id: n._id, type: (n.type || "system") as NotifType,
+          title: n.title, message: n.message,
+          href: n.href || "/customer",
+          timestamp: n.createdAt || new Date().toISOString(),
+          read: !!n.read,
+        }));
+        setNotifs(mapped.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) return (
@@ -87,29 +82,23 @@ export default function NotificationsPage() {
     </div>
   );
 
-  const save = (updated: Notification[]) => {
-    setNotifs(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
-
   const markRead = (id: string) => {
-    save(notifs.map((n) => n.id === id ? { ...n, read: true } : n));
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     import("@/lib/db-client").then(({ api }) => { api.notifications.markRead(id).catch(() => null); });
   };
 
   const markAllRead = () => {
-    save(notifs.map((n) => ({ ...n, read: true })));
-    const u = JSON.parse(localStorage.getItem("user") || "{}");
-    if (u.email) import("@/lib/db-client").then(({ api }) => { api.notifications.markAllRead(u.email).catch(() => null); });
+    setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+    if (user?.email) import("@/lib/db-client").then(({ api }) => { api.notifications.markAllRead(user.email).catch(() => null); });
   };
 
   const deleteNotif = (id: string) => {
     if (selected?.id === id) setSelected(null);
-    save(notifs.filter((n) => n.id !== id));
+    setNotifs(prev => prev.filter(n => n.id !== id));
     import("@/lib/db-client").then(({ api }) => { api.notifications.delete(id).catch(() => null); });
   };
 
-  const clearAll = () => { setSelected(null); save([]); };
+  const clearAll = () => { setSelected(null); setNotifs([]); };
 
   const handleSelect = (n: Notification) => {
     setSelected(n);

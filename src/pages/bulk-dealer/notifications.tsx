@@ -24,21 +24,6 @@ const TYPE_CONFIG: Record<NotifType, { color: string; bg: string; border: string
   reconciliation: { color: "text-yellow-300", bg: "bg-yellow-500/30", border: "border-yellow-500/50", label: "Reconciliation",  icon: "M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
 };
 
-const BASE_NOTIFICATIONS: Notification[] = [];
-
-const STORAGE_KEY = "bulk_dealer_notifications";
-
-function loadNotifications(): Notification[] {
-  try {
-    const stored: Notification[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const storedMap = new Map(stored.map((n) => [n.id, n]));
-    const merged = BASE_NOTIFICATIONS.map((n) => storedMap.has(n.id) ? { ...n, read: storedMap.get(n.id)!.read } : n);
-    stored.forEach((n) => { if (!merged.find((m) => m.id === n.id)) merged.push(n); });
-    const sorted = merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
-    return sorted;
-  } catch { return BASE_NOTIFICATIONS; }
-}
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -61,51 +46,44 @@ export default function BulkDealerNotifications() {
   const [selected, setSelected]   = useState<Notification | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) { router.push("/auth/login"); return; }
-    const u = JSON.parse(stored);
-    if (u.role !== "Bulk Dealer") { router.push("/auth/login"); return; }
-    setUser(u);
-
-    import("@/lib/db-client").then(({ api }) => {
-      api.notifications.list({ recipientEmail: u.email, limit: 200 } as Parameters<typeof api.notifications.list>[0] & { limit: number }).then((result) => {
-        if (result && result.data.length > 0) {
-          const mapped = result.data.map((n: any) => ({
-            id: n._id, type: (n.type || "system") as NotifType,
-            title: n.title, message: n.message,
-            href: n.href || "/bulk-dealer/dashboard",
-            timestamp: n.createdAt || new Date().toISOString(),
-            read: !!n.read,
-          }));
-          setNotifs(mapped);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-        } else {
-          setNotifs(loadNotifications());
-        }
-      });
-    });
+    fetch("/api/auth/me")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const u = data?.user;
+        if (!u || u.role !== "bulk_dealer") { router.push("/auth/login"); return; }
+        setUser(u);
+        return import("@/lib/db-client").then(({ api }) =>
+          api.notifications.list({ recipientEmail: u.email, limit: 200 } as any)
+        );
+      })
+      .then(result => {
+        if (!result?.data) return;
+        const mapped = result.data.map((n: any) => ({
+          id: n._id, type: (n.type || "system") as NotifType,
+          title: n.title, message: n.message,
+          href: n.href || "/bulk-dealer/dashboard",
+          timestamp: n.createdAt || new Date().toISOString(),
+          read: !!n.read,
+        }));
+        setNotifs(mapped);
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
-  const save = (updated: Notification[]) => {
-    setNotifs(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
-
   const markRead = (id: string) => {
-    save(notifs.map((n) => n.id === id ? { ...n, read: true } : n));
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     import("@/lib/db-client").then(({ api }) => { api.notifications.markRead(id).catch(() => null); });
   };
   const markAllRead = () => {
-    save(notifs.map((n) => ({ ...n, read: true })));
-    const u = JSON.parse(localStorage.getItem("user") || "{}");
-    if (u.email) import("@/lib/db-client").then(({ api }) => { api.notifications.markAllRead(u.email).catch(() => null); });
+    setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+    if (user?.email) import("@/lib/db-client").then(({ api }) => { api.notifications.markAllRead(user.email).catch(() => null); });
   };
   const deleteOne = (id: string) => {
-    save(notifs.filter((n) => n.id !== id));
+    setNotifs(prev => prev.filter(n => n.id !== id));
     if (selected?.id === id) setSelected(null);
     import("@/lib/db-client").then(({ api }) => { api.notifications.delete(id).catch(() => null); });
   };
-  const clearAll = () => { save([]); setSelected(null); };
+  const clearAll = () => { setNotifs([]); setSelected(null); };
 
   const handleClick = (n: Notification) => { markRead(n.id); setSelected(n); };
 

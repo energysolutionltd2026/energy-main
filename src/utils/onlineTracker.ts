@@ -1,6 +1,4 @@
-const KEY = "online_users";
-const TTL = 2 * 60 * 1000; // 2 minutes — considered online
-const HEARTBEAT = 30 * 1000; // write every 30s
+const HEARTBEAT_INTERVAL = 30 * 1000;
 
 export interface OnlineUser {
   id: string;
@@ -8,37 +6,21 @@ export interface OnlineUser {
   email: string;
   role: string;
   depot?: string;
-  lastSeen: number; // timestamp ms
+  lastSeen: number;
 }
 
-function write(user: OnlineUser) {
-  try {
-    const all: OnlineUser[] = JSON.parse(localStorage.getItem(KEY) || "[]");
-    const others = all.filter(u => u.id !== user.id);
-    localStorage.setItem(KEY, JSON.stringify([...others, { ...user, lastSeen: Date.now() }]));
-  } catch { /**/ }
-}
-
-function remove(id: string) {
-  try {
-    const all: OnlineUser[] = JSON.parse(localStorage.getItem(KEY) || "[]");
-    localStorage.setItem(KEY, JSON.stringify(all.filter(u => u.id !== id)));
-  } catch { /**/ }
+function sendHeartbeat() {
+  fetch("/api/admin/heartbeat", { method: "POST" }).catch(() => null);
 }
 
 export function getOnlineUsers(): OnlineUser[] {
-  try {
-    const all: OnlineUser[] = JSON.parse(localStorage.getItem(KEY) || "[]");
-    const cutoff = Date.now() - TTL;
-    return all.filter(u => u.lastSeen > cutoff);
-  } catch { return []; }
+  // Online users are now fetched from /api/admin/online-users by the admin dashboard directly.
+  // This stub exists for backward compatibility with call sites that haven't been migrated.
+  return [];
 }
 
-export function startTracking(user: OnlineUser): () => void {
-  write(user);
-  const interval = setInterval(() => write(user), HEARTBEAT);
-  return () => {
-    clearInterval(interval);
-    remove(user.id);
-  };
+export function startTracking(_user: OnlineUser): () => void {
+  sendHeartbeat();
+  const interval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+  return () => clearInterval(interval);
 }

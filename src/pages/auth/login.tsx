@@ -63,47 +63,9 @@ export default function Login() {
       const { user, token } = result;
       const displayRole = ROLE_DISPLAY[user.role ?? ""] ?? user.role ?? "";
 
-      // Persist to localStorage so existing pages reading "user" key still work
-      localStorage.setItem("user", JSON.stringify({
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        role: displayRole,
-        emailVerified: user.emailVerified ?? true,
-        status: user.status,
-        ...(user.companyName ? { company: user.companyName } : {}),
-        ...(user.dealerCode   ? { dealerCode: user.dealerCode } : {}),
-        token,
-      }));
-
       router.push(roleToRoute(user.role ?? ""));
       return;
     }
-
-    // ── 2. Check station manager credentials (localStorage fallback) ───────────
-    try {
-      const managers = JSON.parse(localStorage.getItem("station_managers") || "[]");
-      const sm = managers.find((m: any) => m.email === safeEmail && m.password === password);
-      if (sm) {
-        if (sm.status === "Blocked") {
-          setError("Your account has been blocked. Please contact the administrator.");
-          setIsLoading(false);
-          return;
-        }
-        localStorage.setItem("sm_user", JSON.stringify(sm));
-        router.push("/station-manager/dashboard");
-        return;
-      }
-    } catch { /**/ }
-
-    // ── 4. Unverified self-registered account ──────────────────────────────────
-    try {
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-      if (storedUser.email === safeEmail && storedUser.emailVerified === false) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(storedUser.email)}`);
-        return;
-      }
-    } catch { /**/ }
 
     setError("Invalid email or password");
     setIsLoading(false);

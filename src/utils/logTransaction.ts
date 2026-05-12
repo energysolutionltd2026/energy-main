@@ -1,6 +1,5 @@
-// ─── Platform Transaction Logger ─────────────────────────────────────────────
-// Central audit log for all financial/operational actions across the platform.
-// Writes to localStorage["platform_transactions"] — read by admin Transactions section.
+// Central audit logger — writes directly to the database via API.
+// Fire-and-forget: callers do not need to await this.
 
 export type TransactionType =
   | "Supply Request"
@@ -11,35 +10,38 @@ export type TransactionType =
 
 export interface PlatformTransaction {
   id: string;
-  timestamp: string;       // ISO datetime
-  date: string;            // YYYY-MM-DD
+  timestamp: string;
+  date: string;
   type: TransactionType;
-  user: string;            // display name
+  user: string;
   userRole: "Customer" | "Bulk Dealer";
   product?: string;
   quantity?: string;
-  totalAmount: string;     // formatted ₦ string
+  totalAmount: string;
   status: "Completed" | "Pending" | "Failed";
   paymentMethod?: string;
   depot?: string;
-  reference: string;       // original ID (SUP-REQ-xxx, PO-xxx, TRK-xxx etc.)
+  reference: string;
 }
 
 export function logTransaction(txn: Omit<PlatformTransaction, "id" | "timestamp" | "date">) {
-  try {
-    const now = new Date();
-    const entry: PlatformTransaction = {
-      id: `TXN-${now.getFullYear()}-${String(Date.now()).slice(-6)}`,
-      timestamp: now.toISOString(),
-      date: now.toISOString().split("T")[0],
-      ...txn,
-    };
-    const existing: PlatformTransaction[] = JSON.parse(
-      localStorage.getItem("platform_transactions") || "[]"
-    );
-    localStorage.setItem(
-      "platform_transactions",
-      JSON.stringify([entry, ...existing])
-    );
-  } catch { /**/ }
+  const now = new Date();
+  const entry = {
+    reference:     `TXN-${now.getFullYear()}-${String(Date.now()).slice(-6)}`,
+    timestamp:     now.toISOString(),
+    type:          txn.type,
+    userEmail:     txn.user,
+    userRole:      txn.userRole,
+    product:       txn.product,
+    quantity:      txn.quantity,
+    totalAmount:   txn.totalAmount,
+    status:        txn.status,
+    paymentMethod: txn.paymentMethod,
+    depot:         txn.depot,
+    originalRef:   txn.reference,
+  };
+
+  import("@/lib/db-client")
+    .then(({ api }) => api.transactions.create(entry))
+    .catch(() => null);
 }
