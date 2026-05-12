@@ -20,8 +20,6 @@ const PROTECTED: { prefix: string; roles: string[] }[] = [
   { prefix: "/bulk-dealer",     roles: ["bulk_dealer"] },
   { prefix: "/truck-owner",     roles: ["truck_owner"] },
   { prefix: "/station-manager", roles: ["station_manager"] },
-  { prefix: "/paydues",         roles: ["customer", "bulk_dealer"] },
-  { prefix: "/RentTruck",       roles: ["customer"] },
 ];
 
 // Public paths that are always accessible
