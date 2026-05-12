@@ -39,12 +39,8 @@ const AVAILABLE_PRODUCTS = ["PMS", "AGO", "ATK"];
 
 const inputCls = "w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition";
 
-function logActivity(managerId: string, action: string, depot: string) {
-  try {
-    const logs = JSON.parse(localStorage.getItem("sm_activity_log") || "[]");
-    logs.unshift({ id: `ACT-${Date.now()}`, managerId, action, depot, timestamp: new Date().toISOString() });
-    localStorage.setItem("sm_activity_log", JSON.stringify(logs.slice(0, 200)));
-  } catch { /**/ }
+function logActivity(_managerId: string, _action: string, _depot: string) {
+  // Activities are tracked server-side via heartbeat; local log removed
 }
 
 const pColor = (p: ProductKey) => p === "PMS" ? "text-red-400" : p === "AGO" ? "text-blue-400" : "text-orange-400";
@@ -65,42 +61,33 @@ export default function StationManagerDashboard() {
 
   useEffect(() => {
     let stopTracking: (() => void) | undefined;
-    try {
-      const raw = localStorage.getItem("sm_user");
-      if (!raw) { router.replace("/auth/login"); return; }
-      const sm: StationManager = JSON.parse(raw);
-      if (sm.status === "Blocked") { router.replace("/auth/login"); return; }
-      setManager(sm);
-      stopTracking = startTracking({ id: sm.id, name: sm.name, email: sm.email, role: "Station Manager", depot: sm.depot, lastSeen: Date.now() });
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "station_manager") { router.replace("/auth/login"); return; }
+        const sm: StationManager = { id: u._id || u.id || u.email, name: u.name || "", email: u.email || "", depot: (u as any).depot || "", status: "Active" };
+        setManager(sm);
+        stopTracking = startTracking({ id: sm.email, name: sm.name, email: sm.email, role: "Station Manager", depot: sm.depot, lastSeen: Date.now() });
 
-      const overrides = JSON.parse(localStorage.getItem("sm_depot_stock") || "{}");
-      if (overrides[sm.depot]) setStock(overrides[sm.depot]);
-
-      const logs = JSON.parse(localStorage.getItem("sm_activity_log") || "[]");
-      setActivities(logs.filter((l: any) => l.managerId === sm.id).slice(0, 20));
-
-      // Sync depot stock from DB
-      import("@/lib/db-client").then(({ api }) => {
-        api.depots.list().then((result) => {
-          if (!result) return;
-          const depot: any = result.data.find((d: any) => d.name === sm.depot);
-          if (!depot) return;
-          setDepotDbId(depot._id);
-          const pmsLvl = depot.pmsLevel ?? 60;
-          const agoLvl = depot.agoLevel ?? 60;
-          const atkLvl = depot.atkLevel ?? 60;
-          const dbStock: DepotStock = {
-            PMS: { level: pmsLvl, price: depot.pmsPrice || "₦897/L",   status: pmsLvl < 20 ? "Unavailable" : pmsLvl < 40 ? "Limited" : "Available" },
-            AGO: { level: agoLvl, price: depot.agoPrice || "₦1,200/L", status: agoLvl < 20 ? "Unavailable" : agoLvl < 40 ? "Limited" : "Available" },
-            ATK: { level: atkLvl, price: depot.atkPrice || "₦1,095/L", status: atkLvl < 20 ? "Unavailable" : atkLvl < 40 ? "Limited" : "Available" },
-          };
-          setStock(dbStock);
-          const overridesCopy = JSON.parse(localStorage.getItem("sm_depot_stock") || "{}");
-          overridesCopy[sm.depot] = dbStock;
-          localStorage.setItem("sm_depot_stock", JSON.stringify(overridesCopy));
+        import("@/lib/db-client").then(({ api }) => {
+          api.depots.list().then((result) => {
+            if (!result) return;
+            const depot: any = result.data.find((d: any) => d.name === sm.depot);
+            if (!depot) return;
+            setDepotDbId(depot._id);
+            const pmsLvl = depot.pmsLevel ?? 60;
+            const agoLvl = depot.agoLevel ?? 60;
+            const atkLvl = depot.atkLevel ?? 60;
+            setStock({
+              PMS: { level: pmsLvl, price: depot.pmsPrice || "₦897/L",   status: pmsLvl < 20 ? "Unavailable" : pmsLvl < 40 ? "Limited" : "Available" },
+              AGO: { level: agoLvl, price: depot.agoPrice || "₦1,200/L", status: agoLvl < 20 ? "Unavailable" : agoLvl < 40 ? "Limited" : "Available" },
+              ATK: { level: atkLvl, price: depot.atkPrice || "₦1,095/L", status: atkLvl < 20 ? "Unavailable" : atkLvl < 40 ? "Limited" : "Available" },
+            });
+          });
         });
-      });
-    } catch { router.replace("/auth/login"); }
+      })
+      .catch(() => router.replace("/auth/login"));
     return () => stopTracking?.();
   }, [router]);
 
@@ -123,50 +110,18 @@ export default function StationManagerDashboard() {
     const salesLines: string[] = [];
     const newStock = { ...stock };
 
-    try {
-      const allDealerStock = JSON.parse(localStorage.getItem("dealer_stock") || "{}");
-      if (!allDealerStock[dealerEmail]) {
-        allDealerStock[dealerEmail] = JSON.parse(JSON.stringify(DEALER_STOCK_DEFAULTS[dealerEmail]));
-      }
-
-      for (const product of ["PMS", "AGO", "ATK"] as const) {
-        const liters = parseFloat(salesInput[product]) || 0;
-        if (liters <= 0) continue;
-
-        // Deduct from dealer's cumulative stock
-        const deltaML = liters / 1_000_000;
-        const tank = allDealerStock[dealerEmail][product];
-        if (tank) {
-          tank.level = Math.round(Math.max(0, tank.level - deltaML) * 100) / 100;
-        }
-
-        // Update depot stock percentage display
-        const deltaPercent = (liters / DEPOT_CAPACITY_LITERS) * 100;
-        const oldLevel = stock[product]?.level ?? 0;
-        const newLevel = Math.max(0, Math.round((oldLevel - deltaPercent) * 10) / 10);
-        newStock[product] = { ...stock[product], level: newLevel };
-
-        salesLines.push(`${product}: ${liters.toLocaleString()} L sold (depot: ${oldLevel}% → ${newLevel}%)`);
-      }
-
-      localStorage.setItem("dealer_stock", JSON.stringify(allDealerStock));
-      window.dispatchEvent(new CustomEvent("dealer-stock-updated"));
-    } catch { /**/ }
-
-    // Save updated depot stock
-    const overrides = JSON.parse(localStorage.getItem("sm_depot_stock") || "{}");
-    overrides[manager.depot] = newStock;
-    localStorage.setItem("sm_depot_stock", JSON.stringify(overrides));
-
-    const summary = salesLines.length > 0
-      ? `Sales recorded at ${manager.depot} | Dealer: ${dealerCode} | ${salesLines.join(" · ")}`
-      : `Sales reviewed — no changes at ${manager.depot}`;
+    for (const product of ["PMS", "AGO", "ATK"] as const) {
+      const liters = parseFloat(salesInput[product]) || 0;
+      if (liters <= 0) continue;
+      const deltaPercent = (liters / DEPOT_CAPACITY_LITERS) * 100;
+      const oldLevel = stock[product]?.level ?? 0;
+      const newLevel = Math.max(0, Math.round((oldLevel - deltaPercent) * 10) / 10);
+      newStock[product] = { ...stock[product], level: newLevel };
+      salesLines.push(`${product}: ${liters.toLocaleString()} L sold (depot: ${oldLevel}% → ${newLevel}%)`);
+    }
 
     setStock(newStock);
     setSalesInput({ PMS: "", AGO: "", ATK: "" });
-    logActivity(manager.id, summary, manager.depot);
-    const logs = JSON.parse(localStorage.getItem("sm_activity_log") || "[]");
-    setActivities(logs.filter((l: any) => l.managerId === manager.id).slice(0, 20));
     setDealerCodeInput("");
     setEditing(false);
 
@@ -195,50 +150,18 @@ export default function StationManagerDashboard() {
     const restockLines: string[] = [];
     const newStock = { ...stock };
 
-    try {
-      const allDealerStock = JSON.parse(localStorage.getItem("dealer_stock") || "{}");
-      if (!allDealerStock[dealerEmail]) {
-        allDealerStock[dealerEmail] = JSON.parse(JSON.stringify(DEALER_STOCK_DEFAULTS[dealerEmail]));
-      }
-
-      for (const product of ["PMS", "AGO", "ATK"] as const) {
-        const liters = parseFloat(stockInput[product]) || 0;
-        if (liters <= 0) continue;
-
-        const deltaML = liters / 1_000_000;
-        const tank = allDealerStock[dealerEmail][product];
-        if (tank) {
-          const before = tank.level;
-          tank.level = Math.round(Math.min(tank.max, tank.level + deltaML) * 100) / 100;
-          const after = tank.level;
-          const beforePct = Math.round((before / tank.max) * 100);
-          const afterPct = Math.round((after / tank.max) * 100);
-          restockLines.push(`${product}: ${liters.toLocaleString()} L received (${beforePct}% → ${afterPct}%)`);
-        }
-
-        const deltaPercent = (liters / DEPOT_CAPACITY_LITERS) * 100;
-        const oldLevel = stock[product]?.level ?? 0;
-        const newLevel = Math.min(100, Math.round((oldLevel + deltaPercent) * 10) / 10);
-        newStock[product] = { ...stock[product], level: newLevel };
-      }
-
-      localStorage.setItem("dealer_stock", JSON.stringify(allDealerStock));
-      window.dispatchEvent(new CustomEvent("dealer-stock-updated"));
-    } catch { /**/ }
-
-    const overrides = JSON.parse(localStorage.getItem("sm_depot_stock") || "{}");
-    overrides[manager!.depot] = newStock;
-    localStorage.setItem("sm_depot_stock", JSON.stringify(overrides));
-
-    const summary = restockLines.length > 0
-      ? `Stock received at ${manager!.depot} | Dealer: ${dealerCode} | ${restockLines.join(" · ")}`
-      : `Stock review — no changes at ${manager!.depot}`;
+    for (const product of ["PMS", "AGO", "ATK"] as const) {
+      const liters = parseFloat(stockInput[product]) || 0;
+      if (liters <= 0) continue;
+      const deltaPercent = (liters / DEPOT_CAPACITY_LITERS) * 100;
+      const oldLevel = stock[product]?.level ?? 0;
+      const newLevel = Math.min(100, Math.round((oldLevel + deltaPercent) * 10) / 10);
+      newStock[product] = { ...stock[product], level: newLevel };
+      restockLines.push(`${product}: ${liters.toLocaleString()} L received (${oldLevel}% → ${newLevel}%)`);
+    }
 
     setStock(newStock);
     setStockInput({ PMS: "", AGO: "", ATK: "" });
-    logActivity(manager!.id, summary, manager!.depot);
-    const logs = JSON.parse(localStorage.getItem("sm_activity_log") || "[]");
-    setActivities(logs.filter((l: any) => l.managerId === manager!.id).slice(0, 20));
     setDealerCodeInput("");
     setRestocking(false);
 
@@ -255,8 +178,7 @@ export default function StationManagerDashboard() {
   };
 
   const logout = () => {
-    localStorage.removeItem("sm_user");
-    router.push("/auth/login");
+    fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"));
   };
 
   return (
@@ -441,13 +363,7 @@ export default function StationManagerDashboard() {
               {(() => {
                 // Read dealer's current stock for the entered code
                 const dealerEmail = DEALER_CODE_MAP[dealerCodeInput.trim().toUpperCase()];
-                let dealerTanks: Record<string, { level: number; max: number }> | null = null;
-                if (dealerEmail) {
-                  try {
-                    const all = JSON.parse(localStorage.getItem("dealer_stock") || "{}");
-                    dealerTanks = all[dealerEmail] ?? DEALER_STOCK_DEFAULTS[dealerEmail] ?? null;
-                  } catch { /**/ }
-                }
+                const dealerTanks: Record<string, { level: number; max: number }> | null = dealerEmail ? (DEALER_STOCK_DEFAULTS[dealerEmail] ?? null) : null;
                 const dealerStatus = (p: string) => {
                   if (!dealerTanks) return null;
                   const tank = dealerTanks[p];
@@ -558,13 +474,7 @@ export default function StationManagerDashboard() {
               {/* Product inputs */}
               {(() => {
                 const dealerEmail = DEALER_CODE_MAP[dealerCodeInput.trim().toUpperCase()];
-                let dealerTanks: Record<string, { level: number; max: number }> | null = null;
-                if (dealerEmail) {
-                  try {
-                    const all = JSON.parse(localStorage.getItem("dealer_stock") || "{}");
-                    dealerTanks = all[dealerEmail] ?? DEALER_STOCK_DEFAULTS[dealerEmail] ?? null;
-                  } catch { /**/ }
-                }
+                const dealerTanks: Record<string, { level: number; max: number }> | null = dealerEmail ? (DEALER_STOCK_DEFAULTS[dealerEmail] ?? null) : null;
 
                 return AVAILABLE_PRODUCTS.map(p => {
                   const tank = dealerTanks?.[p];

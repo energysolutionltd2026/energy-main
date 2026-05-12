@@ -397,7 +397,7 @@ export default function RentTruck() {
     if (tractorInputRef.current) tractorInputRef.current.value = "";
     if (tankInputRef.current) tankInputRef.current.value = "";
 
-    // Save submission to localStorage so admin can see it
+    // Build submission record for DB
     const newId = `TRK-${Date.now()}`;
     const ownerId = `OWN-${Date.now()}`;
     const adminRecord = {

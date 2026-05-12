@@ -165,38 +165,28 @@ const CALIBRATION_LOG = [
 const STOCK_PRICES: Record<string, number> = { PMS: 617, ATK: 650, AGO: 1050 };
 
 const DEALER_STOCK_DEFAULTS: Record<string, Record<string, { level: number; max: number }>> = {};
-const DEALER_STOCK_KEY = "dealer_stock";
 
 const NEW_DEALER_DEFAULT = { PMS: { level: 0, max: 5 }, AGO: { level: 0, max: 5 }, ATK: { level: 0, max: 5 } };
 
+// Module-level dealer state — set by main component after API auth, read by section sub-components
+let _dealerEmail = "";
+let _dealerName = "";
+let _dealerTanks: Record<string, { level: number; max: number }> = { ...NEW_DEALER_DEFAULT };
+
 function getDealerTanks(): Record<string, { level: number; max: number }> {
-  try {
-    const email = JSON.parse(localStorage.getItem("user") || "{}").email as string;
-    const all = JSON.parse(localStorage.getItem(DEALER_STOCK_KEY) || "{}");
-    if (!all[email]) {
-      // First login — use known demo defaults, else 5 ML per product for new real dealers
-      all[email] = JSON.parse(JSON.stringify(
-        DEALER_STOCK_DEFAULTS[email] ?? NEW_DEALER_DEFAULT
-      ));
-      localStorage.setItem(DEALER_STOCK_KEY, JSON.stringify(all));
-    }
-    return all[email];
-  } catch { return NEW_DEALER_DEFAULT; }
+  return _dealerTanks;
 }
 
 function updateDealerStock(product: string, deltaLiters: number) {
-  try {
-    const email = JSON.parse(localStorage.getItem("user") || "{}").email as string;
-    const all = JSON.parse(localStorage.getItem(DEALER_STOCK_KEY) || "{}");
-    if (!all[email]) all[email] = JSON.parse(JSON.stringify(DEALER_STOCK_DEFAULTS[email] ?? DEALER_STOCK_DEFAULTS["dealer@energy.ng"]));
-    const tank = all[email][product];
-    if (tank) {
-      const deltaML = deltaLiters / 1_000_000;
-      tank.level = Math.round(Math.max(0, Math.min(tank.max, tank.level + deltaML)) * 100) / 100;
-    }
-    localStorage.setItem(DEALER_STOCK_KEY, JSON.stringify(all));
+  const tank = _dealerTanks[product];
+  if (tank) {
+    const deltaML = deltaLiters / 1_000_000;
+    _dealerTanks = {
+      ..._dealerTanks,
+      [product]: { ...tank, level: Math.round(Math.max(0, Math.min(tank.max, tank.level + deltaML)) * 100) / 100 },
+    };
     window.dispatchEvent(new CustomEvent("dealer-stock-updated"));
-  } catch { /**/ }
+  }
 }
 
 function parseLiters(qty: string): number {
@@ -214,13 +204,7 @@ function AccountFeeBar() {
           setYearlyFee(result.bulkDealerYearlyFee as number);
           return;
         }
-        // fallback to localStorage
-        try {
-          const saved = JSON.parse(localStorage.getItem("admin_settings") || "{}");
-          setYearlyFee(saved.bulkDealerYearlyFee ?? 150000);
-        } catch {
-          setYearlyFee(150000);
-        }
+        setYearlyFee(150000);
       });
     });
   }, []);
@@ -250,8 +234,7 @@ function SectionCurrentStock() {
   useEffect(() => {
     const refresh = () => setMergedTanks(getDealerTanks());
     window.addEventListener("dealer-stock-updated", refresh);
-    const onStorage = (e: StorageEvent) => { if (e.key === DEALER_STOCK_KEY) refresh(); };
-    window.addEventListener("storage", onStorage);
+    window.addEventListener("storage", refresh);
 
     // Sync admin-assigned tank volumes from DB on mount
     import("@/lib/db-client").then(({ api }) => {
@@ -259,22 +242,18 @@ function SectionCurrentStock() {
         if (!result) return;
         const u = result.user as any;
         if (!u.pmsTankMaxML && !u.agoTankMaxML && !u.atkTankMaxML) return;
-        try {
-          const email = JSON.parse(localStorage.getItem("user") || "{}").email as string;
-          const all = JSON.parse(localStorage.getItem(DEALER_STOCK_KEY) || "{}");
-          if (!all[email]) all[email] = JSON.parse(JSON.stringify(NEW_DEALER_DEFAULT));
-          if (u.pmsTankMaxML) all[email].PMS = { ...all[email].PMS, max: u.pmsTankMaxML };
-          if (u.agoTankMaxML) all[email].AGO = { ...all[email].AGO, max: u.agoTankMaxML };
-          if (u.atkTankMaxML) all[email].ATK = { ...all[email].ATK, max: u.atkTankMaxML };
-          localStorage.setItem(DEALER_STOCK_KEY, JSON.stringify(all));
-          refresh();
-        } catch { /**/ }
+        _dealerTanks = {
+          PMS: { ..._dealerTanks.PMS, max: u.pmsTankMaxML || _dealerTanks.PMS.max },
+          AGO: { ..._dealerTanks.AGO, max: u.agoTankMaxML || _dealerTanks.AGO.max },
+          ATK: { ..._dealerTanks.ATK, max: u.atkTankMaxML || _dealerTanks.ATK.max },
+        };
+        refresh();
       });
     });
 
     return () => {
       window.removeEventListener("dealer-stock-updated", refresh);
-      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("storage", refresh);
     };
   }, []);
 
@@ -698,17 +677,10 @@ function SectionReconciliation() {
   const [lastUpdateDate, setLastUpdateDate] = useState<string>("");
   const [reminderDismissed, setReminderDismissed] = useState(false);
 
-  // Check if user has updated stock today
+  // Check if user has updated stock today (session-only, resets on refresh)
   useEffect(() => {
-    try {
-      const email = JSON.parse(localStorage.getItem("user") || "{}").email;
-      if (!email) return;
-      const lastUpdate = localStorage.getItem(`${DAILY_STOCK_UPDATE_KEY}_${email}`);
-      setLastUpdateDate(lastUpdate || "");
-      const today = new Date().toISOString().slice(0, 10);
-      const dismissed = localStorage.getItem(`${DAILY_REMINDER_KEY}_${email}`) === today;
-      setReminderDismissed(dismissed);
-    } catch {}
+    setLastUpdateDate("");
+    setReminderDismissed(false);
   }, []);
 
   const runRecon = () => {
@@ -737,17 +709,8 @@ function SectionReconciliation() {
     updateDealerStock("AGO", -ago);
     updateDealerStock("ATK", -atk);
 
-    // Record last update date
-    try {
-      const email = JSON.parse(localStorage.getItem("user") || "{}").email;
-      if (email) {
-        const today = new Date().toISOString().slice(0, 10);
-        localStorage.setItem(`${DAILY_STOCK_UPDATE_KEY}_${email}`, today);
-        localStorage.setItem(`${DAILY_REMINDER_KEY}_${email}`, today);
-        setLastUpdateDate(today);
-        setReminderDismissed(true);
-      }
-    } catch {}
+    setLastUpdateDate(new Date().toISOString().slice(0, 10));
+    setReminderDismissed(true);
 
     setSoldForm({ pms: "", ago: "", atk: "" });
     setShowUpdateForm(false);
@@ -952,11 +915,11 @@ function SectionAllocations() {
   const depots = ["Lagos Main Depot","Port Harcourt Terminal","Abuja Central Terminal","Warri Storage Facility","Kano Petroleum Reserve"];
 
   useEffect(() => {
+    if (!_dealerEmail) return;
     import("@/lib/db-client").then(({ api }) => {
-      const u = JSON.parse(localStorage.getItem("user") || "{}");
-      api.purchaseOrders.list({ dealer: u.email, limit: 200 }).then((result) => {
+      api.purchaseOrders.list({ dealer: _dealerEmail, limit: 200 }).then((result) => {
         if (!result || result.data.length === 0) return;
-        const mapped = result.data.map((o: any) => ({
+        setOrders(result.data.map((o: any) => ({
           id:      o._id,
           date:    o.orderDate ? o.orderDate.split("T")[0] : "",
           product: o.product,
@@ -964,9 +927,7 @@ function SectionAllocations() {
           depot:   o.depot,
           amount:  `₦${Number(o.totalAmount || 0).toLocaleString()}`,
           status:  o.status,
-        }));
-        setOrders(mapped);
-        try { localStorage.setItem("bulk_purchase_orders", JSON.stringify(mapped)); } catch {}
+        })));
       });
     });
   }, []);
@@ -985,16 +946,11 @@ function SectionAllocations() {
     };
     const updated = [newOrder, ...orders];
     setOrders(updated);
-    try { localStorage.setItem("bulk_purchase_orders", JSON.stringify(updated)); } catch {}
-    try {
-      const dealerName = JSON.parse(localStorage.getItem("user") || "{}").name || "Bulk Dealer";
-      logTransaction({ type: "Allocation", user: dealerName, userRole: "Bulk Dealer", product: form.product, quantity: `${qty.toLocaleString()} L`, totalAmount: `₦${amount.toLocaleString()}`, status: "Pending", depot: form.depot, reference: id });
-    } catch { /**/ }
+    logTransaction({ type: "Allocation", user: _dealerName || "Bulk Dealer", userRole: "Bulk Dealer", product: form.product, quantity: `${qty.toLocaleString()} L`, totalAmount: `₦${amount.toLocaleString()}`, status: "Pending", depot: form.depot, reference: id });
     // Persist to DB
     import("@/lib/db-client").then(({ api }) => {
-      const u = JSON.parse(localStorage.getItem("user") || "{}");
       api.purchaseOrders.create({
-        dealer: u.email, depot: form.depot,
+        dealer: _dealerEmail, depot: form.depot,
         product: form.product as "PMS" | "AGO" | "ATK",
         quantityLitres: qty, totalAmount: amount,
         orderDate: form.date, status: "pending",
@@ -1009,7 +965,6 @@ function SectionAllocations() {
   const receiveOrder = (o: typeof orders[0]) => {
     const updated = orders.map(x => x.id === o.id ? { ...x, status: "Delivered" } : x);
     setOrders(updated);
-    try { localStorage.setItem("bulk_purchase_orders", JSON.stringify(updated)); } catch {}
     updateDealerStock(o.product, parseLiters(o.qty));
     // Update status in DB if real ID (MongoDB ObjectId, 24 hex chars)
     if (/^[a-f\d]{24}$/i.test(o.id)) {
@@ -1240,9 +1195,7 @@ function SectionProfitMargin() {
 function SectionLowStockAlert() {
   const thresholds: Record<string, number> = { PMS: 1.5, ATK: 1.0, AGO: 1.5 };
   const currentLevels: Record<string, number> = { PMS: 9.25, ATK: 4.70, AGO: 7.30 };
-  const [thresh, setThresh] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("bulk_alert_thresholds") || "null") ?? thresholds; } catch { return thresholds; }
-  });
+  const [thresh, setThresh] = useState(thresholds);
   const [toast, setToast] = useState("");
   const alertHistory = [
     { date: "2026-03-10", product: "ATK", level: "0.8M L", threshold: "1.0M L", resolved: "2026-03-12" },
@@ -1250,7 +1203,6 @@ function SectionLowStockAlert() {
     { date: "2026-02-15", product: "AGO", level: "1.3M L", threshold: "1.5M L", resolved: "2026-02-16" },
   ];
   const saveThreshold = (p: string) => {
-    try { localStorage.setItem("bulk_alert_thresholds", JSON.stringify(thresh)); } catch {}
     setToast(`${p} threshold saved — ${thresh[p]}M L`);
     setTimeout(() => setToast(""), 2500);
   };
@@ -1484,11 +1436,9 @@ interface SupplyRequest {
 }
 
 function pushCustomerNotification(notif: { type: string; title: string; message: string; href: string }) {
-  try {
-    const existing = JSON.parse(localStorage.getItem("customer_notifications") || "[]");
-    const entry = { id: `notif-${Date.now()}`, ...notif, timestamp: new Date().toISOString(), read: false };
-    localStorage.setItem("customer_notifications", JSON.stringify([entry, ...existing]));
-  } catch { /**/ }
+  import("@/lib/db-client").then(({ api }) => {
+    (api.notifications as any)?.create?.({ ...notif, timestamp: new Date().toISOString(), read: false }).catch(() => null);
+  }).catch(() => null);
 }
 
 function SectionCustomerRequests() {
@@ -1498,10 +1448,10 @@ function SectionCustomerRequests() {
   const [toast, setToastMsg] = useState("");
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("supply_requests") || "[]");
-      // Show all supply requests — including from non-platform customers
-      setRequests(stored.length > 0 ? stored : [
+    import("@/lib/db-client").then(({ api }) => {
+      api.supplyRequests.list({ limit: 200 } as any).then((result) => {
+        if (result?.data?.length) { setRequests(result.data as any); return; }
+        setRequests([
         { id: "SUP-REQ-001", stationName: "Sunrise Filling Station - Lagos", product: "PMS", depot: "Lagos Main Depot", quantity: "33,000 L", priority: "urgent", deliveryDate: "2026-03-30", notes: "Running low urgently", requestedBy: "Jane Customer", requestedAt: "2026-03-27T09:00:00Z", status: "Processing" },
         { id: "SUP-REQ-002", stationName: "Sunrise Filling Station - Lekki", product: "AGO", depot: "Port Harcourt Terminal", quantity: "25,000 L", priority: "normal", deliveryDate: "2026-04-02", notes: "", requestedBy: "Jane Customer", requestedAt: "2026-03-26T14:30:00Z", status: "Pending" },
         { id: "SUP-REQ-003", stationName: "Okafor Energy - Onitsha", product: "PMS", depot: "Enugu Fuel Depot", quantity: "45,000 L", priority: "emergency", deliveryDate: "2026-03-29", notes: "Critical - station down to 5%", requestedBy: "Emeka Okafor", requestedAt: "2026-03-28T07:00:00Z", status: "Pending" },
@@ -1509,8 +1459,9 @@ function SectionCustomerRequests() {
         // Walk-in / phone orders not on platform
         { id: "SUP-REQ-EXT-001", stationName: "Ogunleye Filling Station - Ibadan", product: "PMS", depot: "Ibadan Storage Terminal", quantity: "20,000 L", priority: "normal", deliveryDate: "2026-04-06", notes: "Walk-in order, not a platform user", requestedBy: "Tunde Ogunleye (External)", requestedAt: "2026-03-28T10:00:00Z", status: "Pending" },
         { id: "SUP-REQ-EXT-002", stationName: "Eze Brothers Gas - Enugu", product: "AGO", depot: "Enugu Fuel Depot", quantity: "18,000 L", priority: "urgent", deliveryDate: "2026-03-31", notes: "Phone order — pay on delivery", requestedBy: "Chukwu Eze (External)", requestedAt: "2026-03-27T14:00:00Z", status: "Pending" },
-      ]);
-    } catch { /**/ }
+        ]);
+      }).catch(() => null);
+    });
   }, []);
 
   const setToast = (msg: string) => { setToastMsg(msg); setTimeout(() => setToastMsg(""), 3000); };
@@ -1519,7 +1470,11 @@ function SectionCustomerRequests() {
     const req = requests.find(r => r.id === id);
     const next = requests.map(r => r.id === id ? { ...r, status } : r);
     setRequests(next);
-    try { localStorage.setItem("supply_requests", JSON.stringify(next)); } catch { /**/ }
+    if (/^[a-f\d]{24}$/i.test(id)) {
+      import("@/lib/db-client").then(({ api }) => {
+        api.supplyRequests.update(id, { status: status.toLowerCase() } as any).catch(() => null);
+      });
+    }
     // Notify customer if they are a platform user (non-external)
     if (req && !req.requestedBy.includes("External")) {
       if (status === "Processing") pushCustomerNotification({ type: "supply", title: "Supply Request Processing", message: `Your request (${id}) for ${req.quantity} of ${req.product} is now being processed by your bulk dealer.`, href: "/customer" });
@@ -1529,10 +1484,7 @@ function SectionCustomerRequests() {
     // Deduct from dealer stock and log fulfillment
     if (req && status === "Delivered") {
       updateDealerStock(req.product, -parseLiters(req.quantity));
-      try {
-        const dealerName = JSON.parse(localStorage.getItem("user") || "{}").name || "Bulk Dealer";
-        logTransaction({ type: "Supply Fulfillment", user: dealerName, userRole: "Bulk Dealer", product: req.product, quantity: req.quantity, totalAmount: "—", status: "Completed", depot: req.depot, reference: req.id });
-      } catch { /**/ }
+      logTransaction({ type: "Supply Fulfillment", user: _dealerName || "Bulk Dealer", userRole: "Bulk Dealer", product: req.product, quantity: req.quantity, totalAmount: "0", status: "Completed", depot: req.depot, reference: req.id });
     }
     setToast(`Request ${id} → ${status}`);
     if (selected?.id === id) setSelected(p => p ? { ...p, status } : null);
@@ -1659,27 +1611,35 @@ export default function BulkDealerDashboard() {
   const [unreadCount, setUnread]  = useState(0);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) { router.push("/auth/login"); return; }
-    const u = JSON.parse(stored);
-    if (u.role !== "Bulk Dealer") { router.push("/auth/login"); return; }
-    setUser(u);
-    const stopTracking = startTracking({ id: u.email, name: u.name, email: u.email, role: u.role, lastSeen: Date.now() });
-    return stopTracking;
+    let stopTracking: (() => void) | undefined;
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "bulk_dealer") { router.push("/auth/login"); return; }
+        setUser(u);
+        _dealerEmail = u.email || "";
+        _dealerName = u.name || "";
+        stopTracking = startTracking({ id: u.email, name: u.name, email: u.email, role: u.role, lastSeen: Date.now() });
 
-    // Load unread notification count
-    try {
-      const notifs = JSON.parse(localStorage.getItem("bulk_dealer_notifications") || "[]");
-      setUnread(notifs.filter((n: any) => !n.read).length);
-    } catch {}
+        // Load unread notification count from API
+        import("@/lib/db-client").then(({ api }) => {
+          (api.notifications as any)?.list?.({ limit: 50 }).then((result: any) => {
+            if (result?.data) setUnread(result.data.filter((n: any) => !n.read).length);
+          }).catch(() => null);
+        }).catch(() => null);
+      })
+      .catch(() => router.push("/auth/login"));
 
-    // Listen for "Create Order for Buyer" navigation events from sections
     const handler = (e: Event) => {
       const section = (e as CustomEvent).detail?.section;
       if (section) setActive(section);
     };
     window.addEventListener("bulk-nav", handler);
-    return () => window.removeEventListener("bulk-nav", handler);
+    return () => {
+      window.removeEventListener("bulk-nav", handler);
+      stopTracking?.();
+    };
   }, [router]);
 
   if (!user) return null;
@@ -1745,7 +1705,7 @@ export default function BulkDealerDashboard() {
               </div>
             )}
             <button
-              onClick={() => { localStorage.removeItem("user"); router.push("/auth/login"); }}
+              onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"))}
               className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

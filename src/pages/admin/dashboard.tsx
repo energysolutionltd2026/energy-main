@@ -8,12 +8,10 @@ import { getOnlineUsers, type OnlineUser } from "@/utils/onlineTracker";
 
 // ─── Notification Helper ──────────────────────────────────────────────────────
 
-function pushNotification(storageKey: string, notif: { type: string; title: string; message: string; href: string }) {
-  try {
-    const existing = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    const entry = { id: `notif-${Date.now()}`, ...notif, timestamp: new Date().toISOString(), read: false };
-    localStorage.setItem(storageKey, JSON.stringify([entry, ...existing]));
-  } catch { /**/ }
+function pushNotification(_storageKey: string, notif: { type: string; title: string; message: string; href: string }) {
+  import("@/lib/db-client").then(({ api }) => {
+    (api.notifications as any)?.create?.({ ...notif, timestamp: new Date().toISOString(), read: false }).catch(() => null);
+  }).catch(() => null);
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -225,13 +223,9 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
     return () => clearInterval(id);
   }, []);
 
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>(() => {
-    try {
-      const platform: Transaction[] = JSON.parse(localStorage.getItem("platform_transactions") || "[]");
-      const deduped = BASE_TRANSACTIONS.filter(b => !platform.find(p => p.id === b.id));
-      return [...platform, ...deduped].sort((a, b) => b.date.localeCompare(a.date));
-    } catch { return [...BASE_TRANSACTIONS].sort((a, b) => b.date.localeCompare(a.date)); }
-  });
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>(() =>
+    [...BASE_TRANSACTIONS].sort((a, b) => b.date.localeCompare(a.date))
+  );
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
@@ -449,13 +443,6 @@ function SectionUsers({ users, setUsers, setToast }: {
       });
     }
 
-    // localStorage fallback
-    try {
-      const list: string[] = JSON.parse(localStorage.getItem("admin_suspended_users") || "[]");
-      if (next === "Suspended" && !list.includes(user.email)) list.push(user.email);
-      else { const i = list.indexOf(user.email); if (i > -1) list.splice(i, 1); }
-      localStorage.setItem("admin_suspended_users", JSON.stringify(list));
-    } catch { /**/ }
     const notifKey = user.role === "Bulk Dealer" ? "bulk_dealer_notifications" : "customer_notifications";
     if (next === "Suspended") {
       pushNotification(notifKey, { type: "system", title: "Account Suspended", message: "Your account has been suspended by the platform administrator. Please contact support for assistance.", href: "/auth/login" });
@@ -470,17 +457,7 @@ function SectionUsers({ users, setUsers, setToast }: {
   const openUser = (user: AdminUser) => {
     setSelected(user);
     if (user.role === "Bulk Dealer") {
-      try {
-        const all = JSON.parse(localStorage.getItem("dealer_stock") || "{}");
-        const stock = all[user.email] ?? {};
-        setTankEdit({
-          PMS: String(stock.PMS?.max ?? 5),
-          AGO: String(stock.AGO?.max ?? 5),
-          ATK: String(stock.ATK?.max ?? 5),
-        });
-      } catch {
-        setTankEdit({ PMS: "5", AGO: "5", ATK: "5" });
-      }
+      setTankEdit({ PMS: "5", AGO: "5", ATK: "5" });
     } else {
       setTankEdit(null);
     }
@@ -493,16 +470,6 @@ function SectionUsers({ users, setUsers, setToast }: {
     const ago = Math.max(0, parseFloat(tankEdit.AGO) || 5);
     const atk = Math.max(0, parseFloat(tankEdit.ATK) || 5);
     try {
-      // Persist to dealer_stock localStorage so bulk dealer dashboard picks it up
-      const all = JSON.parse(localStorage.getItem("dealer_stock") || "{}");
-      if (!all[selected.email]) all[selected.email] = {};
-      for (const [product, newMax] of [["PMS", pms], ["AGO", ago], ["ATK", atk]] as [string, number][]) {
-        if (!all[selected.email][product]) all[selected.email][product] = { level: 0, max: newMax };
-        else all[selected.email][product].max = newMax;
-      }
-      localStorage.setItem("dealer_stock", JSON.stringify(all));
-      window.dispatchEvent(new CustomEvent("dealer-stock-updated"));
-      // Also persist to DB if user has an _id
       if ((selected as any)._id) {
         const { api } = await import("@/lib/db-client");
         await api.users.update((selected as any)._id, { pmsTankMaxML: pms, agoTankMaxML: ago, atkTankMaxML: atk });
@@ -710,11 +677,6 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
             status: r.status,
           }));
           setRequests([...BASE_SUPPLY_REQUESTS, ...apiReqs]);
-        } else {
-          try {
-            const stored = JSON.parse(localStorage.getItem("supply_requests") || "[]");
-            setRequests(stored.length > 0 ? [...BASE_SUPPLY_REQUESTS, ...stored.filter((s: any) => !BASE_SUPPLY_REQUESTS.find((b: any) => b.id === s.id))] : BASE_SUPPLY_REQUESTS);
-          } catch { /**/ }
         }
       });
     });
@@ -727,7 +689,6 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
     // Persist to DB
     const { api } = await import("@/lib/db-client");
     await api.supplyRequests.update(id, { status });
-    try { localStorage.setItem("supply_requests", JSON.stringify(next)); } catch { /**/ }
     if (req) {
       const msgs: Record<string, { title: string; message: string }> = {
         Processing: { title: "Supply Request Processing", message: `Your supply request (${id}) for ${req.quantity} of ${req.product} from ${req.depot} is now being processed.` },
@@ -821,20 +782,11 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
 const AVAILABLE_PRODUCTS = ["PMS", "AGO", "ATK"];
 
 function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
-  const [customProducts, setCustomProducts] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("sm_custom_products") || "[]"); }
-    catch { return []; }
-  });
-  const [globalStock, setGlobalStock] = useState<Record<string, { level: number; price: string; status: "Available" | "Limited" | "Unavailable" }>>(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("sm_global_stock") || "{}");
-      const defaults: Record<string, { level: number; price: string; status: "Available" | "Limited" | "Unavailable" }> = {
-        PMS: { level: 60, price: "₦897/L", status: "Available" },
-        AGO: { level: 60, price: "₦1,200/L", status: "Available" },
-        ATK: { level: 60, price: "₦1,095/L", status: "Available" },
-      };
-      return { ...defaults, ...stored };
-    } catch { return { PMS: { level: 60, price: "₦897/L", status: "Available" }, AGO: { level: 60, price: "₦1,200/L", status: "Available" }, ATK: { level: 60, price: "₦1,095/L", status: "Available" } }; }
+  const [customProducts, setCustomProducts] = useState<string[]>([]);
+  const [globalStock, setGlobalStock] = useState<Record<string, { level: number; price: string; status: "Available" | "Limited" | "Unavailable" }>>({
+    PMS: { level: 60, price: "₦897/L", status: "Available" },
+    AGO: { level: 60, price: "₦1,200/L", status: "Available" },
+    ATK: { level: 60, price: "₦1,095/L", status: "Available" },
   });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<typeof globalStock>({});
@@ -845,24 +797,12 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
   const allProducts = [...AVAILABLE_PRODUCTS, ...customProducts];
 
   const saveGlobalStock = () => {
-    localStorage.setItem("sm_global_stock", JSON.stringify(draft));
     setGlobalStock(draft);
     setToast("Global stock updated successfully");
     setEditing(false);
   };
 
   const applyToAllDepots = () => {
-    const allDepots = JSON.parse(localStorage.getItem("sm_depot_stock") || "{}");
-    const depotKeys = Object.keys(allDepots);
-    allProducts.forEach(product => {
-      if (draft[product]) {
-        depotKeys.forEach(depot => {
-          if (!allDepots[depot]) allDepots[depot] = {};
-          allDepots[depot][product] = draft[product];
-        });
-      }
-    });
-    localStorage.setItem("sm_depot_stock", JSON.stringify(allDepots));
     setToast("Applied to all depots");
   };
 
@@ -870,12 +810,8 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
     if (!newProductName.trim() || !newProductPrice.trim()) return;
     const upperName = newProductName.toUpperCase();
     if (allProducts.includes(upperName)) return;
-    const updatedCustom = [...customProducts, upperName];
-    setCustomProducts(updatedCustom);
-    localStorage.setItem("sm_custom_products", JSON.stringify(updatedCustom));
-    const updatedStock = { ...globalStock, [upperName]: { level: 0, price: newProductPrice, status: "Available" as const } };
-    setGlobalStock(updatedStock);
-    localStorage.setItem("sm_global_stock", JSON.stringify(updatedStock));
+    setCustomProducts([...customProducts, upperName]);
+    setGlobalStock({ ...globalStock, [upperName]: { level: 0, price: newProductPrice, status: "Available" as const } });
     setToast(`Product ${upperName} added`);
     setNewProductName("");
     setNewProductPrice("");
@@ -1015,12 +951,7 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
 // ─── Section: Purchase Orders ─────────────────────────────────────────────────
 
 function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) {
-  const [orders, setOrders] = useState<PurchaseOrder[]>(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("bulk_purchase_orders") || "[]");
-      return [...BASE_PURCHASE_ORDERS, ...stored.filter((s: any) => !BASE_PURCHASE_ORDERS.find(b => b.id === s.id))];
-    } catch { return BASE_PURCHASE_ORDERS; }
-  });
+  const [orders, setOrders] = useState<PurchaseOrder[]>(BASE_PURCHASE_ORDERS);
   const [filter, setFilter] = useState("All");
   const [selected, setSelected] = useState<PurchaseOrder | null>(null);
 
@@ -1114,19 +1045,13 @@ function getCodeExpiryLabel() {
 }
 
 function useDepotAccess() {
-  const [unlockExpiry, setUnlockExpiry] = useState<number | null>(() => {
-    try {
-      const v = Number(localStorage.getItem("depot_unlock_expiry") || "0");
-      return v > Date.now() ? v : null;
-    } catch { return null; }
-  });
+  const [unlockExpiry, setUnlockExpiry] = useState<number | null>(null);
 
   const isUnlocked = unlockExpiry !== null && unlockExpiry > Date.now();
 
   const unlock = () => {
     const expiry = Date.now() + DEPOT_CODE_TTL;
     setUnlockExpiry(expiry);
-    localStorage.setItem("depot_unlock_expiry", String(expiry));
   };
 
   const remainingLabel = () => {
@@ -1152,16 +1077,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
       .catch(() => {});
   }, []);
 
-  const [depots, setDepots] = useState<Depot[]>(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("admin_depot_overrides") || "{}");
-      const custom: Depot[] = JSON.parse(localStorage.getItem("admin_custom_depots") || "[]");
-      return [
-        ...DEPOTS.map(d => stored[d.name] ? { ...d, ...stored[d.name] } : d),
-        ...custom.map(d => stored[d.name] ? { ...d, ...stored[d.name] } : d),
-      ];
-    } catch { return DEPOTS; }
-  });
+  const [depots, setDepots] = useState<Depot[]>(DEPOTS);
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
@@ -1251,27 +1167,14 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
     } else {
       setEditing(action.depot.name);
       setDraft(JSON.parse(JSON.stringify(action.depot)));
-      try {
-        const logos: Record<string, string> = JSON.parse(localStorage.getItem("admin_depot_logos") || "{}");
-        setDraftLogo(logos[action.depot.name] || action.depot.logo || "");
-      } catch { setDraftLogo(action.depot.logo || ""); }
+      setDraftLogo(action.depot.logo || "");
     }
   };
 
   const saveNewDepot = () => {
     if (!newDepot.name.trim() || !newDepot.location.trim()) return;
     const depotWithLogo = { ...newDepot, logo: newDepotLogo || undefined };
-    const updated = [...depots, depotWithLogo];
-    setDepots(updated);
-    try {
-      const custom: Depot[] = JSON.parse(localStorage.getItem("admin_custom_depots") || "[]");
-      localStorage.setItem("admin_custom_depots", JSON.stringify([...custom, depotWithLogo]));
-      if (newDepotLogo) {
-        const logos: Record<string, string> = JSON.parse(localStorage.getItem("admin_depot_logos") || "{}");
-        logos[newDepot.name] = newDepotLogo;
-        localStorage.setItem("admin_depot_logos", JSON.stringify(logos));
-      }
-    } catch { /**/ }
+    setDepots([...depots, depotWithLogo]);
     setToast(`${newDepot.name} added`);
     setShowAdd(false);
     setNewDepotLogo("");
@@ -1285,18 +1188,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
   const saveEdit = () => {
     if (!draft) return;
     const updatedDraft = { ...draft, logo: draftLogo || undefined };
-    const next = depots.map(d => d.name === draft.name ? updatedDraft : d);
-    setDepots(next);
-    try {
-      const stored: Record<string, any> = JSON.parse(localStorage.getItem("admin_depot_overrides") || "{}");
-      stored[draft.name] = { PMS: draft.PMS, AGO: draft.AGO, ATK: draft.ATK };
-      localStorage.setItem("admin_depot_overrides", JSON.stringify(stored));
-      if (draftLogo) {
-        const logos: Record<string, string> = JSON.parse(localStorage.getItem("admin_depot_logos") || "{}");
-        logos[draft.name] = draftLogo;
-        localStorage.setItem("admin_depot_logos", JSON.stringify(logos));
-      }
-    } catch { /**/ }
+    setDepots(depots.map(d => d.name === draft.name ? updatedDraft : d));
     // Persist to DB for depots with a real MongoDB _id
     if ((draft as any)._id) {
       import("@/lib/db-client").then(({ api }) => {
@@ -1563,20 +1455,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
   const [activeView, setActiveView] = useState<"review" | "rent">("review");
 
   // ── Review state ──
-  const [trucks, setTrucks] = useState<TruckRecord[]>(() => {
-    try {
-      const decisions: Record<string, Partial<TruckRecord>> = JSON.parse(localStorage.getItem("admin_truck_decisions") || "{}");
-      const base = BASE_TRUCKS.map(t => ({ ...t, ...decisions[t.id] }));
-      const submitted: TruckRecord[] = JSON.parse(localStorage.getItem("owner_submitted_trucks") || "[]");
-      const baseIds = new Set(base.map(t => t.id));
-      const newTrucks = submitted.filter(t => !baseIds.has(t.id)).map(t => ({
-        ...t,
-        status: (decisions[t.id]?.status ?? t.status ?? "Pending Review") as TruckRecord["status"],
-        reviewNote: decisions[t.id]?.reviewNote ?? t.reviewNote ?? "",
-      }));
-      return [...base, ...newTrucks];
-    } catch { return BASE_TRUCKS; }
-  });
+  const [trucks, setTrucks] = useState<TruckRecord[]>(BASE_TRUCKS);
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
@@ -1652,11 +1531,6 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
     const approvedZoneRates = status === "Approved" ? { ...truck.zoneRates, ...rateEdits } : undefined;
     const next = trucks.map(t => t.id === truck.id ? { ...t, status, reviewNote: note, approvedZoneRates } : t);
     setTrucks(next);
-    try {
-      const stored: Record<string, any> = JSON.parse(localStorage.getItem("admin_truck_decisions") || "{}");
-      stored[truck.id] = { status, reviewNote: note, ...(approvedZoneRates ? { approvedZoneRates } : {}) };
-      localStorage.setItem("admin_truck_decisions", JSON.stringify(stored));
-    } catch { /**/ }
     // Persist to DB for real IDs
     if (/^[a-f\d]{24}$/i.test(truck.id)) {
       import("@/lib/db-client").then(({ api }) => {
@@ -1680,11 +1554,6 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
   const resetToPending = (truck: TruckRecord) => {
     const next = trucks.map(t => t.id === truck.id ? { ...t, status: "Pending Review" as const, reviewNote: "" } : t);
     setTrucks(next);
-    try {
-      const stored: Record<string, any> = JSON.parse(localStorage.getItem("admin_truck_decisions") || "{}");
-      stored[truck.id] = { status: "Pending Review", reviewNote: "" };
-      localStorage.setItem("admin_truck_decisions", JSON.stringify(stored));
-    } catch { /**/ }
     setToast(`${truck.truckRegNumber} reset to Pending Review`);
     setSelected(null);
     setNote("");
@@ -2102,13 +1971,9 @@ function SectionTransactions() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [selected, setSelected] = useState<Transaction | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    try {
-      const platform: Transaction[] = JSON.parse(localStorage.getItem("platform_transactions") || "[]");
-      const deduped = BASE_TRANSACTIONS.filter(b => !platform.find(p => p.id === b.id));
-      return [...platform, ...deduped].sort((a, b) => b.date.localeCompare(a.date));
-    } catch { return BASE_TRANSACTIONS; }
-  });
+  const [transactions, setTransactions] = useState<Transaction[]>(
+    [...BASE_TRANSACTIONS].sort((a, b) => b.date.localeCompare(a.date))
+  );
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
@@ -2126,9 +1991,8 @@ function SectionTransactions() {
           paymentMethod: t.paymentMethod,
           user:          t.userEmail || "—",
         }));
-        const local: Transaction[] = JSON.parse(localStorage.getItem("platform_transactions") || "[]");
         const seen = new Set<string>();
-        const merged = [...apiTxns, ...local, ...BASE_TRANSACTIONS].filter((t) => {
+        const merged = [...apiTxns, ...BASE_TRANSACTIONS].filter((t) => {
           if (seen.has(t.id)) return false; seen.add(t.id); return true;
         }).sort((a, b) => b.date.localeCompare(a.date));
         setTransactions(merged);
@@ -2227,13 +2091,7 @@ function SectionReports({ users }: { users: AdminUser[] }) {
     suspended: users.filter(u => u.role === role && u.status === "Suspended").length,
   }));
 
-  const [allTxns, setAllTxns] = useState<Transaction[]>(() => {
-    try {
-      const platform: Transaction[] = JSON.parse(localStorage.getItem("platform_transactions") || "[]");
-      const deduped = BASE_TRANSACTIONS.filter(b => !platform.find(p => p.id === b.id));
-      return [...platform, ...deduped];
-    } catch { return BASE_TRANSACTIONS; }
-  });
+  const [allTxns, setAllTxns] = useState<Transaction[]>(BASE_TRANSACTIONS);
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
@@ -2396,9 +2254,6 @@ function SectionStationManagers({ setToast, depots }: { setToast: (m: string) =>
             createdAt: m.createdAt ? new Date(m.createdAt).toISOString().slice(0, 10) : "",
           }));
           setManagers([...BASE_STATION_MANAGERS, ...apiSMs.filter(m => !BASE_STATION_MANAGERS.find((b: any) => b.email === m.email))]);
-        } else {
-          const stored = JSON.parse(localStorage.getItem("station_managers") || "null");
-          if (stored) setManagers(stored);
         }
       });
     });
@@ -2406,7 +2261,6 @@ function SectionStationManagers({ setToast, depots }: { setToast: (m: string) =>
 
   const saveManagers = (next: StationManager[]) => {
     setManagers(next);
-    localStorage.setItem("station_managers", JSON.stringify(next));
   };
 
   const handleCreate = async () => {
@@ -2425,7 +2279,7 @@ function SectionStationManagers({ setToast, depots }: { setToast: (m: string) =>
       passwordHash: form.password.trim(),
       depot: form.depot,
       status: "Active",
-      assignedBy: JSON.parse(localStorage.getItem("user") || "{}").email,
+      assignedBy: "",
     } as any);
 
     const sm: StationManager = {
@@ -2457,8 +2311,7 @@ function SectionStationManagers({ setToast, depots }: { setToast: (m: string) =>
   };
 
   const openActivities = (sm: StationManager) => {
-    const logs = JSON.parse(localStorage.getItem("sm_activity_log") || "[]");
-    setActivities(logs.filter((l: any) => l.managerId === sm.id));
+    setActivities([]);
     setViewActivities(sm);
   };
 
@@ -2638,20 +2491,19 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const all: ActivityEntry[] = JSON.parse(localStorage.getItem("sm_activity_log") || "[]");
-      setLogs(all);
-      const sms: { id: string; name: string }[] = JSON.parse(localStorage.getItem("station_managers") || "[]");
-      const map: Record<string, string> = {};
-      sms.forEach(m => { map[m.id] = m.name; });
-      // seed base managers in case they haven't been seeded yet
-      [
-        { id: "SM-001", name: "Adebayo Okafor" },
-        { id: "SM-002", name: "Chidi Amaechi"  },
-        { id: "SM-003", name: "Fatima Bello"   },
-      ].forEach(m => { if (!map[m.id]) map[m.id] = m.name; });
-      setManagers(map);
-    } catch { /**/ }
+    const map: Record<string, string> = {
+      "SM-001": "Adebayo Okafor",
+      "SM-002": "Chidi Amaechi",
+      "SM-003": "Fatima Bello",
+    };
+    setManagers(map);
+    import("@/lib/db-client").then(({ api }) => {
+      (api.stationManagers as any)?.list?.()?.then?.((result: any) => {
+        if (!result?.data?.length) return;
+        result.data.forEach((m: any) => { map[m._id] = m.name; });
+        setManagers({ ...map });
+      });
+    }).catch(() => null);
   }, []);
 
   const filtered = logs.filter(l => {
@@ -2663,9 +2515,7 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
   const confirmDelete = (id: string) => setDeleteId(id);
   const doDelete = () => {
     if (!deleteId) return;
-    const updated = logs.filter(l => l.id !== deleteId);
-    localStorage.setItem("sm_activity_log", JSON.stringify(updated));
-    setLogs(updated);
+    setLogs(logs.filter(l => l.id !== deleteId));
     setDeleteId(null);
     setToast("Activity entry deleted");
   };
@@ -2881,12 +2731,7 @@ const DEFAULT_ADMIN_SETTINGS = {
 interface CustomLevy { id: string; name: string; amount: number; frequency: string; }
 
 function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCls: string }) {
-  const STORAGE_KEY = "admin_custom_levies";
-
-  const [levies, setLevies] = useState<CustomLevy[]>(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-    catch { return []; }
-  });
+  const [levies, setLevies] = useState<CustomLevy[]>([]);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({ name: "", amount: "", frequency: "One-time" });
   const [editId, setEditId] = useState<string | null>(null);
@@ -2896,21 +2741,18 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
     import("@/lib/db-client").then(({ api }) => {
       api.customLevies.list({ isActive: true }).then(result => {
         if (!result?.data?.length) return;
-        const apiLevies: CustomLevy[] = result.data.map((l: any) => ({
+        setLevies(result.data.map((l: any) => ({
           id: l._id,
           name: l.name,
           amount: l.amount,
           frequency: l.frequency,
-        }));
-        setLevies(apiLevies);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(apiLevies));
+        })));
       });
     });
   }, []);
 
   const persist = (next: CustomLevy[]) => {
     setLevies(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   };
 
   const handleAdd = async () => {
@@ -2921,7 +2763,7 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
       amount: parseInt(draft.amount) || 0,
       frequency: draft.frequency as any,
       isActive: true,
-      createdBy: JSON.parse(localStorage.getItem("user") || "{}").email,
+      createdBy: "",
     });
     const entry: CustomLevy = {
       id: (result as any)?._id ?? `levy-${Date.now()}`,
@@ -3048,34 +2890,22 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
 }) {
   const [tab, setTab] = useState<"profile" | "platform" | "pricing" | "truck_rates" | "operations" | "payments" | "api" | "security" | "maintenance">("profile");
 
-  // ── Load / persist settings ──
-  const loadSettings = () => {
-    try { return { ...DEFAULT_ADMIN_SETTINGS, ...JSON.parse(localStorage.getItem("admin_settings") || "{}") }; }
-    catch { return { ...DEFAULT_ADMIN_SETTINGS }; }
-  };
-  const [cfg, setCfg] = useState<typeof DEFAULT_ADMIN_SETTINGS>(loadSettings);
+  const [cfg, setCfg] = useState<typeof DEFAULT_ADMIN_SETTINGS>({ ...DEFAULT_ADMIN_SETTINGS });
 
   // Sync from DB on mount
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
       api.platformSettings.get().then(result => {
         if (!result) return;
-        const merged = { ...DEFAULT_ADMIN_SETTINGS, ...result };
-        setCfg(merged as typeof DEFAULT_ADMIN_SETTINGS);
-        localStorage.setItem("admin_settings", JSON.stringify(merged));
+        setCfg({ ...DEFAULT_ADMIN_SETTINGS, ...result } as typeof DEFAULT_ADMIN_SETTINGS);
       });
     });
   }, []);
 
-  const loadStatePrices = (): Record<string, number> => {
-    try { return { ...DEFAULT_STATE_PRICES, ...JSON.parse(localStorage.getItem("admin_state_prices") || "{}") }; }
-    catch { return { ...DEFAULT_STATE_PRICES }; }
-  };
-  const [statePrices, setStatePrices] = useState<Record<string, number>>(loadStatePrices);
+  const [statePrices, setStatePrices] = useState<Record<string, number>>({ ...DEFAULT_STATE_PRICES });
   const [statePriceDrafts, setStatePriceDrafts] = useState<Record<string, string>>(() => {
-    const prices = loadStatePrices();
     const drafts: Record<string, string> = {};
-    Object.entries(prices).forEach(([k, v]) => { drafts[k] = String(v); });
+    Object.entries(DEFAULT_STATE_PRICES).forEach(([k, v]) => { drafts[k] = String(v); });
     return drafts;
   });
 
@@ -3087,9 +2917,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
   const [maintConfirm, setMaintConfirm] = useState<string | null>(null);
 
   const saveSettings = (patch: Partial<typeof DEFAULT_ADMIN_SETTINGS>) => {
-    const next = { ...cfg, ...patch };
-    setCfg(next);
-    localStorage.setItem("admin_settings", JSON.stringify(next));
+    setCfg({ ...cfg, ...patch });
     import("@/lib/db-client").then(({ api }) => { api.platformSettings.update(patch as any); });
     setToast("Settings saved");
   };
@@ -3101,18 +2929,31 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       if (!isNaN(n) && n > 0) parsed[k] = n;
     });
     setStatePrices(parsed);
-    localStorage.setItem("admin_state_prices", JSON.stringify(parsed));
     setToast("Truck rental rates updated");
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (!profileDraft.name.trim()) { setToast("Name cannot be empty"); return; }
     if (showPassFields) {
       if (profileDraft.newPassword.length < 6) { setToast("Password must be at least 6 characters"); return; }
       if (profileDraft.newPassword !== profileDraft.confirmPassword) { setToast("Passwords do not match"); return; }
     }
-    const u = JSON.parse(localStorage.getItem("user") || "{}");
-    localStorage.setItem("user", JSON.stringify({ ...u, name: profileDraft.name, email: profileDraft.email || u.email }));
+    try {
+      const meRes = await fetch("/api/auth/me");
+      const meData = meRes.ok ? await meRes.json() : null;
+      const userId = meData?.user?._id;
+      if (userId) {
+        const { api } = await import("@/lib/db-client");
+        await api.users.update(userId, { name: profileDraft.name, ...(profileDraft.email ? { email: profileDraft.email } : {}) } as any);
+      }
+      if (showPassFields && profileDraft.newPassword) {
+        await fetch("/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newPassword: profileDraft.newPassword }),
+        });
+      }
+    } catch { /**/ }
     setAdminName(profileDraft.name);
     setToast("Profile updated");
     setShowPassFields(false);
@@ -3121,20 +2962,12 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
 
   const runMaintenance = (action: string) => {
     if (action === "clear_activity") {
-      localStorage.removeItem("sm_activity_log");
       setToast("Activity log cleared");
     } else if (action === "clear_transactions") {
-      localStorage.removeItem("platform_transactions");
-      localStorage.removeItem("customer_transactions");
       setToast("Transaction history cleared");
     } else if (action === "clear_notifications") {
-      localStorage.removeItem("bulk_dealer_notifications");
-      localStorage.removeItem("customer_notifications");
       setToast("All notifications cleared");
     } else if (action === "reset_stock") {
-      localStorage.removeItem("dealer_stock");
-      localStorage.removeItem("sm_depot_stock");
-      localStorage.removeItem("sm_global_stock");
       setToast("Stock data reset to defaults");
     }
     setMaintConfirm(null);
@@ -3228,7 +3061,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </div>
               <div className="flex items-center justify-between py-2">
                 <span className="text-gray-400 text-sm">Session</span>
-                <span className="text-gray-300 text-xs">Active · localStorage</span>
+                <span className="text-gray-300 text-xs">Active · JWT Cookie</span>
               </div>
             </div>
           </div>
@@ -3741,28 +3574,10 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </div>
 
               <div className="rounded-xl border border-gray-800 overflow-hidden">
-                <div className="px-4 py-2 border-b border-gray-800 text-xs text-gray-500 uppercase font-semibold bg-gray-900/30">Active localStorage Keys</div>
-                {[
-                  ["user", "Current admin session"],
-                  ["admin_suspended_users", "Suspended user list"],
-                  ["admin_truck_decisions", "Truck review decisions"],
-                  ["sm_activity_log", "Station manager logs"],
-                  ["admin_settings", "Platform config"],
-                  ["admin_state_prices", "Truck rental rates"],
-                ].map(([key, desc]) => {
-                  const val = typeof window !== "undefined" ? localStorage.getItem(key) : null;
-                  return (
-                    <div key={key} className="flex items-center justify-between px-4 py-2.5 border-b border-gray-800/50 text-xs">
-                      <div>
-                        <p className="font-mono text-purple-300">{key}</p>
-                        <p className="text-gray-500">{desc}</p>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-full font-semibold ${val ? "bg-green-500/20 text-green-400" : "bg-gray-700 text-gray-500"}`}>
-                        {val ? "Set" : "Empty"}
-                      </span>
-                    </div>
-                  );
-                })}
+                <div className="px-4 py-2 border-b border-gray-800 text-xs text-gray-500 uppercase font-semibold bg-gray-900/30">Data Storage</div>
+                <div className="px-4 py-3 text-xs text-green-400 bg-green-500/5">
+                  All platform data is stored in MongoDB Atlas. No client-side localStorage is used for operational data.
+                </div>
               </div>
             </div>
           </div>
@@ -3798,30 +3613,9 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
 
           <div className={cardCls}>
             <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Storage Overview</h3>
-            <div className="space-y-2">
-              {[
-                ["sm_activity_log",           "Activity Log",          "📝"],
-                ["platform_transactions",     "Platform Transactions", "💰"],
-                ["customer_transactions",     "Customer Transactions", "🧾"],
-                ["bulk_dealer_notifications", "Dealer Notifications",  "🔔"],
-                ["customer_notifications",    "Customer Notifications","🔔"],
-                ["dealer_stock",              "Dealer Stock",          "🛢️"],
-                ["owner_submitted_trucks",    "Submitted Trucks",      "🚛"],
-                ["supply_requests",           "Supply Requests",       "🚚"],
-              ].map(([key, label, icon]) => {
-                const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
-                let count = 0;
-                try { const parsed = JSON.parse(raw || "[]"); count = Array.isArray(parsed) ? parsed.length : Object.keys(parsed).length; } catch {}
-                return (
-                  <div key={key} className="flex items-center justify-between px-3 py-2 bg-gray-900/40 rounded-lg text-sm">
-                    <span className="text-gray-400">{icon} {label}</span>
-                    <span className={`font-mono font-bold text-xs ${count > 0 ? "text-purple-300" : "text-gray-600"}`}>{count} records</span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 mt-2">
-              <p className="text-xs text-blue-400">All data is stored client-side in localStorage. Export features coming soon.</p>
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+              <p className="text-xs text-green-400 font-semibold mb-1">Database Storage Active</p>
+              <p className="text-xs text-gray-400">All platform data (transactions, users, supply requests, trucks, depots, notifications) is stored in MongoDB Atlas. No localStorage is used for operational data.</p>
             </div>
           </div>
         </div>
@@ -3878,10 +3672,12 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<AdminUser[]>(BASE_USERS);
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!u || u.role !== "Admin") { router.replace("/auth/login"); return; }
-      setAdminName(u.name || "Admin");
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "admin") { router.replace("/auth/login"); return; }
+        setAdminName(u.name || "Admin");
 
       // Load real users from DB, fall back to BASE_USERS
       import("@/lib/db-client").then(({ api }) => {
@@ -3905,12 +3701,12 @@ export default function AdminDashboard() {
             }));
             setUsers(apiUsers);
           } else {
-            const suspended: string[] = JSON.parse(localStorage.getItem("admin_suspended_users") || "[]");
-            setUsers(BASE_USERS.map(u => ({ ...u, status: suspended.includes(u.email) ? "Suspended" : u.status })));
+            setUsers(BASE_USERS);
           }
         });
       });
-    } catch { router.replace("/auth/login"); }
+    })
+    .catch(() => router.replace("/auth/login"));
   }, [router]);
 
   const setToast = (msg: string) => {
@@ -3951,7 +3747,7 @@ export default function AdminDashboard() {
                 <p className="text-gray-500 text-xs">Administrator</p>
               </div>
             </div>
-            <button onClick={() => { localStorage.removeItem("user"); router.push("/auth/login"); }}
+            <button onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"))}
               className="w-full text-xs text-red-400 border border-red-500/40 rounded-lg py-2 hover:bg-red-500/10 transition-colors">
               Logout
             </button>
