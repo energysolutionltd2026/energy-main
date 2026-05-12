@@ -17,6 +17,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  try {
   if (req.method !== "POST" && req.method !== "PUT") return res.status(405).json({ error: "Method not allowed" });
 
   const secret = req.headers["x-seed-secret"];
@@ -70,4 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     message: "Admin created",
     email: admin.email,
   });
+  } catch (err: any) {
+    return res.status(500).json({ error: err?.message ?? String(err) });
+  }
 }
