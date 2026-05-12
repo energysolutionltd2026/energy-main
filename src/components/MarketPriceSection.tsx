@@ -141,16 +141,11 @@ export default function MarketPriceSection() {
           </div>
         </div>
 
-        {/* Content Area with Sliding Animation */}
-        <div className="relative overflow-hidden">
-          <div
-            className="flex transition-transform duration-500 ease-in-out"
-            style={{
-              transform: activeTab === "prices" ? "translateX(0%)" : "translateX(-100%)",
-            }}
-          >
+        {/* Content Area */}
+        <div className="relative">
+          <div>
             {/* Market Prices Tab */}
-            <div className="w-full flex-shrink-0 p-2 h-full">
+            <div className={`p-2 transition-opacity duration-300 ${activeTab === "prices" ? "block opacity-100" : "hidden opacity-0"}`}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 {/* PMS Card */}
                 <div className="bg-white rounded-lg border-l-4 border-red-500 p-1.5 shadow-sm hover:shadow-md transition-shadow">
@@ -233,7 +228,7 @@ export default function MarketPriceSection() {
             </div>
 
             {/* Price Trend Tab */}
-            <div className="w-full flex-shrink-0 p-2">
+            <div className={`p-2 transition-opacity duration-300 ${activeTab === "trend" ? "block opacity-100" : "hidden opacity-0"}`}>
               <div className="bg-gray-50 rounded-lg p-1.5 border border-gray-200">
                 <h4 className="text-sm font-bold text-gray-800 mb-0.5">4 Month Price Trend</h4>
                 
