@@ -21,10 +21,6 @@ interface SupplyForm {
   notes:        string;
 }
 
-const STATIONS_LIST = [
-  { id: "STN-001", name: "Ikeja Central Fuel Station"  },
-  { id: "STN-002", name: "Lekki Junction Station"       },
-];
 
 const PRODUCTS = [
   { value: "PMS", label: "PMS — Premium Motor Spirit (Petrol)", color: "text-red-400"  },
@@ -47,6 +43,7 @@ export default function RequestSupply() {
   const router = useRouter();
   const { depots, depotProducts, updateProductData } = useDepot();
   const [user, setUser]       = useState<any>(null);
+  const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [reqId, setReqId]     = useState("");
   const [errors, setErrors]   = useState<Partial<SupplyForm>>({});
@@ -69,6 +66,13 @@ export default function RequestSupply() {
         const u = data?.user;
         if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
         setUser(u);
+        import("@/lib/db-client").then(({ api }) => {
+          api.stationManagers.list({ userEmail: u.email, limit: 50 } as any).then((result: any) => {
+            if (result?.data?.length) {
+              setStations(result.data.map((sm: any) => ({ id: sm._id, name: sm.name || sm.depot || sm._id })));
+            }
+          }).catch(() => null);
+        });
       })
       .catch(() => router.push("/auth/login"));
 
@@ -293,14 +297,14 @@ export default function RequestSupply() {
                     className={selectCls}
                     value={form.stationId}
                     onChange={(e) => {
-                      const s = STATIONS_LIST.find((x) => x.id === e.target.value);
+                      const s = stations.find((x) => x.id === e.target.value);
                       setForm((f) => ({ ...f, stationId: e.target.value, stationName: s?.name || "" }));
                       setErrors((er) => ({ ...er, stationId: "" }));
                     }}
                   >
-                    <option value="">Select station</option>
-                    {STATIONS_LIST.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.id})</option>
+                    <option value="">{stations.length === 0 ? "No stations registered" : "Select station"}</option>
+                    {stations.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
                   {errors.stationId && <p className="text-xs text-red-400 mt-1">{errors.stationId}</p>}
