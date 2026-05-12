@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
 
-  sendResetPassword(user.email, user.name, resetUrl).catch(() => null);
+  await sendResetPassword(user.email, user.name, resetUrl).catch(() => null);
 
   return res.status(200).json(ok);
 }

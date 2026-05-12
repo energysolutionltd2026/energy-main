@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await Session.findByIdAndUpdate(session._id, { token });
   setTokenCookie(res, token);
 
-  sendVerifyEmail(user.email, user.name, otpCode).catch((err) => console.error("[signup] email error:", err));
+  await sendVerifyEmail(user.email, user.name, otpCode).catch((err) => console.error("[signup] email error:", err));
 
   return res.status(201).json({
     token,
