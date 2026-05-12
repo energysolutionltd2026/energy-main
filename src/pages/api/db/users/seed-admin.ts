@@ -17,7 +17,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST" && req.method !== "PUT") return res.status(405).json({ error: "Method not allowed" });
 
   const secret = req.headers["x-seed-secret"];
   if (!process.env.SEED_SECRET || secret !== process.env.SEED_SECRET) {
@@ -25,6 +25,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   await connectDB();
+
+  // PUT — update existing admin credentials
+  if (req.method === "PUT") {
+    const { name, email, password } = req.body ?? {};
+    if (!email || !password) return res.status(400).json({ error: "email and password are required" });
+    if (password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+    const passwordHash = await bcrypt.hash(password, 12);
+    const updated = await User.findOneAndUpdate(
+      { role: "admin" },
+      { $set: { email: email.toLowerCase().trim(), passwordHash, ...(name ? { name } : {}), emailVerified: true, status: "active" } },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: "No admin found to update" });
+    return res.status(200).json({ message: "Admin updated", email: updated.email });
+  }
 
   const existing = await User.findOne({ role: "admin" }).lean();
   if (existing) {
