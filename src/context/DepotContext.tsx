@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { DEFAULT_DEPOT_LOGOS } from '../lib/defaultDepotLogos';
+import { api } from '../lib/db-client';
 
 /* ---------------- TYPES ---------------- */
 export type ProductKey = "PMS" | "ATK" | "AGO";
@@ -84,8 +85,7 @@ export const DepotProvider: React.FC<DepotProviderProps> = ({ children }) => {
   const [depotLogos, setDepotLogos] = useState<Record<string, string>>(DEFAULT_DEPOT_LOGOS);
 
   useEffect(() => {
-    import("@/lib/db-client")
-      .then(({ api }) => api.depots.list({ limit: 50 } as any))
+    api.depots.list({ limit: 50 } as any)
       .then((result) => {
         if (!result?.data?.length) return;
         const names: string[] = [];
