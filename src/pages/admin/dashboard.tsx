@@ -1102,22 +1102,8 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
 // ─── Section: Depots ──────────────────────────────────────────────────────────
 
 const EMPTY_DEPOT_PRODUCTS = { level: 0, price: "₦0/L", status: "Available" as DepotProduct["status"] };
-const DEPOT_CODE_TTL = 3 * 60 * 60 * 1000; // 3 hours in ms
-const DEPOT_CODE_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
-const DEPOT_CODE_SECRET = "PNB-DEPOT-CONTROL-SA-2024";
-
-function generateDepotCode(windowIndex: number): string {
-  const seed = `${DEPOT_CODE_SECRET}-${windowIndex}`;
-  let h = 5381;
-  for (let i = 0; i < seed.length; i++) {
-    h = Math.imul(h, 33) ^ seed.charCodeAt(i);
-  }
-  return "DC-" + (Math.abs(h) >>> 0).toString(36).toUpperCase().padStart(6, "0").slice(0, 6);
-}
-
-function getCurrentDepotCode() {
-  return generateDepotCode(Math.floor(Date.now() / DEPOT_CODE_WINDOW));
-}
+const DEPOT_CODE_TTL = 3 * 60 * 60 * 1000;
+const DEPOT_CODE_WINDOW = 6 * 60 * 60 * 1000;
 
 function getCodeExpiryLabel() {
   const nextWindow = (Math.floor(Date.now() / DEPOT_CODE_WINDOW) + 1) * DEPOT_CODE_WINDOW;
@@ -1157,6 +1143,14 @@ function useDepotAccess() {
 
 function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
   const { isUnlocked, unlock, remainingLabel } = useDepotAccess();
+  const [currentCode, setCurrentCode] = useState("••••••••");
+
+  useEffect(() => {
+    fetch("/api/admin/depot-code")
+      .then(r => r.json())
+      .then(d => { if (d.code) setCurrentCode(d.code); })
+      .catch(() => {});
+  }, []);
 
   const [depots, setDepots] = useState<Depot[]>(() => {
     try {
@@ -1226,9 +1220,20 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
     }
   };
 
-  const submitCode = () => {
-    if (codeInput.trim() !== getCurrentDepotCode()) {
-      setCodeError("Invalid code. Please contact the super admin.");
+  const submitCode = async () => {
+    try {
+      const res = await fetch("/api/admin/depot-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: codeInput.trim() }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setCodeError("Invalid code. Please contact the super admin.");
+        return;
+      }
+    } catch {
+      setCodeError("Could not validate code. Try again.");
       return;
     }
     unlock();
@@ -1328,7 +1333,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
           {/* Super admin: current rotating code */}
           <div className="flex items-center gap-2 bg-black/40 border border-gray-700 rounded-lg px-3 py-1.5">
             <span className="text-xs text-gray-500">Control Code:</span>
-            <span className="text-xs font-mono font-bold text-purple-300 tracking-widest">{getCurrentDepotCode()}</span>
+            <span className="text-xs font-mono font-bold text-purple-300 tracking-widest">{currentCode}</span>
             <span className="text-xs text-gray-600">· rotates in {getCodeExpiryLabel()}</span>
           </div>
         </div>
