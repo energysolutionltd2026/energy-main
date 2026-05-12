@@ -151,9 +151,9 @@ export default function MarketPriceSection() {
           >
             {/* Market Prices Tab */}
             <div className="w-full flex-shrink-0 p-2 h-full">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 h-40 bg-snow-500">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 {/* PMS Card */}
-                <div className="bg-white rounded-lg border-l-4 border-red-500 p-1.5 shadow-sm hover:shadow-md transition-shadow h-full">
+                <div className="bg-white rounded-lg border-l-4 border-red-500 p-1.5 shadow-sm hover:shadow-md transition-shadow">
                   <h5 className="text-sm font-bold text-red-600 mb-0.5 flex items-center gap-2">
                     <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                     PMS (Petrol)
@@ -179,7 +179,7 @@ export default function MarketPriceSection() {
                 </div>
 
                 {/* ATK Card */}
-                <div className="bg-white rounded-lg border-l-4 border-green-500 p-1.5 shadow-sm hover:shadow-md transition-shadow h-full">
+                <div className="bg-white rounded-lg border-l-4 border-green-500 p-1.5 shadow-sm hover:shadow-md transition-shadow">
                   <h5 className="text-sm font-bold text-green-600 mb-0.5 flex items-center gap-2">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     ATK (Jet Fuel)
