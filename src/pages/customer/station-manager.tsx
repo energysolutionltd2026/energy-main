@@ -233,11 +233,14 @@ export default function StationManager() {
   const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
-    const str = localStorage.getItem("user");
-    if (!str) { router.push("/auth/login"); return; }
-    const u = JSON.parse(str);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) return (

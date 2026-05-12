@@ -486,27 +486,31 @@ export default function BuyNow() {
   }, []);
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) return;
-    const u = JSON.parse(userStr);
-    if (u.role === "Customer") setIsCustomer(true);
-    setFormData((f) => ({
-      ...f,
-      company: {
-        ...f.company,
-        name: u.companyName || "",
-        telephone: u.phone || "",
-        email: u.email || "",
-        headOfficeAddress: u.address || "",
-      },
-      owner: {
-        ...f.owner,
-        name: u.name || "",
-        telephone: u.phone || "",
-        email: u.email || "",
-        address: u.address || "",
-      },
-    }));
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u) return;
+        if (u.role === "customer") setIsCustomer(true);
+        setFormData((f) => ({
+          ...f,
+          company: {
+            ...f.company,
+            name: u.companyName || "",
+            telephone: u.phone || "",
+            email: u.email || "",
+            headOfficeAddress: u.address || "",
+          },
+          owner: {
+            ...f.owner,
+            name: u.name || "",
+            telephone: u.phone || "",
+            email: u.email || "",
+            address: u.address || "",
+          },
+        }));
+      })
+      .catch(() => null);
   }, []);
 
   const [formData, setFormData] = useState<FormData>({

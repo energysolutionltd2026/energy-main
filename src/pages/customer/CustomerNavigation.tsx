@@ -88,8 +88,7 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    router.push("/auth/login");
+    fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"));
   };
 
   return (

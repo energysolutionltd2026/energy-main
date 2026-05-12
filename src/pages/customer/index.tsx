@@ -91,29 +91,29 @@ export default function CustomerDashboard() {
   const [greeting, setGreeting]     = useState("Good day");
 
   useEffect(() => {
-    const str = localStorage.getItem("user");
-    if (!str) { router.push("/auth/login"); return; }
-    const u = JSON.parse(str);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
 
-    const h = new Date().getHours();
-    setGreeting(h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening");
+        const h = new Date().getHours();
+        setGreeting(h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening");
 
-    // Load from API, fall back to localStorage
-    import("@/lib/db-client").then(({ api }) => {
-      api.transactions.list({ limit: 5 }).then(result => {
-        if (result?.data?.length) setTxns(result.data);
-        else setTxns(JSON.parse(localStorage.getItem("customer_transactions") || "[]").slice(0, 5));
-      });
-      api.supplyRequests.list({ requestedBy: u.email, limit: 4 }).then(result => {
-        if (result?.data?.length) setSupply(result.data);
-        else setSupply(JSON.parse(localStorage.getItem("supply_requests") || "[]").slice(0, 4));
-      });
-    });
+        import("@/lib/db-client").then(({ api }) => {
+          api.transactions.list({ limit: 5 }).then(result => {
+            if (result?.data?.length) setTxns(result.data);
+          });
+          api.supplyRequests.list({ requestedBy: u.email, limit: 4 }).then(result => {
+            if (result?.data?.length) setSupply(result.data);
+          });
+        });
 
-    const stopTracking = startTracking({ id: u.email, name: u.name, email: u.email, role: u.role, lastSeen: Date.now() });
-    return stopTracking;
+        const stopTracking = startTracking({ id: u.email, name: u.name, email: u.email, role: u.role, lastSeen: Date.now() });
+        return stopTracking;
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) return (

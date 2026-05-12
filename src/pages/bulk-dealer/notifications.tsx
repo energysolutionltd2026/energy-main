@@ -109,7 +109,7 @@ export default function BulkDealerNotifications() {
             <Link href="/bulk-dealer/dashboard" className="text-sm text-gray-400 hover:text-white border border-gray-700 px-4 py-2 rounded-lg transition">
               ← Dashboard
             </Link>
-            <button onClick={() => { localStorage.removeItem("user"); router.push("/auth/login"); }}
+            <button onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"))}
               className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

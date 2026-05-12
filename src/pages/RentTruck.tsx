@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import FlowCompleteModal from "@/components/FlowCompleteModal";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { sanitizeString } from "@/lib/security/sanitize";
+import { logTransaction } from "@/utils/logTransaction";
 import Link from "next/link";
 import tower from "@/../public/tower.jpg";
 import { DEPOTS } from "@/context/DepotContext";
@@ -123,26 +124,6 @@ const MOCK_TRUCK_OWNER = {
 
 const INITIAL_OWNER_TRUCKS: OwnerTruck[] = [];
 
-// ─── Apply Admin Decisions ────────────────────────────────────────────────────
-
-function applyAdminDecisions(trucks: OwnerTruck[]): OwnerTruck[] {
-  try {
-    const decisions: Record<string, { status: string; reviewNote?: string }> = JSON.parse(
-      localStorage.getItem("admin_truck_decisions") || "{}"
-    );
-    return trucks.map((t) => {
-      if (!t.listingId || !decisions[t.listingId]) return t;
-      const d = decisions[t.listingId];
-      const ownerStatus =
-        d.status === "Approved" ? "approved" :
-        d.status === "Rejected" ? "rejected" :
-        "under_review";
-      return { ...t, status: ownerStatus, reviewNote: d.reviewNote ?? t.reviewNote };
-    });
-  } catch {
-    return trucks;
-  }
-}
 
 // ─── Mock Truck Database ──────────────────────────────────────────────────────
 
@@ -293,23 +274,26 @@ export default function RentTruck() {
   const [isCustomer, setIsCustomer] = useState(false);
 
    useEffect(() => {
-     const userStr = localStorage.getItem("user");
-     if (userStr) {
-       const u = JSON.parse(userStr);
-       if (u.role === "Customer") setIsCustomer(true);
-       setRegistration((prev) => ({
-         ...prev,
-         ownerName: u.name || "",
-         ownerEmail: u.email || "",
-         ownerPhone: u.phone || "",
-       }));
-       setRentBook((prev) => ({
-         ...prev,
-         fullName: u.name || "",
-         phone: u.phone || "",
-         email: u.email || "",
-       }));
-     }
+     fetch("/api/auth/me")
+       .then((r) => (r.ok ? r.json() : null))
+       .then((data) => {
+         const u = data?.user;
+         if (!u) return;
+         if (u.role === "customer") setIsCustomer(true);
+         setRegistration((prev) => ({
+           ...prev,
+           ownerName: u.name || "",
+           ownerEmail: u.email || "",
+           ownerPhone: u.phone || "",
+         }));
+         setRentBook((prev) => ({
+           ...prev,
+           fullName: u.name || "",
+           phone: u.phone || "",
+           email: u.email || "",
+         }));
+       })
+       .catch(() => null);
    }, []);
 
    useEffect(() => {
@@ -454,11 +438,6 @@ export default function RentTruck() {
       tractorImageUrl,
       tankImageUrl,
     };
-    try {
-      const existing = JSON.parse(localStorage.getItem("owner_submitted_trucks") || "[]");
-      localStorage.setItem("owner_submitted_trucks", JSON.stringify([...existing, adminRecord]));
-    } catch { /**/ }
-
     // Persist to DB
     import("@/lib/db-client").then(({ api }) => {
       api.trucks.create({
@@ -569,20 +548,26 @@ export default function RentTruck() {
   const [showOwnerRegister, setShowOwnerRegister] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
-  const [ownerTrucks, setOwnerTrucks] = useState<OwnerTruck[]>(() => applyAdminDecisions(INITIAL_OWNER_TRUCKS));
+  const [ownerTrucks, setOwnerTrucks] = useState<OwnerTruck[]>([]);
   const [selectedOwnerTruck, setSelectedOwnerTruck] = useState<OwnerTruck | null>(null);
   const [editForm, setEditForm] = useState<OwnerTruck | null>(null);
 
   const handleTruckOwnerLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginForm.email === MOCK_TRUCK_OWNER.email && loginForm.password === MOCK_TRUCK_OWNER.password) {
-      setTruckOwner(MOCK_TRUCK_OWNER);
-      setShowLoginSlide(false);
-      setLoginError("");
-      setLoginForm({ email: "", password: "" });
-    } else {
-      setLoginError("Invalid email or password.");
-    }
+    import("@/lib/db-client").then(({ api }) => {
+      api.auth.login({ email: loginForm.email, password: loginForm.password }).then((result) => {
+        if (result?.user && result.user.role === "truck_owner") {
+          setTruckOwner({ name: result.user.name || "", email: result.user.email || "", phone: (result.user as any).phone || "", company: (result.user as any).companyName || "", ownerId: result.user._id || "" });
+          setShowLoginSlide(false);
+          setLoginError("");
+          setLoginForm({ email: "", password: "" });
+        } else if (result?.user) {
+          setLoginError("This account is not registered as a truck owner.");
+        } else {
+          setLoginError("Invalid email or password.");
+        }
+      }).catch(() => setLoginError("Login failed. Please try again."));
+    });
   };
 
   const handleSaveTruck = () => {
@@ -592,35 +577,22 @@ export default function RentTruck() {
     setEditForm(null);
   };
 
-  // Save rental booking to localStorage (for admin view / transaction history)
   const saveRentalBooking = (reference: string) => {
     const price = STATE_PRICES[rentBook.state] || 0;
     const days = Number(rentBook.rentalDays || 1);
     const total = price * days;
-
-    const booking = {
-      id: reference,
-      date: new Date().toISOString().slice(0, 10),
+    logTransaction({
       type: "Truck Rental",
-      depot: rentBook.depot,
-      product: rentBook.productType || "—",
-      quantity: `${rentBook.rentalDays} day(s)`,
-      unitPrice: `₦${price.toLocaleString()}`,
+      user: rentBook.fullName || "Customer",
+      userRole: "Customer",
+      product: `Truck to ${rentBook.state}`,
+      quantity: `${days} day(s)`,
       totalAmount: `₦${total.toLocaleString()}`,
       status: "Pending",
       paymentMethod: rentBook.paymentMethod,
-      truckNumber: `${rentBook.capacity}L ${rentBook.vehicleType}`,
-      customerName: rentBook.fullName,
-      customerPhone: rentBook.phone,
-      customerEmail: rentBook.email || "—",
-      destinationState: rentBook.state,
-      destinationTown: rentBook.lga,
-      destinationAddress: rentBook.destinationAddress,
-      notes: rentBook.notes,
-      company: rentBook.company,
-    };
-    const existing = JSON.parse(localStorage.getItem("customer_transactions") || "[]");
-    localStorage.setItem("customer_transactions", JSON.stringify([booking, ...existing]));
+      depot: rentBook.depot,
+      reference,
+    });
   };
 
   const handlePaystack = () => {
@@ -675,13 +647,13 @@ export default function RentTruck() {
     }
   };
 
-  // Refresh admin decisions when truck owner logs in and on window focus
   useEffect(() => {
     if (!truckOwner) return;
-    setOwnerTrucks(applyAdminDecisions(INITIAL_OWNER_TRUCKS));
-    const onFocus = () => setOwnerTrucks(applyAdminDecisions(INITIAL_OWNER_TRUCKS));
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    import("@/lib/db-client").then(({ api }) => {
+      api.trucks.list({ ownerEmail: truckOwner.email } as any).then((result: any) => {
+        if (result?.data?.length) setOwnerTrucks(result.data);
+      }).catch(() => null);
+    }).catch(() => null);
   }, [truckOwner]);
 
   // When a truck owner logs in, auto-fill their profile into the register form

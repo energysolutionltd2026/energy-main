@@ -40,12 +40,7 @@ export default function SignUp() {
       if (settings && settings.allowNewRegistrations === false) {
         setRegistrationsOpen(false);
       }
-    }).catch(() => {
-      try {
-        const saved = JSON.parse(localStorage.getItem("admin_settings") || "{}");
-        if (saved.allowNewRegistrations === false) setRegistrationsOpen(false);
-      } catch { /**/ }
-    });
+    }).catch(() => null);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -103,31 +98,13 @@ export default function SignUp() {
     });
 
     if (result) {
-      // API created the user; store basic info for verify-email page
-      localStorage.setItem("user", JSON.stringify({
-        email: safe.email,
-        name: safe.name,
-        phone: safe.phone,
-        role: safe.role,
-        emailVerified: false,
-      }));
       setRegisteredEmail(safe.email);
       setVerificationSent(true);
       setIsLoading(false);
       return;
     }
 
-    // ── 2. Fallback: localStorage-only (no DB connected yet) ──────────────────
-    localStorage.setItem("user", JSON.stringify({
-      email: safe.email,
-      name: safe.name,
-      phone: safe.phone,
-      role: safe.role,
-      emailVerified: false,
-    }));
-
-    setRegisteredEmail(safe.email);
-    setVerificationSent(true);
+    setError("Sign up failed. Please try again.");
     setIsLoading(false);
   };
 

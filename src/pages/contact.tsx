@@ -113,8 +113,10 @@ export default function Contact() {
   const router = useRouter();
 
   useEffect(() => {
-    const u = localStorage.getItem("user");
-    if (u) setIsLoggedIn(true);
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.user) setIsLoggedIn(true); })
+      .catch(() => null);
   }, []);
 
   const update = (d: Partial<ContactForm>) =>

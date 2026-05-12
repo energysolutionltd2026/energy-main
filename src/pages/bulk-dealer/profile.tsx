@@ -115,62 +115,33 @@ export default function BulkDealerProfile() {
   const [activeTab, setActiveTab] = useState("Business");
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) { router.push("/auth/login"); return; }
-    const u = JSON.parse(stored);
-    if (u.role !== "Bulk Dealer") { router.push("/auth/login"); return; }
-    setUser(u);
-
-    // Load from localStorage first for instant render, then sync from DB
-    const saved = localStorage.getItem("bulk_dealer_profile");
-    const base: DealerProfile = saved ? JSON.parse(saved) : {
-      ...EMPTY, name: u.name, email: u.email, role: u.role,
-    };
-    setProfile(base);
-    if (!saved) localStorage.setItem("bulk_dealer_profile", JSON.stringify(base));
-
-    // Sync real data from DB
-    import("@/lib/db-client").then(({ api }) => {
-      api.auth.me().then((res) => {
-        if (!res) return;
-        const db = res.user as any;
-        const merged: DealerProfile = {
-          ...base,
-          name:               db.name               || base.name,
-          email:              db.email              || base.email,
-          phone:              db.phone              || base.phone,
-          companyName:        db.companyName        || base.companyName,
-          rcNumber:           db.rcNumber           || base.rcNumber,
-          dprLicence:         db.dprLicence         || base.dprLicence,
-          tinNumber:          db.tinNumber          || base.tinNumber,
-          headOfficeAddress:  db.headOfficeAddress  || base.headOfficeAddress,
-          state:              db.state              || base.state,
-          lga:                db.lga                || base.lga,
-          officialIdType:     db.officialIdType     || base.officialIdType,
-          idNumber:           db.idNumber           || base.idNumber,
-          idIssueDate:        db.idIssueDate        || base.idIssueDate,
-          idExpiryDate:       db.idExpiryDate       || base.idExpiryDate,
-          idIssuingAuthority: db.idIssuingAuthority || base.idIssuingAuthority,
-          bankName:           db.bankName           || base.bankName,
-          accountName:        db.accountName        || base.accountName,
-          accountNumber:      db.accountNumber      || base.accountNumber,
-          bankBranch:         db.bankBranch         || base.bankBranch,
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "bulk_dealer") { router.push("/auth/login"); return; }
+        setUser(u);
+        const base: DealerProfile = {
+          ...EMPTY, name: u.name || "", email: u.email || "", role: u.role,
+          phone: u.phone || "", companyName: u.companyName || "",
+          rcNumber: u.rcNumber || "", dprLicence: u.dprLicence || "",
+          tinNumber: u.tinNumber || "", headOfficeAddress: u.headOfficeAddress || "",
+          state: u.state || "", lga: u.lga || "",
+          bankName: u.bankName || "", accountName: u.accountName || "",
+          accountNumber: u.accountNumber || "", bankBranch: u.bankBranch || "",
         };
-        setProfile(merged);
-        localStorage.setItem("bulk_dealer_profile", JSON.stringify(merged));
-      });
-    });
+        setProfile(base);
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   const startEdit = () => { setDraft(profile); setEditing(true); };
   const cancel    = () => setEditing(false);
   const save = () => {
     setProfile(draft);
-    localStorage.setItem("bulk_dealer_profile", JSON.stringify(draft));
     setEditing(false);
     setToast("Profile updated successfully!");
     setTimeout(() => setToast(""), 2500);
-    // Persist to DB if user has a real _id
     if (user?._id) {
       import("@/lib/db-client").then(({ api }) => {
         const { password: _pw, role: _r, ...patch } = draft;
@@ -204,7 +175,7 @@ export default function BulkDealerProfile() {
             <Link href="/bulk-dealer/dashboard" className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 px-4 py-2 rounded-lg transition">
               ← Dashboard
             </Link>
-            <button onClick={() => { localStorage.removeItem("user"); router.push("/auth/login"); }}
+            <button onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"))}
               className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

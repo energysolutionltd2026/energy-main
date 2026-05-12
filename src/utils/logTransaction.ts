@@ -34,7 +34,7 @@ export function logTransaction(txn: Omit<PlatformTransaction, "id" | "timestamp"
     userRole:      txn.userRole,
     product:       txn.product,
     quantity:      txn.quantity,
-    totalAmount:   txn.totalAmount,
+    totalAmount:   Number(String(txn.totalAmount).replace(/[₦,\s]/g, "")) || 0,
     status:        txn.status,
     paymentMethod: txn.paymentMethod,
     depot:         txn.depot,
@@ -42,6 +42,6 @@ export function logTransaction(txn: Omit<PlatformTransaction, "id" | "timestamp"
   };
 
   import("@/lib/db-client")
-    .then(({ api }) => api.transactions.create(entry))
+    .then(({ api }) => api.transactions.create(entry as any))
     .catch(() => null);
 }

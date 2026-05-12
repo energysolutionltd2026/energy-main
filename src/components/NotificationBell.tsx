@@ -98,66 +98,6 @@ function mergeNotifications(base: Notification[], stored: Notification[]): Notif
   return merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
-function buildDynamicNotifications(): Notification[] {
-  const dynamic: Notification[] = [];
-  const now = Date.now();
-
-  // From supply requests
-  try {
-    const reqs: any[] = JSON.parse(localStorage.getItem("supply_requests") || "[]");
-    reqs.slice(0, 3).forEach((r) => {
-      dynamic.push({
-        id:        `supply-${r.id}`,
-        type:      "supply",
-        title:     "Supply Request Submitted",
-        message:   `${r.product} (${r.quantity}) from ${r.depot} to ${r.stationName || r.stationId} — ${r.priority} priority.`,
-        href:      "/customer/station-manager",
-        timestamp: r.requestedAt || new Date(now - 2 * 3600000).toISOString(),
-        read:      false,
-      });
-    });
-  } catch {}
-
-  // From transactions
-  try {
-    const txns: any[] = JSON.parse(localStorage.getItem("customer_transactions") || "[]");
-    txns.slice(0, 2).forEach((t) => {
-      dynamic.push({
-        id:        `txn-${t.id}`,
-        type:      "transaction",
-        title:     t.status === "Completed" ? "Transaction Completed" : "Transaction Pending",
-        message:   `${t.product || t.description || "Order"} — ${t.amount || t.total || ""} is ${(t.status || "Pending").toLowerCase()}.`,
-        href:      "/customer/TransactionHistory",
-        timestamp: t.date ? new Date(t.date).toISOString() : new Date(now - 5 * 3600000).toISOString(),
-        read:      t.status === "Completed",
-      });
-    });
-  } catch {}
-
-  return dynamic;
-}
-
-// ─── Storage ──────────────────────────────────────────────────────────────────
-
-const STORAGE_KEY = "customer_notifications";
-
-function loadNotifications(): Notification[] {
-  try {
-    const stored: Notification[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const base    = generateBaseNotifications();
-    const dynamic = buildDynamicNotifications();
-    const all     = mergeNotifications([...base, ...dynamic], stored);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-    return all;
-  } catch {
-    return generateBaseNotifications();
-  }
-}
-
-function saveNotifications(notifs: Notification[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notifs));
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function NotificationBell() {
@@ -167,7 +107,23 @@ export default function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setNotifs(loadNotifications());
+    import("@/lib/db-client").then(({ api }) => {
+      (api.notifications as any)?.list?.({ limit: 20 }).then((result: any) => {
+        if (result?.data?.length) {
+          setNotifs(result.data.map((n: any) => ({
+            id: n._id || n.id,
+            type: n.type || "info",
+            title: n.title || "Notification",
+            message: n.message || "",
+            href: n.href || "#",
+            timestamp: n.createdAt || n.timestamp || new Date().toISOString(),
+            read: n.read ?? false,
+          })));
+        } else {
+          setNotifs(generateBaseNotifications());
+        }
+      }).catch(() => setNotifs(generateBaseNotifications()));
+    }).catch(() => setNotifs(generateBaseNotifications()));
   }, []);
 
   // Close on outside click
@@ -182,15 +138,14 @@ export default function NotificationBell() {
   const unread = notifs.filter((n) => !n.read).length;
 
   const markRead = (id: string) => {
-    const updated = notifs.map((n) => n.id === id ? { ...n, read: true } : n);
-    setNotifs(updated);
-    saveNotifications(updated);
+    setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    import("@/lib/db-client").then(({ api }) => {
+      (api.notifications as any)?.update?.(id, { read: true }).catch(() => null);
+    }).catch(() => null);
   };
 
   const markAllRead = () => {
-    const updated = notifs.map((n) => ({ ...n, read: true }));
-    setNotifs(updated);
-    saveNotifications(updated);
+    setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const handleClick = (notif: Notification) => {

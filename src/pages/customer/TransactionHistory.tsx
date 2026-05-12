@@ -454,26 +454,35 @@ export default function TransactionHistory() {
   const [filterProduct, setFilterProduct] = useState("All");
 
   useEffect(() => {
-    // Check if user is logged in
-    const userStr = localStorage.getItem("user");
-    if (!userStr) {
-      router.push("/auth/login");
-      return;
-    }
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
 
-    const userData = JSON.parse(userStr);
-    if (userData.role !== "Customer") {
-      router.push("/auth/login");
-      return;
-    }
-
-    setUser(userData);
-
-    // Merge real transactions from localStorage with mock data
-    const stored = JSON.parse(localStorage.getItem("customer_transactions") || "[]");
-    if (stored.length > 0) {
-      setTransactions([...stored, ...MOCK_TRANSACTIONS]);
-    }
+        import("@/lib/db-client").then(({ api }) => {
+          api.transactions.list({ limit: 200 } as any).then((result) => {
+            const apiTxns = (result?.data ?? []).map((t: any) => ({
+              id: t.reference || t._id,
+              date: t.createdAt ? t.createdAt.slice(0, 10) : "",
+              type: (t.type === "union_dues" ? "Union Dues" : t.type === "truck_rental" ? "Truck Rental" : "Fuel Purchase") as any,
+              depot: t.depot || "—",
+              product: t.product || "—",
+              quantity: t.quantity ? `${Number(t.quantity).toLocaleString()}` : "—",
+              unitPrice: t.unitPrice ? `₦${Number(t.unitPrice).toLocaleString()}` : "—",
+              totalAmount: `₦${Number(t.totalAmount || 0).toLocaleString()}`,
+              status: t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
+              paymentMethod: t.paymentMethod || "—",
+              truckNumber: t.truckNumber || "—",
+            }));
+            const combined = [...apiTxns, ...MOCK_TRANSACTIONS];
+            const seen = new Set<string>();
+            setTransactions(combined.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; }) as Transaction[]);
+          });
+        });
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) {

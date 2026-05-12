@@ -13,10 +13,10 @@ const PmsTankSimulation = ({ level, logo }: PmsTankSimulationProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      setIsAdmin(u?.role === 'Admin');
-    } catch { /**/ }
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.user?.role === "admin") setIsAdmin(true); })
+      .catch(() => null);
   }, []);
 
   useEffect(() => { setLiquidLevel(level); }, [level]);

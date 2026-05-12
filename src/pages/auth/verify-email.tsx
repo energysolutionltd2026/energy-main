@@ -59,13 +59,6 @@ export default function VerifyEmail() {
     const result = await api.auth.verifyEmail({ email: emailStr, code });
 
     if (result?.ok) {
-      // Mark verified in localStorage for backward compat
-      try {
-        const stored = JSON.parse(localStorage.getItem("user") || "{}");
-        stored.emailVerified = true;
-        localStorage.setItem("user", JSON.stringify(stored));
-      } catch { /**/ }
-
       router.push("/auth/login?verified=1");
       return;
     }

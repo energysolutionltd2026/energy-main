@@ -83,16 +83,7 @@ const Field = ({
   </div>
 );
 
-// ─── Helper: Get fixed dues amount set by admin ────────────────────────────────
-
-function getAdminFixedDuesAmount(): number {
-  try {
-    const stored = localStorage.getItem("admin_fixed_dues_amount");
-    return stored ? parseFloat(stored) : 300000; // default fallback
-  } catch {
-    return 300000;
-  }
-}
+const DEFAULT_DUES_AMOUNT = 300000;
 
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 
@@ -213,8 +204,8 @@ const MemberStage = ({
 
 // ─── Stage 2: Select Dues ─────────────────────────────────────────────────────
 
-const DuesStage = () => {
-  const total = getAdminFixedDuesAmount();
+const DuesStage = ({ amount }: { amount: number }) => {
+  const total = amount;
 
   return (
     <div className="space-y-4">
@@ -438,13 +429,14 @@ const PaymentStage = ({
 
 const InvoiceModal = ({
   formData,
+  total,
   onClose,
 }: {
   formData: FormData;
+  total: number;
   onClose: () => void;
 }) => {
   const { member, payment } = formData;
-  const total = getAdminFixedDuesAmount();
 
   const lineItems: { label: string; desc: string; amount: number }[] = [
     { label: "Union Dues (All Applicable Fees)", desc: "Covers: Annual Membership, Product Handling Levy, Loading Fee, Depot Access, Regulatory Compliance", amount: total },
@@ -593,6 +585,7 @@ export default function PayDues() {
   const [showFlowModal, setShowFlowModal] = useState(false);
   const [isCustomer, setIsCustomer] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [duesAmount, setDuesAmount] = useState(DEFAULT_DUES_AMOUNT);
   const rateLimit = useRateLimit({ maxAttempts: 5, windowMs: 60_000 });
 
   useEffect(() => {
@@ -605,21 +598,34 @@ export default function PayDues() {
   }, []);
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) return;
-    const u = JSON.parse(userStr);
-    if (u.role === "Customer") setIsCustomer(true);
-    setFormData((f) => ({
-      ...f,
-      member: {
-        ...f.member,
-        fullName: u.name || "",
-        email: u.email || "",
-        telephone: u.phone || "",
-        membershipId: u.memberId || "",
-        companyName: u.companyName || "",
-      },
-    }));
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u) return;
+        if (u.role === "customer") setIsCustomer(true);
+        setFormData((f) => ({
+          ...f,
+          member: {
+            ...f.member,
+            fullName: u.name || "",
+            email: u.email || "",
+            telephone: u.phone || "",
+            membershipId: u.memberId || "",
+            companyName: u.companyName || "",
+          },
+        }));
+      })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    import("@/lib/db-client")
+      .then(({ api }) => api.platformSettings.get())
+      .then((settings) => {
+        if (settings?.annualMembershipFee) setDuesAmount(settings.annualMembershipFee);
+      })
+      .catch(() => null);
   }, []);
 
   const [formData, setFormData] = useState<FormData>({
@@ -652,7 +658,7 @@ export default function PayDues() {
    const updatePayment = (d: Partial<PaymentInfo>) =>
      setFormData((f) => ({ ...f, payment: { ...f.payment, ...d } }));
 
-  const computeTotal = () => getAdminFixedDuesAmount();
+  const computeTotal = () => duesAmount;
 
   const saveDuesTransaction = () => {
     const { member: rawMember, payment } = formData;
@@ -665,7 +671,7 @@ export default function PayDues() {
       telephone:    sanitizeString(rawMember.telephone),
       address:      sanitizeString(rawMember.address),
     };
-    const total = getAdminFixedDuesAmount();
+    const total = duesAmount;
 
     type LineItem = { description: string; qty: string; unitPrice: string; amount: string };
     const invoiceItems: LineItem[] = [
@@ -676,34 +682,6 @@ export default function PayDues() {
     const txnDate = new Date().toISOString().slice(0, 10);
 
     const selectedDues = invoiceItems.map((i) => i.description);
-    const invoice = {
-      invoiceNumber: txnId,
-      issuedDate: txnDate,
-      customerName: member.fullName || "Member",
-      customerEmail: member.email,
-      items: invoiceItems,
-      total: `₦${total.toLocaleString()}`,
-      paymentMethod: payment.paymentMethod || "Bank Transfer",
-      status: "Pending",
-      notes: member.paymentDepot ? `Depot: ${member.paymentDepot}` : undefined,
-    };
-
-    const txn = {
-      id: txnId,
-      date: txnDate,
-      type: "Union Dues",
-      depot: member.paymentDepot || "—",
-      product: selectedDues.join(" + ") || "Union Dues",
-      quantity: "—",
-      unitPrice: "—",
-      totalAmount: `₦${total.toLocaleString()}`,
-      status: "Pending",
-      paymentMethod: payment.paymentMethod || "Bank Transfer",
-      truckNumber: "—",
-      invoice,
-    };
-    const existing = JSON.parse(localStorage.getItem("customer_transactions") || "[]");
-    localStorage.setItem("customer_transactions", JSON.stringify([txn, ...existing]));
 
     logTransaction({
       type: "Union Dues",
@@ -856,7 +834,7 @@ export default function PayDues() {
                 </button>
               </div>
             </div>
-            <InvoiceModal formData={formData} onClose={() => setShowInvoice(false)} />
+            <InvoiceModal formData={formData} total={duesAmount} onClose={() => setShowInvoice(false)} />
           </>
         ) : (
           <div className="flex w-full max-w-4xl bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border-4 border-orange-500 overflow-hidden my-10">
@@ -908,7 +886,7 @@ export default function PayDues() {
               <StepIndicator current={stage} />
 
               {stage === 0 && <MemberStage data={formData.member} onChange={updateMember} />}
-               {stage === 1 && <DuesStage />}
+               {stage === 1 && <DuesStage amount={duesAmount} />}
               {stage === 2 && <PaymentStage data={formData.payment} onChange={updatePayment} />}
 
               {/* Navigation */}

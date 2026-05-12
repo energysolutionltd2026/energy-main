@@ -55,12 +55,15 @@ export default function CustomerRentTruck() {
   const [confirmedTxn, setConfirmedTxn] = useState<any>(null);
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) { router.push("/auth/login"); return; }
-    const u = JSON.parse(userStr);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
-    setRentBook(b => ({ ...b, fullName: u.name || "", email: u.email || "", phone: u.phone || "" }));
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
+        setRentBook(b => ({ ...b, fullName: u.name || "", email: u.email || "", phone: u.phone || "" }));
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) return (
@@ -92,8 +95,6 @@ export default function CustomerRentTruck() {
       totalAmount: `₦${price.toLocaleString()}`,
       status: "Pending", paymentMethod: rentBook.paymentMethod, invoice,
     };
-    const existing = JSON.parse(localStorage.getItem("customer_transactions") || "[]");
-    localStorage.setItem("customer_transactions", JSON.stringify([txn, ...existing]));
     logTransaction({
       type: "Truck Rental", user: user.name, userRole: "Customer",
       product: `Truck to ${rentBook.state}`, quantity: "1 trip",

@@ -91,23 +91,26 @@ export default function UpdateSales() {
   });
 
   useEffect(() => {
-    const str = localStorage.getItem("user");
-    if (!str) { router.push("/auth/login"); return; }
-    const u = JSON.parse(str);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
 
-    const { station, name } = router.query;
-    if (station) {
-      const sid = String(station);
-      setForm((f) => ({
-        ...f,
-        stationId:   sid,
-        stationName: name ? String(name) : "",
-        pumpsActive: STATION_PUMPS[sid] || "",
-        products:    makeProducts(sid),
-      }));
-    }
+        const { station, name } = router.query;
+        if (station) {
+          const sid = String(station);
+          setForm((f) => ({
+            ...f,
+            stationId:   sid,
+            stationName: name ? String(name) : "",
+            pumpsActive: STATION_PUMPS[sid] || "",
+            products:    makeProducts(sid),
+          }));
+        }
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) return (
@@ -231,8 +234,6 @@ export default function UpdateSales() {
       }).catch(() => null);
     });
 
-    const existing = JSON.parse(localStorage.getItem("station_daily_sales") || "[]");
-    localStorage.setItem("station_daily_sales", JSON.stringify([entry, ...existing]));
     setEntryId(id);
     setSubmitted(true);
   };

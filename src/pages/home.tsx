@@ -26,17 +26,13 @@ function HomeContent() {
     setSelectedDepot(depot);
   };
 
-  /* ============== AUTH: Check if Super Admin (Admin role) ============== */
-  const isSuperAdmin = (): boolean => {
-    try {
-      const userStr = localStorage.getItem("user");
-      if (!userStr) return false;
-      const user = JSON.parse(userStr);
-      return user.role === "Admin";
-    } catch {
-      return false;
-    }
-  };
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.user?.role === "admin") setIsSuperAdmin(true); })
+      .catch(() => null);
+  }, []);
 
   /* ============== CUMULATIVE LEVELS (average across all depots — fallback) ============== */
   const depotCumulativeLevel = (product: ProductKey): number => {
@@ -44,37 +40,7 @@ function HomeContent() {
     return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
   };
 
-  /* ============== AGGREGATE DEALER STOCK (source of truth when available) ============== */
-  const computeDealerLevels = (): Record<string, number> => {
-    try {
-      const all = JSON.parse(localStorage.getItem("dealer_stock") || "{}") as Record<string, Record<string, { level: number; max: number }>>;
-      const dealers = Object.values(all);
-      if (dealers.length === 0) return {};
-      const result: Record<string, number> = {};
-      for (const product of ["PMS", "AGO", "ATK"]) {
-        let totalLevel = 0, totalMax = 0;
-        for (const dealer of dealers) {
-          if (dealer[product]) { totalLevel += dealer[product].level; totalMax += dealer[product].max; }
-        }
-        if (totalMax > 0) result[product] = Math.round((totalLevel / totalMax) * 100);
-      }
-      return result;
-    } catch { return {}; }
-  };
-
-  const [dealerLevels, setDealerLevels] = useState<Record<string, number>>(() => computeDealerLevels());
-
-  useEffect(() => {
-    const refresh = () => setDealerLevels(computeDealerLevels());
-    window.addEventListener("dealer-stock-updated", refresh);
-    const onStorage = (e: StorageEvent) => { if (e.key === "dealer_stock") refresh(); };
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener("dealer-stock-updated", refresh);
-      window.removeEventListener("storage", onStorage);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [dealerLevels] = useState<Record<string, number>>({});
 
   const tankLevel = (product: ProductKey): number =>
     dealerLevels[product] ?? depotCumulativeLevel(product);
@@ -165,7 +131,7 @@ function HomeContent() {
                      buttonClassName="!bg-white/20 hover:!bg-white/30 !text-white !border-white/40 !py-2 !px-4 text-sm font-bold w-full"
                    />
                  </div>
-                 {isSuperAdmin() && (
+                 {isSuperAdmin && (
                    <div className="flex-1">
                      <input
                        type="text"

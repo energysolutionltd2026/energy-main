@@ -107,44 +107,38 @@ export default function TransactionStatus() {
   const [disputeSent, setDisputeSent] = useState(false);
 
   useEffect(() => {
-    const str = localStorage.getItem("user");
-    if (!str) { router.push("/auth/login"); return; }
-    const u = JSON.parse(str);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
 
-    const stored: Transaction[] = JSON.parse(localStorage.getItem("customer_transactions") || "[]");
+        import("@/lib/db-client").then(({ api }) => {
+          api.transactions.list({ limit: 200 } as any).then((result) => {
+            const apiTxns: Transaction[] = (result?.data ?? []).map((t: any) => ({
+              id:            t.reference || t._id,
+              date:          t.createdAt ? t.createdAt.slice(0, 10) : "",
+              type:          t.type === "union_dues" ? "Union Dues" : t.type === "truck_rental" ? "Truck Rental" : "Fuel Purchase",
+              depot:         t.depot || "—",
+              product:       t.product || "—",
+              quantity:      t.quantity ? `${Number(t.quantity).toLocaleString()}` : "—",
+              unitPrice:     t.unitPrice ? `₦${Number(t.unitPrice).toLocaleString()}` : "—",
+              totalAmount:   `₦${Number(t.totalAmount || 0).toLocaleString()}`,
+              status:        t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
+              paymentMethod: t.paymentMethod || "—",
+              truckNumber:   t.truckNumber || "—",
+            }));
 
-    import("@/lib/db-client").then(({ api }) => {
-      api.transactions.list({ limit: 200 } as any).then((result) => {
-        const apiTxns: Transaction[] = (result?.data ?? []).map((t: any) => ({
-          id:            t.reference || t._id,
-          date:          t.createdAt ? t.createdAt.slice(0, 10) : "",
-          type:          t.type === "union_dues" ? "Union Dues" : t.type === "truck_rental" ? "Truck Rental" : "Fuel Purchase",
-          depot:         t.depot || "—",
-          product:       t.product || "—",
-          quantity:      t.quantity ? `${Number(t.quantity).toLocaleString()}` : "—",
-          unitPrice:     t.unitPrice ? `₦${Number(t.unitPrice).toLocaleString()}` : "—",
-          totalAmount:   `₦${Number(t.totalAmount || 0).toLocaleString()}`,
-          status:        t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
-          paymentMethod: t.paymentMethod || "—",
-          truckNumber:   t.truckNumber || "—",
-        }));
-
-        const combined = [...apiTxns, ...stored, ...MOCK_TRANSACTIONS];
-        const seen = new Set<string>();
-        const unique = combined.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
-        setTransactions(unique);
-        if (unique.length > 0) setSelected(unique[0]);
-      });
-    });
-
-    // Render immediately with local data while API loads
-    const combined = [...stored, ...MOCK_TRANSACTIONS];
-    const seen = new Set<string>();
-    const unique = combined.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
-    setTransactions(unique);
-    if (unique.length > 0) setSelected(unique[0]);
+            const combined = [...apiTxns, ...MOCK_TRANSACTIONS];
+            const seen = new Set<string>();
+            const unique = combined.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
+            setTransactions(unique);
+            if (unique.length > 0) setSelected(unique[0]);
+          });
+        });
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) return (

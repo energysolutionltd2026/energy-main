@@ -131,12 +131,6 @@ export default function CustomerProfilePage() {
   const [showDeletePw, setShowDeletePw] = useState(false);
 
   useEffect(() => {
-    const str = localStorage.getItem("user");
-    if (!str) { router.push("/auth/login"); return; }
-    const u = JSON.parse(str);
-    if (u.role !== "Customer") { router.push("/auth/login"); return; }
-    setUser(u);
-
     const buildProfile = (src: any): CustomerProfile => ({
       name:               src.name               || "",
       email:              src.email              || "",
@@ -159,26 +153,20 @@ export default function CustomerProfilePage() {
       accountName:        src.accountName        || "",
       accountNumber:      src.accountNumber      || "",
       bankBranch:         src.bankBranch         || "",
-      password:           src.password           || "",
+      password:           "",
     });
 
-    const p = buildProfile(u);
-    setProfile(p);
-    setDraft(p);
-
-    // Sync from DB — merge real values on top of local defaults
-    import("@/lib/db-client").then(({ api }) => {
-      api.auth.me().then((res) => {
-        if (!res) return;
-        const db = res.user as any;
-        const merged = buildProfile({ ...u, ...db });
-        setProfile(merged);
-        setDraft(merged);
-        const updatedUser = { ...u, ...db };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      });
-    });
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
+        setUser(u);
+        const p = buildProfile(u);
+        setProfile(p);
+        setDraft(p);
+      })
+      .catch(() => router.push("/auth/login"));
   }, [router]);
 
   if (!user) return (
@@ -191,10 +179,7 @@ export default function CustomerProfilePage() {
     setDraft((d) => ({ ...d, [key]: val }));
 
   const handleSave = () => {
-    const updated = { ...JSON.parse(localStorage.getItem("user") || "{}"), ...draft };
-    localStorage.setItem("user", JSON.stringify(updated));
     setProfile(draft);
-    setUser(updated);
     setEditing(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -212,26 +197,30 @@ export default function CustomerProfilePage() {
   const handleChangePw = () => {
     setPwError("");
     if (!pwForm.current) { setPwError("Please enter your current password."); return; }
-    if (profile.password && pwForm.current !== profile.password) { setPwError("Current password is incorrect."); return; }
     if (pwForm.next.length < 6) { setPwError("New password must be at least 6 characters."); return; }
     if (pwForm.next !== pwForm.confirm) { setPwError("Passwords do not match."); return; }
-    const updated = { ...JSON.parse(localStorage.getItem("user") || "{}"), password: pwForm.next };
-    localStorage.setItem("user", JSON.stringify(updated));
-    setProfile((p) => ({ ...p, password: pwForm.next }));
-    setDraft((p) => ({ ...p, password: pwForm.next }));
-    setPwForm({ current: "", next: "", confirm: "" });
-    setPwSuccess(true);
-    setTimeout(() => { setPwSuccess(false); setShowChangePw(false); }, 2500);
+    fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: pwForm.current, password: pwForm.next }),
+    }).then((r) => {
+      if (!r.ok) { setPwError("Current password is incorrect."); return; }
+      setPwForm({ current: "", next: "", confirm: "" });
+      setPwSuccess(true);
+      setTimeout(() => { setPwSuccess(false); setShowChangePw(false); }, 2500);
+    }).catch(() => setPwError("Failed to update password. Please try again."));
   };
 
   // Delete account
   const handleDelete = () => {
     setDeleteError("");
     if (!deletePass) { setDeleteError("Please enter your password to confirm."); return; }
-    if (profile.password && deletePass !== profile.password) { setDeleteError("Incorrect password."); return; }
-    localStorage.removeItem("user");
-    localStorage.removeItem("customer_transactions");
-    router.push("/auth/login");
+    if (user?._id) {
+      import("@/lib/db-client").then(({ api }) => {
+        api.users.delete(user._id).catch(() => null);
+      });
+    }
+    fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"));
   };
 
   const EyeIcon = ({ show }: { show: boolean }) => (

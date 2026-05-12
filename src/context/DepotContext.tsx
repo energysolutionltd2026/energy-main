@@ -106,23 +106,10 @@ export const DepotProvider: React.FC<DepotProviderProps> = ({ children }) => {
   const [selectedDepot, setSelectedDepot] = useState(depots[0]);
   const [activeProduct, setActiveProduct] = useState<ProductKey>("PMS");
 
-  const [depotLogos, setDepotLogos] = useState<Record<string, string>>(() => {
-    try {
-      const saved: Record<string, string> = JSON.parse(localStorage.getItem("admin_depot_logos") || "{}");
-      return { ...DEFAULT_DEPOT_LOGOS, ...saved };
-    } catch { return DEFAULT_DEPOT_LOGOS; }
-  });
+  const [depotLogos, setDepotLogos] = useState<Record<string, string>>(DEFAULT_DEPOT_LOGOS);
 
   const setDepotLogo = (depot: string, logo: string) => {
-    setDepotLogos(prev => {
-      const next = { ...prev, [depot]: logo };
-      try {
-        const saved: Record<string, string> = JSON.parse(localStorage.getItem("admin_depot_logos") || "{}");
-        saved[depot] = logo;
-        localStorage.setItem("admin_depot_logos", JSON.stringify(saved));
-      } catch { /**/ }
-      return next;
-    });
+    setDepotLogos(prev => ({ ...prev, [depot]: logo }));
   };
 
   const updateProductData = (depot: string, product: ProductKey, data: Partial<ProductData>) => {
