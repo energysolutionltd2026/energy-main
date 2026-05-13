@@ -34,24 +34,49 @@ function HomeContent() {
       .catch(() => null);
   }, []);
 
-  /* ============== CUMULATIVE LEVELS (average across all depots — fallback) ============== */
+  /* ============== PLATFORM-LEVEL OVERRIDES ============== */
+  const [platformLevels, setPlatformLevels] = useState<{ PMS: number | null; AGO: number | null; ATK: number | null }>({ PMS: null, AGO: null, ATK: null });
+
+  useEffect(() => {
+    fetch("/api/db/platform-settings")
+      .then(r => r.ok ? r.json() : null)
+      .then(s => {
+        if (!s) return;
+        setPlatformLevels({
+          PMS: s.pmsLevel ?? null,
+          AGO: s.agoLevel ?? null,
+          ATK: s.atkLevel ?? null,
+        });
+      })
+      .catch(() => null);
+  }, []);
+
+  const saveLevel = (product: ProductKey, level: number) => {
+    const key = product === "PMS" ? "pmsLevel" : product === "AGO" ? "agoLevel" : "atkLevel";
+    fetch("/api/db/platform-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: level }),
+    }).then(() => setPlatformLevels(prev => ({ ...prev, [product]: level }))).catch(() => null);
+  };
+
+  /* ============== CUMULATIVE LEVELS (sum total across all depots as %) ============== */
   const depotCumulativeLevel = (product: ProductKey): number => {
     const values = Object.values(depotProducts).map(d => d[product]?.level ?? 0);
+    if (!values.length) return 0;
     return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
   };
 
-  const [dealerLevels] = useState<Record<string, number>>({});
-
   const tankLevel = (product: ProductKey): number =>
-    dealerLevels[product] ?? activeDepotProducts?.[product]?.level ?? depotCumulativeLevel(product);
+    platformLevels[product] ?? depotCumulativeLevel(product);
 
   /* ============== TANK RENDER ============== */
   const renderTankSimulation = () => {
     const logo = depotLogos[selectedDepot];
     switch (activeProduct) {
-      case "PMS": return <PmsTankSimulation level={tankLevel("PMS")} logo={logo} />;
-      case "ATK": return <AtkTankSimulation level={tankLevel("ATK")} logo={logo} />;
-      case "AGO": return <AgoTankSimulation level={tankLevel("AGO")} logo={logo} />;
+      case "PMS": return <PmsTankSimulation level={tankLevel("PMS")} logo={logo} onLevelSave={l => saveLevel("PMS", l)} />;
+      case "ATK": return <AtkTankSimulation level={tankLevel("ATK")} logo={logo} onLevelSave={l => saveLevel("ATK", l)} />;
+      case "AGO": return <AgoTankSimulation level={tankLevel("AGO")} logo={logo} onLevelSave={l => saveLevel("AGO", l)} />;
       default:    return null;
     }
   };

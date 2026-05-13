@@ -71,6 +71,11 @@ const PlatformSettingsSchema = new Schema(
     allowNewRegistrations: { type: Boolean, default: true },
     depotCodeTtlHours:     { type: Number, default: 3 },
     depotCodeSecret:       { type: String },               // never sent to client
+
+    // ── Homepage tank levels (admin override, 0–100%) ─────────────────────────
+    pmsLevel: { type: Number, min: 0, max: 100 },
+    agoLevel: { type: Number, min: 0, max: 100 },
+    atkLevel: { type: Number, min: 0, max: 100 },
   },
   { timestamps: true }
 );

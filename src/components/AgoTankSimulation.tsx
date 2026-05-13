@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 type AgoTankSimulationProps = {
   level: number;
   logo?: string;
+  onLevelSave?: (level: number) => void;
 };
 
-const AgoTankSimulation = ({ level, logo }: AgoTankSimulationProps) => {
+const AgoTankSimulation = ({ level, logo, onLevelSave }: AgoTankSimulationProps) => {
   const [liquidLevel, setLiquidLevel] = useState(level);
   const [isAnimating, setIsAnimating] = useState(false);
   const [maxVolume, setMaxVolume] = useState(16000000);
@@ -280,18 +281,19 @@ const AgoTankSimulation = ({ level, logo }: AgoTankSimulationProps) => {
         </div>
       </div>
 
-      {/* Controls */}
-      {/* <div className="flex gap-2 justify-center items-center mt-2">
-        <button onClick={() => setIsAnimating(!isAnimating)}
-          className="px-2 md:px-3 py-1 md:py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-[10px] md:text-xs font-semibold shadow">
-          {isAnimating ? 'Pause' : 'Start'}
-        </button>
-        <div className="flex items-center gap-1 md:gap-2 flex-1 max-w-xs">
-          <label className="text-slate-700 font-medium text-[10px] md:text-xs">Level:</label>
-          <input type="range" min="10" max="90" value={liquidLevel}
-            onChange={(e) => setLiquidLevel(Number(e.target.value))} className="flex-1"/>
+      {/* Admin level controls */}
+      {isAdmin && onLevelSave && (
+        <div className="flex items-center gap-2 mt-2 bg-white/90 backdrop-blur rounded-lg px-3 py-2 shadow border border-slate-200">
+          <label className="text-slate-600 font-medium text-[10px] md:text-xs whitespace-nowrap">AGO Level:</label>
+          <input type="range" min="0" max="100" value={liquidLevel}
+            onChange={(e) => setLiquidLevel(Number(e.target.value))} className="flex-1 accent-blue-600" />
+          <span className="text-xs font-bold text-blue-600 w-9 text-right">{Math.round(liquidLevel)}%</span>
+          <button onClick={() => onLevelSave(Math.round(liquidLevel))}
+            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] md:text-xs font-semibold shrink-0">
+            Save
+          </button>
         </div>
-      </div> */}
+      )}
     </div>
   );
 };

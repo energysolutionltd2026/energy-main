@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 type PmsTankSimulationProps = {
   level: number;
   logo?: string;
+  onLevelSave?: (level: number) => void;
 };
 
-const PmsTankSimulation = ({ level, logo }: PmsTankSimulationProps) => {
+const PmsTankSimulation = ({ level, logo, onLevelSave }: PmsTankSimulationProps) => {
   const [liquidLevel, setLiquidLevel] = useState(level);
   const [isAnimating, setIsAnimating] = useState(false);
   const [maxVolume, setMaxVolume] = useState(16000000);
@@ -281,18 +282,19 @@ const PmsTankSimulation = ({ level, logo }: PmsTankSimulationProps) => {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex gap-2 justify-center items-center mt-2 hidden">
-        <button onClick={() => setIsAnimating(!isAnimating)}
-          className="px-2 md:px-3 py-1 md:py-1.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded text-[10px] md:text-xs font-semibold shadow">
-          {isAnimating ? 'Pause' : 'Start'}
-        </button>
-        <div className="flex items-center gap-1 md:gap-2 flex-1 max-w-xs">
-          <label className="text-slate-700 font-medium text-[10px] md:text-xs">Level:</label>
-          <input type="range" min="10" max="90" value={liquidLevel}
-            onChange={(e) => setLiquidLevel(Number(e.target.value))} className="flex-1"/>
+      {/* Admin level controls */}
+      {isAdmin && onLevelSave && (
+        <div className="flex items-center gap-2 mt-2 bg-white/90 backdrop-blur rounded-lg px-3 py-2 shadow border border-slate-200">
+          <label className="text-slate-600 font-medium text-[10px] md:text-xs whitespace-nowrap">PMS Level:</label>
+          <input type="range" min="0" max="100" value={liquidLevel}
+            onChange={(e) => setLiquidLevel(Number(e.target.value))} className="flex-1 accent-red-600" />
+          <span className="text-xs font-bold text-red-600 w-9 text-right">{Math.round(liquidLevel)}%</span>
+          <button onClick={() => onLevelSave(Math.round(liquidLevel))}
+            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] md:text-xs font-semibold shrink-0">
+            Save
+          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

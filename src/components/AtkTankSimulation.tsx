@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 type AtkTankSimulationProps = {
   level: number;
   logo?: string;
+  onLevelSave?: (level: number) => void;
 };
 
-const AtkTankSimulation = ({ level, logo }: AtkTankSimulationProps) => {
+const AtkTankSimulation = ({ level, logo, onLevelSave }: AtkTankSimulationProps) => {
   const [liquidLevel, setLiquidLevel] = useState(level);
   const [isAnimating, setIsAnimating] = useState(false);
   const [maxVolume, setMaxVolume] = useState(16000000);
@@ -283,6 +284,20 @@ const AtkTankSimulation = ({ level, logo }: AtkTankSimulationProps) => {
           </svg>
         </div>
       </div>
+
+      {/* Admin level controls */}
+      {isAdmin && onLevelSave && (
+        <div className="flex items-center gap-2 mt-2 bg-white/90 backdrop-blur rounded-lg px-3 py-2 shadow border border-slate-200">
+          <label className="text-slate-600 font-medium text-[10px] md:text-xs whitespace-nowrap">ATK Level:</label>
+          <input type="range" min="0" max="100" value={liquidLevel}
+            onChange={(e) => setLiquidLevel(Number(e.target.value))} className="flex-1 accent-green-600" />
+          <span className="text-xs font-bold text-green-600 w-9 text-right">{Math.round(liquidLevel)}%</span>
+          <button onClick={() => onLevelSave(Math.round(liquidLevel))}
+            className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[10px] md:text-xs font-semibold shrink-0">
+            Save
+          </button>
+        </div>
+      )}
     </div>
   );
 };
