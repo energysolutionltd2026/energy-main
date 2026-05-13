@@ -571,6 +571,24 @@ export default function BuyNow() {
         bankAccountName: formData.payment.accountName || undefined,
         transactionRef: paystackRef || formData.payment.transactionRef || `MANUAL-${Date.now()}`,
       } as any);
+      // Send confirmation email (fire-and-forget — don't block the success screen)
+      const email = formData.owner.email || formData.company.email;
+      if (email) {
+        fetch("/api/notify/order-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            name: formData.owner.name || formData.company.name,
+            orderId: id,
+            companyName: formData.company.name,
+            product: formData.purchase.productType,
+            quantity: formData.purchase.productQuantity,
+            depot: formData.company.loadingDepot,
+            paymentMethod: formData.payment.paymentMethod,
+          }),
+        }).catch(() => null);
+      }
       setOrderId(id);
       setSubmitted(true);
     } catch {

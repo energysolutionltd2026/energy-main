@@ -202,6 +202,75 @@ export function supplyRequestStatusTemplate({ name, requestId, product, status, 
   };
 }
 
+// ─── Order Confirmation ───────────────────────────────────────────────────────
+
+export function orderConfirmationTemplate({ name, orderId, companyName, product, quantity, depot, paymentMethod }: {
+  name: string;
+  orderId: string;
+  companyName: string;
+  product: string;
+  quantity: string;
+  depot: string;
+  paymentMethod: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Order Confirmed — ${orderId} | e-Nergy`,
+    html: base(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:#fff7ed;border:2px solid ${brand.orange};border-radius:50%;width:56px;height:56px;line-height:56px;font-size:26px;">🎉</div>
+      </div>
+
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:800;color:${brand.text};text-align:center;">Order Received!</h1>
+      <p style="margin:0 0 32px;font-size:14px;color:${brand.muted};text-align:center;line-height:1.6;">
+        Hi <strong style="color:${brand.text};">${name}</strong>, your purchase order has been received and is being processed.
+      </p>
+
+      <!-- Order ID box -->
+      <div style="background:#fff7ed;border:2px solid ${brand.orange};border-radius:14px;padding:28px 24px;text-align:center;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:${brand.orange};text-transform:uppercase;letter-spacing:4px;">Your Unique Order ID</p>
+        <p style="margin:0;font-size:38px;font-weight:900;color:${brand.text};letter-spacing:8px;font-family:'Courier New',monospace;">${orderId}</p>
+        <p style="margin:14px 0 0;font-size:12px;color:${brand.muted};">Save this ID — you will need it to begin loading at the depot.</p>
+      </div>
+
+      <!-- Order details -->
+      <div style="background:#fafafa;border:1px solid ${brand.border};border-radius:14px;padding:24px;margin-bottom:24px;">
+        <p style="margin:0 0 16px;font-size:11px;font-weight:700;color:${brand.subtle};text-transform:uppercase;letter-spacing:2px;">Order Details</p>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:7px 0;font-size:12px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;width:140px;">Company</td>
+            <td style="padding:7px 0;font-size:13px;color:${brand.text};font-weight:600;">${companyName}</td>
+          </tr>
+          <tr>
+            <td style="padding:7px 0;font-size:12px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;">Product</td>
+            <td style="padding:7px 0;font-size:13px;color:${brand.text};">${product.toUpperCase()}</td>
+          </tr>
+          <tr>
+            <td style="padding:7px 0;font-size:12px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;">Quantity</td>
+            <td style="padding:7px 0;font-size:13px;color:${brand.text};">${Number(quantity).toLocaleString()} litres</td>
+          </tr>
+          <tr>
+            <td style="padding:7px 0;font-size:12px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;">Loading Depot</td>
+            <td style="padding:7px 0;font-size:13px;color:${brand.text};">${depot}</td>
+          </tr>
+          <tr>
+            <td style="padding:7px 0;font-size:12px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;">Payment</td>
+            <td style="padding:7px 0;font-size:13px;color:${brand.text};">${paymentMethod}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Next steps -->
+      <div style="background:#fafafa;border-left:3px solid ${brand.orange};border-radius:4px;padding:16px 18px;margin-bottom:8px;">
+        <p style="margin:0 0 10px;font-size:11px;font-weight:700;color:${brand.text};text-transform:uppercase;letter-spacing:1px;">What happens next?</p>
+        <p style="margin:0 0 6px;font-size:12px;color:${brand.muted};line-height:1.7;">1. Our team will verify your payment within <strong style="color:${brand.text};">48 hours</strong>.</p>
+        <p style="margin:0 0 6px;font-size:12px;color:${brand.muted};line-height:1.7;">2. Once confirmed, proceed to the depot with your truck and driver.</p>
+        <p style="margin:0 0 6px;font-size:12px;color:${brand.muted};line-height:1.7;">3. Use your Order ID on the <strong style="color:${brand.orange};">Load</strong> page to begin loading.</p>
+        <p style="margin:0;font-size:12px;color:${brand.muted};line-height:1.7;">4. A waybill / loading order will be generated for you to print.</p>
+      </div>
+    `),
+  };
+}
+
 // ─── Payment Confirmed ────────────────────────────────────────────────────────
 
 export function paymentConfirmedTemplate({ name, amount, reference, type }: {

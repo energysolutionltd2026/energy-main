@@ -4,6 +4,7 @@ import {
   resetPasswordTemplate,
   supplyRequestStatusTemplate,
   paymentConfirmedTemplate,
+  orderConfirmationTemplate,
 } from "./email-templates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -39,6 +40,14 @@ export async function sendSupplyRequestStatus(
   opts: { name: string; requestId: string; product: string; status: string; adminNote?: string }
 ) {
   const { subject, html } = supplyRequestStatusTemplate(opts);
+  await send(to, subject, html);
+}
+
+export async function sendOrderConfirmation(
+  to: string,
+  opts: { name: string; orderId: string; companyName: string; product: string; quantity: string; depot: string; paymentMethod: string }
+) {
+  const { subject, html } = orderConfirmationTemplate(opts);
   await send(to, subject, html);
 }
 
