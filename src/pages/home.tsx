@@ -51,14 +51,6 @@ function HomeContent() {
       .catch(() => null);
   }, []);
 
-  const saveLevel = (product: ProductKey, level: number) => {
-    const key = product === "PMS" ? "pmsLevel" : product === "AGO" ? "agoLevel" : "atkLevel";
-    fetch("/api/db/platform-settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [key]: level }),
-    }).then(() => setPlatformLevels(prev => ({ ...prev, [product]: level }))).catch(() => null);
-  };
 
   /* ============== CUMULATIVE LEVELS (sum total across all depots as %) ============== */
   const depotCumulativeLevel = (product: ProductKey): number => {
@@ -74,9 +66,9 @@ function HomeContent() {
   const renderTankSimulation = () => {
     const logo = depotLogos[selectedDepot];
     switch (activeProduct) {
-      case "PMS": return <PmsTankSimulation level={tankLevel("PMS")} logo={logo} onLevelSave={l => saveLevel("PMS", l)} />;
-      case "ATK": return <AtkTankSimulation level={tankLevel("ATK")} logo={logo} onLevelSave={l => saveLevel("ATK", l)} />;
-      case "AGO": return <AgoTankSimulation level={tankLevel("AGO")} logo={logo} onLevelSave={l => saveLevel("AGO", l)} />;
+      case "PMS": return <PmsTankSimulation level={tankLevel("PMS")} logo={logo} />;
+      case "ATK": return <AtkTankSimulation level={tankLevel("ATK")} logo={logo} />;
+      case "AGO": return <AgoTankSimulation level={tankLevel("AGO")} logo={logo} />;
       default:    return null;
     }
   };
@@ -157,13 +149,15 @@ function HomeContent() {
                    />
                  </div>
                  {isSuperAdmin && (
-                   <div className="flex-1">
-                     <input
-                       type="text"
-                       placeholder="Bulk dealer code"
-                       className="w-full bg-white/20 hover:bg-white/30 text-white placeholder-white/70 border border-white/40 rounded-lg py-2 px-4 text-sm font-medium focus:outline-none focus:bg-white/30"
-                     />
-                   </div>
+                   <button
+                     onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => window.location.href = "/auth/login")}
+                     className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white border border-white/40 rounded-lg py-2 px-3 text-xs font-semibold transition shrink-0"
+                   >
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                     </svg>
+                     Logout
+                   </button>
                  )}
                </div>
 

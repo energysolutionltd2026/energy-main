@@ -3,10 +3,9 @@ import React, { useState, useEffect } from 'react';
 type AgoTankSimulationProps = {
   level: number;
   logo?: string;
-  onLevelSave?: (level: number) => void;
 };
 
-const AgoTankSimulation = ({ level, logo, onLevelSave }: AgoTankSimulationProps) => {
+const AgoTankSimulation = ({ level, logo }: AgoTankSimulationProps) => {
   const [liquidLevel, setLiquidLevel] = useState(level);
   const [isAnimating, setIsAnimating] = useState(false);
   const [maxVolume, setMaxVolume] = useState(16000000);
@@ -17,6 +16,18 @@ const AgoTankSimulation = ({ level, logo, onLevelSave }: AgoTankSimulationProps)
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.user?.role === "admin") setIsAdmin(true); })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/db/platform-settings")
+      .then(r => r.ok ? r.json() : null)
+      .then(s => {
+        if (s?.agoMaxVolume) {
+          setMaxVolume(s.agoMaxVolume);
+          setInputVolume(String(s.agoMaxVolume));
+        }
+      })
       .catch(() => null);
   }, []);
 
@@ -34,6 +45,11 @@ const AgoTankSimulation = ({ level, logo, onLevelSave }: AgoTankSimulationProps)
     const parsed = parseFloat(inputVolume.replace(/,/g, ''));
     if (!isNaN(parsed) && parsed > 0) {
       setMaxVolume(parsed);
+      fetch("/api/db/platform-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agoMaxVolume: parsed }),
+      }).catch(() => null);
     }
   };
 
@@ -281,19 +297,6 @@ const AgoTankSimulation = ({ level, logo, onLevelSave }: AgoTankSimulationProps)
         </div>
       </div>
 
-      {/* Admin level controls */}
-      {isAdmin && onLevelSave && (
-        <div className="flex items-center gap-2 mt-2 bg-white/90 backdrop-blur rounded-lg px-3 py-2 shadow border border-slate-200">
-          <label className="text-slate-600 font-medium text-[10px] md:text-xs whitespace-nowrap">AGO Level:</label>
-          <input type="range" min="0" max="100" value={liquidLevel}
-            onChange={(e) => setLiquidLevel(Number(e.target.value))} className="flex-1 accent-blue-600" />
-          <span className="text-xs font-bold text-blue-600 w-9 text-right">{Math.round(liquidLevel)}%</span>
-          <button onClick={() => onLevelSave(Math.round(liquidLevel))}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] md:text-xs font-semibold shrink-0">
-            Save
-          </button>
-        </div>
-      )}
     </div>
   );
 };

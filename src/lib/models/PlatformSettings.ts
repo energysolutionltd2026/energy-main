@@ -76,6 +76,11 @@ const PlatformSettingsSchema = new Schema(
     pmsLevel: { type: Number, min: 0, max: 100 },
     agoLevel: { type: Number, min: 0, max: 100 },
     atkLevel: { type: Number, min: 0, max: 100 },
+
+    // ── Homepage tank max capacities (litres) ─────────────────────────────────
+    pmsMaxVolume: { type: Number, default: 16000000 },
+    agoMaxVolume: { type: Number, default: 16000000 },
+    atkMaxVolume: { type: Number, default: 16000000 },
   },
   { timestamps: true }
 );
