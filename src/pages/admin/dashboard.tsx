@@ -3696,6 +3696,7 @@ export default function AdminDashboard() {
   const [adminName, setAdminName] = useState("Admin");
   const [toast, setToastMsg] = useState("");
   const [users, setUsers] = useState<AdminUser[]>(BASE_USERS);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -3746,16 +3747,36 @@ export default function AdminDashboard() {
       <div className="fixed inset-0 bg-black/72" />
 
       <div className="relative z-10 flex h-screen">
+
+        {/* Mobile backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-30 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <aside className="w-56 shrink-0 flex flex-col bg-black/50 backdrop-blur-md border-r border-gray-800">
-          <div className="px-5 py-4 border-b border-gray-800">
-            <p className="text-purple-400 font-bold text-lg tracking-wide">e-Nergy</p>
-            <p className="text-gray-500 text-xs">Admin Portal</p>
+        <aside className={`fixed md:relative inset-y-0 left-0 z-40 w-56 flex flex-col bg-black/80 md:bg-black/50 backdrop-blur-md border-r border-gray-800 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+            <div>
+              <p className="text-purple-400 font-bold text-lg tracking-wide">e-Nergy</p>
+              <p className="text-gray-500 text-xs">Admin Portal</p>
+            </div>
+            {/* Close button — mobile only */}
+            <button
+              className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           <nav className="flex-1 overflow-y-auto py-3">
             {NAV_ITEMS.map(item => (
-              <button key={item.id} onClick={() => setActive(item.id)}
+              <button key={item.id} onClick={() => { setActive(item.id); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-5 py-3 text-sm transition-colors ${active === item.id ? "bg-purple-600/25 text-purple-300 border-r-2 border-purple-500" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}>
                 <span className="text-base">{item.icon}</span>
                 <span>{item.id}</span>
@@ -3782,15 +3803,25 @@ export default function AdminDashboard() {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden">
-          <header className="h-14 shrink-0 flex items-center justify-between px-6 bg-black/40 backdrop-blur-md border-b border-gray-800">
-            <h1 className="text-white font-semibold">{active}</h1>
-            <div className="flex items-center gap-3">
-              <span className="text-gray-400 text-sm">
+          <header className="h-14 shrink-0 flex items-center gap-3 px-4 md:px-6 bg-black/40 backdrop-blur-md border-b border-gray-800">
+            {/* Hamburger — mobile only */}
+            <button
+              className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition shrink-0"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-white font-semibold flex-1 truncate">{active}</h1>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="hidden sm:block text-gray-400 text-sm">
                 {new Date().toLocaleDateString("en-NG", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
               </span>
               <span className="flex items-center gap-1.5 text-green-400 text-xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                System Online
+                <span className="hidden sm:inline">System Online</span>
               </span>
             </div>
           </header>
