@@ -28,6 +28,9 @@ interface AdminUser {
   companyName?: string;
   phone?: string;
   state?: string;
+  pmsTankMaxML?: number;
+  agoTankMaxML?: number;
+  atkTankMaxML?: number;
 }
 
 interface SupplyRequest {
@@ -461,7 +464,11 @@ function SectionUsers({ users, setUsers, setToast }: {
   const openUser = (user: AdminUser) => {
     setSelected(user);
     if (user.role === "Bulk Dealer") {
-      setTankEdit({ PMS: "5", AGO: "5", ATK: "5" });
+      setTankEdit({
+        PMS: String(user.pmsTankMaxML ?? 5),
+        AGO: String(user.agoTankMaxML ?? 5),
+        ATK: String(user.atkTankMaxML ?? 5),
+      });
     } else {
       setTankEdit(null);
     }
@@ -477,6 +484,8 @@ function SectionUsers({ users, setUsers, setToast }: {
       if ((selected as any)._id) {
         const { api } = await import("@/lib/db-client");
         await api.users.update((selected as any)._id, { pmsTankMaxML: pms, agoTankMaxML: ago, atkTankMaxML: atk });
+        setUsers(prev => prev.map(u => u.id === selected.id ? { ...u, pmsTankMaxML: pms, agoTankMaxML: ago, atkTankMaxML: atk } : u));
+        setSelected(prev => prev ? { ...prev, pmsTankMaxML: pms, agoTankMaxML: ago, atkTankMaxML: atk } : null);
       }
       setToast(`Tank volumes updated for ${selected.name}`);
     } catch { /**/ }
@@ -3798,6 +3807,9 @@ export default function AdminDashboard() {
               companyName: u.companyName,
               phone: u.phone,
               state: u.state,
+              pmsTankMaxML: u.pmsTankMaxML,
+              agoTankMaxML: u.agoTankMaxML,
+              atkTankMaxML: u.atkTankMaxML,
             }));
             setUsers(apiUsers);
           } else {
