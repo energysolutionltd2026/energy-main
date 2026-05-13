@@ -17,7 +17,7 @@ import type {
   Transaction, Truck, TruckRental, LoadingRecord,
   Depot, FuelStation, DailySales,
   UnionDues, CustomLevy, PlatformSettings,
-  Notification, Session, AIFeedback,
+  Notification, Session, AIFeedback, Allocation,
   PaginatedResponse,
 } from "./db-types";
 
@@ -404,6 +404,25 @@ const ai = {
     })),
 };
 
+// ─── Allocations ──────────────────────────────────────────────────────────────
+
+const allocations = {
+  list: (filters: { dealerEmail?: string; product?: string; depot?: string; status?: string; page?: number; limit?: number } = {}) =>
+    safe(() => apiFetch<PaginatedResponse<Allocation>>(`/api/db/allocations${qs(filters)}`)),
+
+  get: (id: string) =>
+    safe(() => apiFetch<Allocation>(`/api/db/allocations/${id}`)),
+
+  create: (data: Partial<Allocation>) =>
+    safe(() => apiFetch<Allocation>("/api/db/allocations", { method: "POST", body: JSON.stringify(data) })),
+
+  update: (id: string, data: Partial<Allocation>) =>
+    safe(() => apiFetch<Allocation>(`/api/db/allocations/${id}`, { method: "PUT", body: JSON.stringify(data) })),
+
+  delete: (id: string) =>
+    safe(() => apiFetch<{ deleted: boolean }>(`/api/db/allocations/${id}`, { method: "DELETE" })),
+};
+
 // ─── Seed helpers ─────────────────────────────────────────────────────────────
 
 const seed = {
@@ -438,6 +457,7 @@ export const api = {
   notifications,
   sessions: sessionsMod,
   aiFeedback,
+  allocations,
   ai,
   seed,
 };

@@ -540,3 +540,25 @@ export interface AIFeedback {
   adminEmail?: string;
   createdAt: string;
 }
+
+// ─── Allocation ───────────────────────────────────────────────────────────────
+
+export type AllocationStatus = "Active" | "Exhausted" | "Expired" | "Revoked";
+
+export interface Allocation {
+  _id: string;
+  allocationId: string;
+  dealerEmail: string;
+  dealerName: string;
+  product: Product;
+  volumeLitres: number;
+  usedLitres: number;
+  depot: string;
+  validFrom: string;
+  validTo: string;
+  status: AllocationStatus;
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}

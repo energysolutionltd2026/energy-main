@@ -844,157 +844,214 @@ function SectionReconciliation() {
 // ─── Section: Allocations ────────────────────────────────────────────────────────
 
 function SectionAllocations() {
-  const [orders, setOrders]   = useState<any[]>([]);
-  const [filter, setFilter]   = useState("All");
-  const [showForm, setShowForm] = useState(false);
-  const [toast, setToast]     = useState("");
-  const [form, setForm]       = useState({ product: "PMS", depot: "", qty: "", date: "" });
-  const statuses = ["All","Pending","Processing","In Transit","Delivered"];
-  const counts: Record<string, number> = { All: orders.length };
-  statuses.slice(1).forEach((s) => { counts[s] = orders.filter((o) => o.status === s).length; });
-  const filtered = filter === "All" ? orders : orders.filter((o) => o.status === filter);
-  const depots = ["Lagos Main Depot","Port Harcourt Terminal","Abuja Central Terminal","Warri Storage Facility","Kano Petroleum Reserve"];
+  const [allocations, setAllocations] = useState<any[]>([]);
+  const [filter, setFilter]           = useState("All");
+  const [loading, setLoading]         = useState(true);
+  const [toast, setToast]             = useState("");
+  const [orderModal, setOrderModal]   = useState<any | null>(null);
+  const [orderQty, setOrderQty]       = useState("");
+  const [submitting, setSubmitting]   = useState(false);
+
+  const statuses = ["All", "Active", "Exhausted", "Expired", "Revoked"];
+  const counts: Record<string, number> = { All: allocations.length };
+  statuses.slice(1).forEach((s) => { counts[s] = allocations.filter((a) => a.status === s).length; });
+  const filtered = filter === "All" ? allocations : allocations.filter((a) => a.status === filter);
 
   useEffect(() => {
     if (!_dealerEmail) return;
     import("@/lib/db-client").then(({ api }) => {
-      api.purchaseOrders.list({ dealer: _dealerEmail, limit: 200 }).then((result) => {
-        if (!result || result.data.length === 0) return;
-        setOrders(result.data.map((o: any) => ({
-          id:      o._id,
-          date:    o.orderDate ? o.orderDate.split("T")[0] : "",
-          product: o.product,
-          qty:     `${Number(o.quantityLitres || 0).toLocaleString()} L`,
-          depot:   o.depot,
-          amount:  `₦${Number(o.totalAmount || 0).toLocaleString()}`,
-          status:  o.status,
-        })));
-      });
+      api.allocations.list({ dealerEmail: _dealerEmail, limit: 200 }).then((result: any) => {
+        setAllocations(result?.data ?? []);
+        setLoading(false);
+      }).catch(() => setLoading(false));
     });
   }, []);
 
-  const handleSubmit = () => {
-    if (!form.depot || !form.qty || !form.date) {
-      setToast("Please fill all required fields"); setTimeout(() => setToast(""), 2500); return;
-    }
-    const qty = parseInt(form.qty);
-    const amount = qty * (_platformPrices[form.product] ?? 617);
-    import("@/lib/db-client").then(({ api }) => {
-      api.purchaseOrders.create({
-        dealer: _dealerEmail,
-        product: form.product as any,
-        depot: form.depot,
-        quantityLitres: qty,
-        totalAmount: amount,
-        status: "pending",
-        orderDate: form.date,
-      } as any).then((result) => {
-        const id = result?._id || `ALLOC-${Date.now()}`;
-        const newOrder = {
-          id, date: form.date, product: form.product,
-          qty: `${qty.toLocaleString()} L`, depot: form.depot,
-          amount: `₦${amount.toLocaleString()}`, status: "Pending",
-        };
-        setOrders((prev) => [newOrder, ...prev]);
-        setShowForm(false);
-        setForm({ product: "PMS", depot: "", qty: "", date: "" });
-        setToast(`Allocation submitted successfully!`);
-        setTimeout(() => setToast(""), 3000);
-      }).catch(() => {
-        setToast("Failed to submit allocation"); setTimeout(() => setToast(""), 3000);
-      });
-    });
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
+
+  const openOrderModal = (alloc: any) => {
+    setOrderModal(alloc);
+    setOrderQty("");
   };
 
-  const receiveOrder = (o: typeof orders[0]) => {
-    const updated = orders.map(x => x.id === o.id ? { ...x, status: "Delivered" } : x);
-    setOrders(updated);
-    updateDealerStock(o.product, parseLiters(o.qty));
-    // Update status in DB if real ID (MongoDB ObjectId, 24 hex chars)
-    if (/^[a-f\d]{24}$/i.test(o.id)) {
-      import("@/lib/db-client").then(({ api }) => {
-        api.purchaseOrders.update(o.id, { status: "delivered" } as any).catch(() => null);
-      });
+  const submitOrder = async () => {
+    if (!orderModal) return;
+    const qty = parseInt(orderQty);
+    const remaining = orderModal.volumeLitres - orderModal.usedLitres;
+    if (!qty || qty < 1) { showToast("Enter a valid quantity"); return; }
+    if (qty > remaining) { showToast(`Cannot exceed remaining allocation (${remaining.toLocaleString()} L)`); return; }
+    setSubmitting(true);
+    const { api } = await import("@/lib/db-client");
+    const price = _platformPrices[orderModal.product] ?? 0;
+    try {
+      await api.purchaseOrders.create({
+        dealer: _dealerEmail,
+        companyName: _dealerName,
+        loadingDepot: orderModal.depot,
+        productType: orderModal.product,
+        productQuantity: qty,
+        pricePerLitre: price,
+        totalAmount: qty * price,
+        paymentMethod: "bank_transfer",
+        transactionRef: `ALLOC-${orderModal.allocationId}-${Date.now()}`,
+        haulageTruck: "Owned Truck",
+        ownerName: _dealerName,
+        ownerEmail: _dealerEmail,
+        ownerTelephone: "",
+        ownerAddress: "",
+        ownerIdType: "",
+        ownerIdNumber: "",
+        companyAddress: "",
+        companyTelephone: "",
+        companyEmail: _dealerEmail,
+        dprRegNo: "",
+        cacRegNo: "",
+        stationAddress: "",
+      } as any);
+      showToast("Order submitted successfully!");
+      setOrderModal(null);
+    } catch {
+      showToast("Failed to submit order");
     }
-    setToast(`${o.qty} of ${o.product} received — stock updated!`);
-    setTimeout(() => setToast(""), 3000);
+    setSubmitting(false);
+  };
+
+  const allocationStatusBadge = (s: string) => {
+    const map: Record<string, string> = {
+      Active:    "bg-green-900/50 text-green-400 border border-green-800",
+      Exhausted: "bg-orange-900/50 text-orange-400 border border-orange-800",
+      Expired:   "bg-gray-800/60 text-gray-400 border border-gray-700",
+      Revoked:   "bg-red-900/50 text-red-400 border border-red-800",
+    };
+    return `inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${map[s] ?? map.Expired}`;
   };
 
   return (
     <div className="space-y-5">
-      {toast && <div className={`fixed bottom-4 right-4 z-50 px-4 py-3 rounded-lg text-sm font-semibold shadow-lg ${toast.includes("success") ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>{toast}</div>}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex gap-2 flex-wrap">
-          {statuses.map((s) => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${filter === s ? "bg-green-600 text-white" : "bg-gray-800/60 text-gray-400 hover:text-white"}`}>
-              {s} <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === s ? "bg-white/20" : "bg-gray-700"}`}>{counts[s] ?? 0}</span>
-            </button>
-          ))}
+      {toast && (
+        <div className={`fixed bottom-4 right-4 z-50 px-4 py-3 rounded-lg text-sm font-semibold shadow-lg ${toast.includes("success") ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
+          {toast}
         </div>
-         <button onClick={() => setShowForm(!showForm)} className={gBtn}>+ New Allocation</button>
-       </div>
+      )}
 
-       {showForm && (
-         <div className={card}>
-           <p className="text-sm font-semibold text-white mb-4">New Allocation</p>
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-             <div><p className={label}>Product</p>
-               <select value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })} className={inputCls}>
-                 <option>PMS</option><option>ATK</option><option>AGO</option>
-               </select>
-             </div>
-             <div><p className={label}>Depot</p>
-               <select value={form.depot} onChange={(e) => setForm({ ...form, depot: e.target.value })} className={inputCls}>
-                 <option value="">Select depot…</option>
-                 {depots.map((d) => <option key={d}>{d}</option>)}
-               </select>
-             </div>
-             <div><p className={label}>Quantity (Litres)</p>
-               <input type="number" placeholder="e.g. 50000" value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} className={inputCls} />
-             </div>
-             <div><p className={label}>Preferred Date</p>
-               <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputCls} />
-             </div>
-           </div>
-           <div className="flex gap-3 mt-4">
-             <button onClick={handleSubmit} className={gBtn}>Submit Allocation</button>
-             <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 transition">Cancel</button>
-           </div>
-         </div>
-       )}
-
-       <div className={card}>
-         <div className="overflow-x-auto">
-           <table className="w-full text-sm">
-             <thead><tr className="border-b border-gray-800">
-               {["Allocation ID","Date","Product","Qty","Depot","Amount","Status"].map((h) => (
-                 <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">{h}</th>
-               ))}
-             </tr></thead>
-            <tbody className="divide-y divide-gray-800/50">
-              {filtered.map((o) => (
-                <tr key={o.id} className="hover:bg-white/5 transition">
-                  <td className="px-3 py-2.5 font-mono text-xs text-green-400">{o.id}</td>
-                  <td className="px-3 py-2.5 text-gray-300">{o.date}</td>
-                  <td className="px-3 py-2.5"><span className={`text-xs font-bold ${PRODUCT_COLORS[o.product].text}`}>{o.product}</span></td>
-                  <td className="px-3 py-2.5 text-gray-300">{o.qty}</td>
-                  <td className="px-3 py-2.5 text-gray-400 text-xs">{o.depot}</td>
-                  <td className="px-3 py-2.5 text-white font-semibold">{o.amount}</td>
-                  <td className="px-3 py-2.5"><span className={statusBadge(o.status)}>{o.status}</span></td>
-                  <td className="px-3 py-2.5">
-                    {o.status === "In Transit" && (
-                      <button onClick={() => receiveOrder(o)} className="text-xs px-2 py-1 bg-green-600 hover:bg-green-500 text-white rounded font-semibold">
-                        Mark Received
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Order Modal */}
+      {orderModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <p className="text-white font-semibold text-base mb-1">Request Order</p>
+            <p className="text-xs text-gray-400 mb-4">Allocation: <span className="font-mono text-green-400">{orderModal.allocationId}</span></p>
+            <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+              <div><p className={label}>Product</p><p className={`font-bold ${PRODUCT_COLORS[orderModal.product]?.text}`}>{orderModal.product}</p></div>
+              <div><p className={label}>Depot</p><p className="text-gray-300">{orderModal.depot}</p></div>
+              <div><p className={label}>Allocated</p><p className="text-white">{Number(orderModal.volumeLitres).toLocaleString()} L</p></div>
+              <div><p className={label}>Remaining</p><p className="text-green-400 font-semibold">{Number(orderModal.volumeLitres - orderModal.usedLitres).toLocaleString()} L</p></div>
+            </div>
+            <div className="mb-4">
+              <p className={label}>Order Quantity (Litres)</p>
+              <input
+                type="number"
+                min={1}
+                max={orderModal.volumeLitres - orderModal.usedLitres}
+                placeholder={`Max ${(orderModal.volumeLitres - orderModal.usedLitres).toLocaleString()} L`}
+                value={orderQty}
+                onChange={(e) => setOrderQty(e.target.value)}
+                className={inputCls}
+              />
+              {orderQty && !isNaN(parseInt(orderQty)) && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Est. amount: <span className="text-white font-semibold">₦{(parseInt(orderQty) * (_platformPrices[orderModal.product] ?? 0)).toLocaleString()}</span>
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={submitOrder} disabled={submitting} className={`${gBtn} flex-1 disabled:opacity-50`}>
+                {submitting ? "Submitting…" : "Submit Order"}
+              </button>
+              <button onClick={() => setOrderModal(null)} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 transition">
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {statuses.map((s) => (
+          <button key={s} onClick={() => setFilter(s)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${filter === s ? "bg-green-600 text-white" : "bg-gray-800/60 text-gray-400 hover:text-white"}`}>
+            {s} <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === s ? "bg-white/20" : "bg-gray-700"}`}>{counts[s] ?? 0}</span>
+          </button>
+        ))}
       </div>
+
+      {loading && <p className="text-gray-500 text-sm text-center py-8">Loading allocations…</p>}
+
+      {!loading && filtered.length === 0 && (
+        <div className={`${card} text-center py-10`}>
+          <p className="text-gray-500 text-sm">No allocations found.</p>
+          <p className="text-gray-600 text-xs mt-1">Contact admin to request a fuel allocation.</p>
+        </div>
+      )}
+
+      {!loading && filtered.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map((a) => {
+            const used      = Number(a.usedLitres ?? 0);
+            const total     = Number(a.volumeLitres ?? 0);
+            const remaining = total - used;
+            const pct       = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+            const isActive  = a.status === "Active" && remaining > 0;
+            const col       = PRODUCT_COLORS[a.product] ?? PRODUCT_COLORS["PMS"];
+            return (
+              <div key={a._id} className={`${card} flex flex-col gap-3`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-mono text-xs text-green-400">{a.allocationId}</p>
+                    <p className={`text-xs font-bold mt-0.5 ${col.text}`}>{a.product} — {a.depot}</p>
+                  </div>
+                  <span className={allocationStatusBadge(a.status)}>{a.status}</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-gray-800/60 rounded-lg px-2 py-2">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold">Allocated</p>
+                    <p className="text-sm font-semibold text-white">{total.toLocaleString()} L</p>
+                  </div>
+                  <div className="bg-gray-800/60 rounded-lg px-2 py-2">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold">Used</p>
+                    <p className="text-sm font-semibold text-orange-400">{used.toLocaleString()} L</p>
+                  </div>
+                  <div className="bg-gray-800/60 rounded-lg px-2 py-2">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold">Remaining</p>
+                    <p className={`text-sm font-semibold ${remaining > 0 ? "text-green-400" : "text-gray-500"}`}>{remaining.toLocaleString()} L</p>
+                  </div>
+                </div>
+
+                {/* Usage bar */}
+                <div>
+                  <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                    <span>{pct}% used</span>
+                    <span>Valid {a.validFrom ? new Date(a.validFrom).toLocaleDateString() : "—"} – {a.validTo ? new Date(a.validTo).toLocaleDateString() : "—"}</span>
+                  </div>
+                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${pct >= 90 ? "bg-red-500" : pct >= 60 ? "bg-orange-500" : "bg-green-500"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+
+                {isActive && (
+                  <button onClick={() => openOrderModal(a)} className={`${gBtn} w-full text-center`}>
+                    Request Order
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
