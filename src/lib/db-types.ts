@@ -294,9 +294,11 @@ export interface LoadingRecord {
 // ─── Depot ────────────────────────────────────────────────────────────────────
 
 export interface ProductStock {
-  level: number;    // 0–100 %
-  price: number;    // ₦ per litre
+  level: number;             // 0–100 %
+  price: number;             // ₦ per litre
   status: StockStatus;
+  capacityLitres?: number;   // max tank volume in litres
+  currentLitres?: number;    // actual volume in litres
 }
 
 export interface Depot {

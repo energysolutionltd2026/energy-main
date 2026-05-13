@@ -10,6 +10,8 @@ export type ProductData = {
   quantity: string;
   price: string;
   status: "Available" | "Limited" | "Unavailable";
+  capacityLitres: number;
+  currentLitres: number;
 };
 
 export type DepotData = Record<ProductKey, ProductData>;
@@ -29,12 +31,18 @@ interface DepotContextType {
 }
 
 /* ---------------- HELPERS ---------------- */
-const MAX_CAPACITY: Record<ProductKey, number> = { PMS: 220000, AGO: 260000, ATK: 120000 };
+const DEFAULT_CAPACITY: Record<ProductKey, number> = { PMS: 220000, AGO: 260000, ATK: 120000 };
 
-function fmtQty(level: number, product: ProductKey): string {
-  const max = MAX_CAPACITY[product];
-  const stored = Math.round((level / 100) * max);
-  return `${stored.toLocaleString()} L/${max.toLocaleString()} L`;
+function resolveProduct(d: any, key: ProductKey): { level: number; capacityLitres: number; currentLitres: number } {
+  const capacity = d[key]?.capacityLitres ?? DEFAULT_CAPACITY[key];
+  const hasActual = d[key]?.currentLitres != null && d[key]?.capacityLitres != null;
+  const current = hasActual ? d[key].currentLitres : Math.round((d[key]?.level ?? 0) / 100 * capacity);
+  const level = capacity > 0 ? Math.min(100, Math.round((current / capacity) * 100)) : (d[key]?.level ?? 0);
+  return { level, capacityLitres: capacity, currentLitres: current };
+}
+
+function fmtQty(currentLitres: number, capacityLitres: number): string {
+  return `${currentLitres.toLocaleString()} L/${capacityLitres.toLocaleString()} L`;
 }
 
 function fmtPrice(price: number): string {
@@ -48,25 +56,13 @@ function depotStatus(level: number): "Available" | "Limited" | "Unavailable" {
 }
 
 function apiToDepotData(d: any): DepotData {
+  const pms = resolveProduct(d, "PMS");
+  const ago = resolveProduct(d, "AGO");
+  const atk = resolveProduct(d, "ATK");
   return {
-    PMS: {
-      level:    d.PMS?.level    ?? 0,
-      price:    fmtPrice(d.PMS?.price   ?? 1300),
-      quantity: fmtQty(d.PMS?.level ?? 0, "PMS"),
-      status:   (d.PMS?.status as ProductData["status"]) ?? depotStatus(d.PMS?.level ?? 0),
-    },
-    AGO: {
-      level:    d.AGO?.level    ?? 0,
-      price:    fmtPrice(d.AGO?.price   ?? 1900),
-      quantity: fmtQty(d.AGO?.level ?? 0, "AGO"),
-      status:   (d.AGO?.status as ProductData["status"]) ?? depotStatus(d.AGO?.level ?? 0),
-    },
-    ATK: {
-      level:    d.ATK?.level    ?? 0,
-      price:    fmtPrice(d.ATK?.price   ?? 1300),
-      quantity: fmtQty(d.ATK?.level ?? 0, "ATK"),
-      status:   (d.ATK?.status as ProductData["status"]) ?? depotStatus(d.ATK?.level ?? 0),
-    },
+    PMS: { level: pms.level, capacityLitres: pms.capacityLitres, currentLitres: pms.currentLitres, price: fmtPrice(d.PMS?.price ?? 1300), quantity: fmtQty(pms.currentLitres, pms.capacityLitres), status: (d.PMS?.status as ProductData["status"]) ?? depotStatus(pms.level) },
+    AGO: { level: ago.level, capacityLitres: ago.capacityLitres, currentLitres: ago.currentLitres, price: fmtPrice(d.AGO?.price ?? 1900), quantity: fmtQty(ago.currentLitres, ago.capacityLitres), status: (d.AGO?.status as ProductData["status"]) ?? depotStatus(ago.level) },
+    ATK: { level: atk.level, capacityLitres: atk.capacityLitres, currentLitres: atk.currentLitres, price: fmtPrice(d.ATK?.price ?? 1300), quantity: fmtQty(atk.currentLitres, atk.capacityLitres), status: (d.ATK?.status as ProductData["status"]) ?? depotStatus(atk.level) },
   };
 }
 

@@ -34,48 +34,18 @@ function HomeContent() {
       .catch(() => null);
   }, []);
 
-  /* ============== PLATFORM-LEVEL OVERRIDES ============== */
-  const [platformLevels, setPlatformLevels] = useState<{ PMS: number | null; AGO: number | null; ATK: number | null }>({ PMS: null, AGO: null, ATK: null });
-  const [maxVolumes, setMaxVolumes] = useState<{ PMS: number; AGO: number; ATK: number }>(() => {
-    try {
-      const cached = localStorage.getItem("tankMaxVolumes");
-      if (cached) return JSON.parse(cached);
-    } catch {}
-    return { PMS: 16000000, AGO: 16000000, ATK: 16000000 };
-  });
-
-  useEffect(() => {
-    fetch("/api/db/platform-settings")
-      .then(r => r.ok ? r.json() : null)
-      .then(s => {
-        if (!s) return;
-        setPlatformLevels({
-          PMS: s.pmsLevel ?? null,
-          AGO: s.agoLevel ?? null,
-          ATK: s.atkLevel ?? null,
-        });
-        const vols = {
-          PMS: s.pmsMaxVolume ?? 16000000,
-          AGO: s.agoMaxVolume ?? 16000000,
-          ATK: s.atkMaxVolume ?? 16000000,
-        };
-        setMaxVolumes(vols);
-        try { localStorage.setItem("tankMaxVolumes", JSON.stringify(vols)); } catch {}
-      })
-      .catch(() => null);
-  }, []);
-
-
-  const tankLevel = (product: ProductKey): number =>
-    platformLevels[product] ?? depotProducts[selectedDepot]?.[product]?.level ?? 0;
+  const depotProduct = (product: ProductKey) => depotProducts[selectedDepot]?.[product];
 
   /* ============== TANK RENDER ============== */
   const renderTankSimulation = () => {
     const logo = depotLogos[selectedDepot];
+    const pms = depotProduct("PMS");
+    const atk = depotProduct("ATK");
+    const ago = depotProduct("AGO");
     switch (activeProduct) {
-      case "PMS": return <PmsTankSimulation level={tankLevel("PMS")} logo={logo} maxVolume={maxVolumes.PMS} isAdmin={isSuperAdmin} />;
-      case "ATK": return <AtkTankSimulation level={tankLevel("ATK")} logo={logo} maxVolume={maxVolumes.ATK} isAdmin={isSuperAdmin} />;
-      case "AGO": return <AgoTankSimulation level={tankLevel("AGO")} logo={logo} maxVolume={maxVolumes.AGO} isAdmin={isSuperAdmin} />;
+      case "PMS": return <PmsTankSimulation level={pms?.level ?? 0} logo={logo} maxVolume={pms?.capacityLitres ?? 220000} />;
+      case "ATK": return <AtkTankSimulation level={atk?.level ?? 0} logo={logo} maxVolume={atk?.capacityLitres ?? 120000} />;
+      case "AGO": return <AgoTankSimulation level={ago?.level ?? 0} logo={logo} maxVolume={ago?.capacityLitres ?? 260000} />;
       default:    return null;
     }
   };

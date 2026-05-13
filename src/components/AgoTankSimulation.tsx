@@ -4,52 +4,17 @@ type AgoTankSimulationProps = {
   level: number;
   logo?: string;
   maxVolume?: number;
-  isAdmin?: boolean;
 };
 
-const AgoTankSimulation = ({ level, logo, maxVolume: maxVolumeProp, isAdmin: isAdminProp }: AgoTankSimulationProps) => {
+const AgoTankSimulation = ({ level, logo, maxVolume: maxVolumeProp }: AgoTankSimulationProps) => {
   const [liquidLevel, setLiquidLevel] = useState(level);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [maxVolume, setMaxVolume] = useState(maxVolumeProp ?? 16000000);
-  const [inputVolume, setInputVolume] = useState(String(maxVolumeProp ?? 16000000));
-  const [isAdmin, setIsAdmin] = useState(isAdminProp ?? false);
+  const [maxVolume, setMaxVolume] = useState(maxVolumeProp ?? 260000);
 
   useEffect(() => {
-    if (isAdminProp !== undefined) return;
-    fetch("/api/auth/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.user?.role === "admin") setIsAdmin(true); })
-      .catch(() => null);
-  }, [isAdminProp]);
-
-  useEffect(() => {
-    if (maxVolumeProp !== undefined) {
-      setMaxVolume(maxVolumeProp);
-      setInputVolume(String(maxVolumeProp));
-    }
+    if (maxVolumeProp !== undefined) setMaxVolume(maxVolumeProp);
   }, [maxVolumeProp]);
 
   useEffect(() => { setLiquidLevel(level); }, [level]);
-
-  useEffect(() => {
-    if (!isAnimating) return;
-    const interval = setInterval(() => {
-      setLiquidLevel(prev => Math.max(10, Math.min(90, prev + (Math.random() - 0.5) * 1.5)));
-    }, 100);
-    return () => clearInterval(interval);
-  }, [isAnimating]);
-
-  const handleApply = () => {
-    const parsed = parseFloat(inputVolume.replace(/,/g, ''));
-    if (!isNaN(parsed) && parsed > 0) {
-      setMaxVolume(parsed);
-      fetch("/api/db/platform-settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agoMaxVolume: parsed }),
-      }).catch(() => null);
-    }
-  };
 
   const CALIBRATION_BOTTOM = 745;
   const CALIBRATION_TOP = 130;
@@ -83,28 +48,6 @@ const AgoTankSimulation = ({ level, logo, maxVolume: maxVolumeProp, isAdmin: isA
   return (
     <div className="relative z-[60] w-full h-full flex flex-col">
 
-      {/* Volume Config Input — Admin only */}
-      {isAdmin && (
-        <div className="bg-white/90 backdrop-blur rounded-lg p-2 md:p-3 shadow-lg border border-slate-200 mb-2 md:mb-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-slate-600 text-[10px] md:text-xs font-medium whitespace-nowrap">Max Capacity (L):</p>
-            <input
-              type="text"
-              value={inputVolume}
-              onChange={(e) => setInputVolume(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleApply()}
-              className="border border-slate-300 rounded px-2 py-1 text-xs md:text-sm text-slate-800 w-36 md:w-44"
-              placeholder="e.g. 16000000"
-            />
-            <button
-              onClick={handleApply}
-              className="px-2 md:px-3 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-[10px] md:text-xs font-semibold"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Info Panel */}
       <div className="bg-white/90 backdrop-blur rounded-lg p-2 md:p-3 shadow-lg border border-slate-200 mb-2 md:mb-3">

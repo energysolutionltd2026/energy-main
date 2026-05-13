@@ -116,6 +116,8 @@ interface DepotProduct {
   level: number;
   price: string;
   status: "Available" | "Limited" | "Unavailable";
+  capacityLitres: number;
+  currentLitres: number;
 }
 
 interface Depot {
@@ -1095,7 +1097,7 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
 
 // ─── Section: Depots ──────────────────────────────────────────────────────────
 
-const EMPTY_DEPOT_PRODUCTS = { level: 0, price: "₦0/L", status: "Available" as DepotProduct["status"] };
+const EMPTY_DEPOT_PRODUCTS = { level: 0, price: "₦0/L", status: "Available" as DepotProduct["status"], capacityLitres: 0, currentLitres: 0 };
 const DEPOT_CODE_TTL = 3 * 60 * 60 * 1000;
 const DEPOT_CODE_WINDOW = 6 * 60 * 60 * 1000;
 
@@ -1147,13 +1149,18 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
       api.depots.list().then((result) => {
         if (!result || result.data.length === 0) return;
         const fmtP = (n: number) => `₦${n.toLocaleString()}/L`;
+        const deriveLevel = (p: any, defaultCap: number) => {
+          const cap = p?.capacityLitres ?? defaultCap;
+          const cur = p?.currentLitres ?? Math.round((p?.level ?? 0) / 100 * cap);
+          return { level: cap > 0 ? Math.round(cur / cap * 100) : (p?.level ?? 0), capacityLitres: cap, currentLitres: cur };
+        };
         const apiDepots = result.data.map((d: any) => ({
           name:     d.name,
           location: d.location || "",
           logo:     d.logo,
-          PMS: { level: d.PMS?.level ?? 60, price: d.PMS?.price ? fmtP(d.PMS.price) : "₦1,300/L", status: (d.PMS?.status as any) || "Available" },
-          AGO: { level: d.AGO?.level ?? 60, price: d.AGO?.price ? fmtP(d.AGO.price) : "₦1,900/L", status: (d.AGO?.status as any) || "Available" },
-          ATK: { level: d.ATK?.level ?? 60, price: d.ATK?.price ? fmtP(d.ATK.price) : "₦1,300/L", status: (d.ATK?.status as any) || "Available" },
+          PMS: { ...deriveLevel(d.PMS, 220000), price: d.PMS?.price ? fmtP(d.PMS.price) : "₦1,300/L", status: (d.PMS?.status as any) || "Available" },
+          AGO: { ...deriveLevel(d.AGO, 260000), price: d.AGO?.price ? fmtP(d.AGO.price) : "₦1,900/L", status: (d.AGO?.status as any) || "Available" },
+          ATK: { ...deriveLevel(d.ATK, 120000), price: d.ATK?.price ? fmtP(d.ATK.price) : "₦1,300/L", status: (d.ATK?.status as any) || "Available" },
           _id: d._id,
         })) as Depot[];
         setDepots((prev) => {
@@ -1239,6 +1246,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
     if (!newDepot.name.trim() || !newDepot.location.trim()) return;
     const depotWithLogo = { ...newDepot, logo: newDepotLogo || undefined };
     const parsePrice = (s: string) => parseInt(s.replace(/[^0-9]/g, "")) || 0;
+    const derivedLevel = (p: DepotProduct) => p.capacityLitres > 0 ? Math.round(p.currentLitres / p.capacityLitres * 100) : p.level;
     fetch("/api/db/depots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1246,9 +1254,9 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
         name: newDepot.name.trim(),
         location: newDepot.location.trim(),
         ...(newDepotLogo ? { logo: newDepotLogo } : {}),
-        PMS: { level: newDepot.PMS.level, price: parsePrice(newDepot.PMS.price), status: newDepot.PMS.status },
-        AGO: { level: newDepot.AGO.level, price: parsePrice(newDepot.AGO.price), status: newDepot.AGO.status },
-        ATK: { level: newDepot.ATK.level, price: parsePrice(newDepot.ATK.price), status: newDepot.ATK.status },
+        PMS: { level: derivedLevel(newDepot.PMS), price: parsePrice(newDepot.PMS.price), status: newDepot.PMS.status, capacityLitres: newDepot.PMS.capacityLitres, currentLitres: newDepot.PMS.currentLitres },
+        AGO: { level: derivedLevel(newDepot.AGO), price: parsePrice(newDepot.AGO.price), status: newDepot.AGO.status, capacityLitres: newDepot.AGO.capacityLitres, currentLitres: newDepot.AGO.currentLitres },
+        ATK: { level: derivedLevel(newDepot.ATK), price: parsePrice(newDepot.ATK.price), status: newDepot.ATK.status, capacityLitres: newDepot.ATK.capacityLitres, currentLitres: newDepot.ATK.currentLitres },
       }),
     })
       .then(r => r.json())
@@ -1272,10 +1280,11 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
     if ((draft as any)._id) {
       import("@/lib/db-client").then(({ api }) => {
         const parsePrice = (s: string) => parseInt(s.replace(/[^0-9]/g, "")) || 0;
+        const derivedLevel = (p: DepotProduct) => p.capacityLitres > 0 ? Math.round(p.currentLitres / p.capacityLitres * 100) : p.level;
         api.depots.update((draft as any)._id, {
-          "PMS.level": draft.PMS.level, "PMS.price": parsePrice(draft.PMS.price), "PMS.status": draft.PMS.status,
-          "AGO.level": draft.AGO.level, "AGO.price": parsePrice(draft.AGO.price), "AGO.status": draft.AGO.status,
-          "ATK.level": draft.ATK.level, "ATK.price": parsePrice(draft.ATK.price), "ATK.status": draft.ATK.status,
+          "PMS.level": derivedLevel(draft.PMS), "PMS.price": parsePrice(draft.PMS.price), "PMS.status": draft.PMS.status, "PMS.capacityLitres": draft.PMS.capacityLitres, "PMS.currentLitres": draft.PMS.currentLitres,
+          "AGO.level": derivedLevel(draft.AGO), "AGO.price": parsePrice(draft.AGO.price), "AGO.status": draft.AGO.status, "AGO.capacityLitres": draft.AGO.capacityLitres, "AGO.currentLitres": draft.AGO.currentLitres,
+          "ATK.level": derivedLevel(draft.ATK), "ATK.price": parsePrice(draft.ATK.price), "ATK.status": draft.ATK.status, "ATK.capacityLitres": draft.ATK.capacityLitres, "ATK.currentLitres": draft.ATK.currentLitres,
           ...(draftLogo ? { logo: draftLogo } : {}),
         } as any).catch(() => null);
       });
@@ -1428,10 +1437,19 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
                 <p className={`text-sm font-medium mb-3 ${p === "PMS" ? "text-red-400" : p === "AGO" ? "text-blue-400" : "text-orange-400"}`}>{p}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Stock Level (%)</label>
-                    <input type="number" min={0} max={100}
-                      value={newDepot[p].level}
-                      onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], level: Math.min(100, Math.max(0, Number(e.target.value))) } }))}
+                    <label className="text-gray-400 text-xs block mb-1">Tank Capacity (L)</label>
+                    <input type="number" min={0}
+                      value={newDepot[p].capacityLitres || ""}
+                      placeholder="e.g. 500000"
+                      onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], capacityLitres: Math.max(0, Number(e.target.value)) } }))}
+                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs block mb-1">Current Volume (L)</label>
+                    <input type="number" min={0}
+                      value={newDepot[p].currentLitres || ""}
+                      placeholder="e.g. 300000"
+                      onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], currentLitres: Math.max(0, Number(e.target.value)) } }))}
                       className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
@@ -1441,7 +1459,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
                       onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], price: e.target.value } }))}
                       className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <label className="text-gray-400 text-xs block mb-1">Status</label>
                     <select
                       value={newDepot[p].status}
@@ -1492,10 +1510,19 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
                 <p className={`text-sm font-medium mb-3 ${pText(p)}`}>{p}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Stock Level (%)</label>
-                    <input type="number" min={0} max={100}
-                      value={draft[p].level}
-                      onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], level: Math.min(100, Math.max(0, Number(e.target.value))) } } : prev)}
+                    <label className="text-gray-400 text-xs block mb-1">Tank Capacity (L)</label>
+                    <input type="number" min={0}
+                      value={draft[p].capacityLitres || ""}
+                      placeholder="e.g. 500000"
+                      onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], capacityLitres: Math.max(0, Number(e.target.value)) } } : prev)}
+                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs block mb-1">Current Volume (L)</label>
+                    <input type="number" min={0}
+                      value={draft[p].currentLitres || ""}
+                      placeholder="e.g. 300000"
+                      onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], currentLitres: Math.max(0, Number(e.target.value)) } } : prev)}
                       className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
@@ -1505,7 +1532,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
                       onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], price: e.target.value } } : prev)}
                       className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <label className="text-gray-400 text-xs block mb-1">Status</label>
                     <select
                       value={draft[p].status}

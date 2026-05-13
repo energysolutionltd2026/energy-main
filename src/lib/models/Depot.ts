@@ -2,9 +2,11 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 
 const ProductStockSchema = new Schema(
   {
-    level:  { type: Number, required: true, min: 0, max: 100 }, // percentage
-    price:  { type: Number, required: true, min: 0 },           // ₦ per litre
-    status: { type: String, enum: ["Available", "Limited", "Unavailable"], required: true },
+    level:          { type: Number, required: true, min: 0, max: 100 }, // percentage (derived or stored)
+    price:          { type: Number, required: true, min: 0 },           // ₦ per litre
+    status:         { type: String, enum: ["Available", "Limited", "Unavailable"], required: true },
+    capacityLitres: { type: Number, min: 0 },   // max tank volume in litres
+    currentLitres:  { type: Number, min: 0 },   // actual volume in litres
   },
   { _id: false }
 );
