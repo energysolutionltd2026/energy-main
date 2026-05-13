@@ -246,6 +246,9 @@ const depots = {
   get: (id: string) =>
     safe(() => apiFetch<Depot>(`/api/db/depots/${id}`)),
 
+  create: (data: Partial<Depot>) =>
+    safe(() => apiFetch<Depot>("/api/db/depots", { method: "POST", body: JSON.stringify(data) })),
+
   update: (id: string, data: Partial<Depot>) =>
     safe(() => apiFetch<Depot>(`/api/db/depots/${id}`, { method: "PUT", body: JSON.stringify(data) })),
 

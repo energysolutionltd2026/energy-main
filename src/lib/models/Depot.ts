@@ -21,8 +21,9 @@ const DepotSchema = new Schema(
   {
     name:        { type: String, required: true, unique: true },
     location:    { type: String, required: true },
-    state:       { type: String, required: true },
-    coordinates: { type: CoordinatesSchema, required: true },
+    state:       { type: String },
+    coordinates: { type: CoordinatesSchema },
+    logo:        { type: String },
     PMS:         { type: ProductStockSchema, required: true },
     AGO:         { type: ProductStockSchema, required: true },
     ATK:         { type: ProductStockSchema, required: true },

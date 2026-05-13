@@ -22,5 +22,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Unauthorized — please log in" });
 
+  if (req.method === "POST") {
+    try {
+      const { name, location, logo, PMS, AGO, ATK } = req.body ?? {};
+      if (!name?.trim() || !location?.trim()) {
+        return res.status(400).json({ error: "name and location are required" });
+      }
+      const parsePrice = (p: any): number => {
+        if (typeof p === "number") return p;
+        const n = parseInt(String(p ?? "0").replace(/[^0-9]/g, ""));
+        return isNaN(n) ? 0 : n;
+      };
+      const buildProduct = (p: any, defaultPrice: number) => {
+        const lvl = Number(p?.level ?? 0);
+        return {
+          level: lvl,
+          price: parsePrice(p?.price ?? defaultPrice),
+          status: (p?.status as string) || (lvl < 20 ? "Unavailable" : lvl < 40 ? "Limited" : "Available"),
+        };
+      };
+      const doc = await Depot.create({
+        name: name.trim(),
+        location: location.trim(),
+        state: location.trim(),
+        ...(logo ? { logo } : {}),
+        PMS: buildProduct(PMS, 1300),
+        AGO: buildProduct(AGO, 1900),
+        ATK: buildProduct(ATK, 1300),
+      });
+      return res.status(201).json(doc);
+    } catch (err: any) {
+      if (err?.code === 11000) return res.status(409).json({ error: "A depot with this name already exists" });
+      return res.status(400).json({ error: err?.message ?? "Failed to create depot" });
+    }
+  }
+
   return res.status(405).json({ error: "Method not allowed" });
 }

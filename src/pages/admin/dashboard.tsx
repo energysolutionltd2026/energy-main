@@ -800,14 +800,39 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
 
   const allProducts = [...AVAILABLE_PRODUCTS, ...customProducts];
 
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      (api.platformSettings as any).get?.().then((s: any) => {
+        if (s?.productCatalog) setGlobalStock(s.productCatalog);
+      }).catch(() => null);
+    });
+  }, []);
+
   const saveGlobalStock = () => {
     setGlobalStock(draft);
-    setToast("Global stock updated successfully");
     setEditing(false);
+    setToast("Global stock updated successfully");
+    import("@/lib/db-client").then(({ api }) => {
+      api.platformSettings.update({ productCatalog: draft } as any).catch(() => null);
+    });
   };
 
   const applyToAllDepots = () => {
-    setToast("Applied to all depots");
+    const parsePrice = (s: string) => parseInt(s.replace(/[^0-9]/g, "")) || 0;
+    import("@/lib/db-client").then(async ({ api }) => {
+      const result = await api.depots.list({ limit: 100 } as any);
+      if (!result?.data?.length) { setToast("No depots found"); return; }
+      await Promise.all(result.data.map((d: any) =>
+        api.depots.update(d._id, {
+          "PMS.level": draft.PMS?.level ?? 60, "PMS.price": parsePrice(draft.PMS?.price ?? "0"), "PMS.status": draft.PMS?.status ?? "Available",
+          "AGO.level": draft.AGO?.level ?? 60, "AGO.price": parsePrice(draft.AGO?.price ?? "0"), "AGO.status": draft.AGO?.status ?? "Available",
+          "ATK.level": draft.ATK?.level ?? 60, "ATK.price": parsePrice(draft.ATK?.price ?? "0"), "ATK.status": draft.ATK?.status ?? "Available",
+        } as any).catch(() => null)
+      ));
+      setGlobalStock(draft);
+      setEditing(false);
+      setToast(`Applied to ${result.data.length} depots`);
+    });
   };
 
   const addNewProduct = () => {
@@ -959,9 +984,35 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
   const [filter, setFilter] = useState("All");
   const [selected, setSelected] = useState<PurchaseOrder | null>(null);
 
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.purchaseOrders.list({ limit: 200 } as any).then((result) => {
+        if (!result?.data?.length) return;
+        const mapped: PurchaseOrder[] = result.data.map((o: any) => ({
+          id: o.orderId || o._id,
+          _id: o._id,
+          dealer: o.companyName || o.dealer || "—",
+          product: ((o.productType as string)?.toUpperCase() as "PMS" | "AGO" | "ATK") || "PMS",
+          depot: o.loadingDepot || "—",
+          qty: o.productQuantity ? `${Number(o.productQuantity).toLocaleString()} L` : "—",
+          amount: o.totalAmount ? `₦${Number(o.totalAmount).toLocaleString()}` : "—",
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-NG") : "—",
+          status: (o.status as PurchaseOrder["status"]) || "Pending",
+        }));
+        setOrders(mapped);
+      }).catch(() => null);
+    });
+  }, []);
+
   const update = (id: string, status: PurchaseOrder["status"]) => {
     const po = orders.find(o => o.id === id);
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    if (selected?.id === id) setSelected(p => p ? { ...p, status } : null);
+    if (po && (po as any)._id) {
+      import("@/lib/db-client").then(({ api }) => {
+        api.purchaseOrders.update((po as any)._id, { status } as any).catch(() => null);
+      });
+    }
     if (po) {
       const msgs: Record<string, { title: string; message: string }> = {
         Processing: { title: "Purchase Order Processing", message: `Your purchase order ${id} for ${po.qty} of ${po.product} is now being processed at ${po.depot}.` },
@@ -971,7 +1022,6 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
       if (msgs[status]) pushNotification("bulk_dealer_notifications", { type: "order", href: "/bulk-dealer/dashboard", ...msgs[status] });
     }
     setToast(`${id} → ${status}`);
-    if (selected?.id === id) setSelected(p => p ? { ...p, status } : null);
   };
 
   const counts: Record<string, number> = { All: orders.length };
@@ -1087,13 +1137,14 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
     import("@/lib/db-client").then(({ api }) => {
       api.depots.list().then((result) => {
         if (!result || result.data.length === 0) return;
+        const fmtP = (n: number) => `₦${n.toLocaleString()}/L`;
         const apiDepots = result.data.map((d: any) => ({
           name:     d.name,
           location: d.location || "",
           logo:     d.logo,
-          PMS: { level: d.pmsLevel ?? 60, price: d.pmsPrice || "₦1,300/L", status: d.pmsLevel < 20 ? "Unavailable" : d.pmsLevel < 40 ? "Limited" : "Available" },
-          AGO: { level: d.agoLevel ?? 60, price: d.agoPrice || "₦1,900/L", status: d.agoLevel < 20 ? "Unavailable" : d.agoLevel < 40 ? "Limited" : "Available" },
-          ATK: { level: d.atkLevel ?? 60, price: d.atkPrice || "₦1,300/L", status: d.atkLevel < 20 ? "Unavailable" : d.atkLevel < 40 ? "Limited" : "Available" },
+          PMS: { level: d.PMS?.level ?? 60, price: d.PMS?.price ? fmtP(d.PMS.price) : "₦1,300/L", status: (d.PMS?.status as any) || "Available" },
+          AGO: { level: d.AGO?.level ?? 60, price: d.AGO?.price ? fmtP(d.AGO.price) : "₦1,900/L", status: (d.AGO?.status as any) || "Available" },
+          ATK: { level: d.ATK?.level ?? 60, price: d.ATK?.price ? fmtP(d.ATK.price) : "₦1,300/L", status: (d.ATK?.status as any) || "Available" },
           _id: d._id,
         })) as Depot[];
         setDepots((prev) => {
@@ -1178,7 +1229,22 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
   const saveNewDepot = () => {
     if (!newDepot.name.trim() || !newDepot.location.trim()) return;
     const depotWithLogo = { ...newDepot, logo: newDepotLogo || undefined };
-    setDepots([...depots, depotWithLogo]);
+    const parsePrice = (s: string) => parseInt(s.replace(/[^0-9]/g, "")) || 0;
+    fetch("/api/db/depots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: newDepot.name.trim(),
+        location: newDepot.location.trim(),
+        ...(newDepotLogo ? { logo: newDepotLogo } : {}),
+        PMS: { level: newDepot.PMS.level, price: parsePrice(newDepot.PMS.price), status: newDepot.PMS.status },
+        AGO: { level: newDepot.AGO.level, price: parsePrice(newDepot.AGO.price), status: newDepot.AGO.status },
+        ATK: { level: newDepot.ATK.level, price: parsePrice(newDepot.ATK.price), status: newDepot.ATK.status },
+      }),
+    })
+      .then(r => r.json())
+      .then(d => setDepots(prev => [...prev, { ...depotWithLogo, _id: d._id ?? undefined } as any]))
+      .catch(() => setDepots(prev => [...prev, depotWithLogo]));
     setToast(`${newDepot.name} added`);
     setShowAdd(false);
     setNewDepotLogo("");
@@ -1196,10 +1262,12 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
     // Persist to DB for depots with a real MongoDB _id
     if ((draft as any)._id) {
       import("@/lib/db-client").then(({ api }) => {
+        const parsePrice = (s: string) => parseInt(s.replace(/[^0-9]/g, "")) || 0;
         api.depots.update((draft as any)._id, {
-          pmsLevel: draft.PMS.level, pmsPrice: draft.PMS.price,
-          agoLevel: draft.AGO.level, agoPrice: draft.AGO.price,
-          atkLevel: draft.ATK.level, atkPrice: draft.ATK.price,
+          "PMS.level": draft.PMS.level, "PMS.price": parsePrice(draft.PMS.price), "PMS.status": draft.PMS.status,
+          "AGO.level": draft.AGO.level, "AGO.price": parsePrice(draft.AGO.price), "AGO.status": draft.AGO.status,
+          "ATK.level": draft.ATK.level, "ATK.price": parsePrice(draft.ATK.price), "ATK.status": draft.ATK.status,
+          ...(draftLogo ? { logo: draftLogo } : {}),
         } as any).catch(() => null);
       });
     }
@@ -1558,6 +1626,11 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
   const resetToPending = (truck: TruckRecord) => {
     const next = trucks.map(t => t.id === truck.id ? { ...t, status: "Pending Review" as const, reviewNote: "" } : t);
     setTrucks(next);
+    if (/^[a-f\d]{24}$/i.test(truck.id)) {
+      import("@/lib/db-client").then(({ api }) => {
+        api.trucks.update(truck.id, { status: "pending" as any, reviewNote: "" } as any).catch(() => null);
+      });
+    }
     setToast(`${truck.truckRegNumber} reset to Pending Review`);
     setSelected(null);
     setNote("");
