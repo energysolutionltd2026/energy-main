@@ -38,6 +38,7 @@ interface SupplyRecord {
 }
 
 interface Station {
+  _dbId?: string;
   id: string;
   name: string;
   address: string;
@@ -55,109 +56,64 @@ interface Station {
   supplies: SupplyRecord[];
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── FuelStation → Station adapter ───────────────────────────────────────────
 
-const STATIONS_INIT: Station[] = [
-  {
-    id: "STN-001",
-    name: "Ikeja Central Fuel Station",
-    address: "45 Allen Avenue, Ikeja",
-    state: "Lagos",
-    licenseNo: "DPR/LIC/2024/0127",
-    dprNo: "DPR-0127-LAG",
-    phone: "08012345678",
-    email: "ikeja@energystation.ng",
+function adaptStation(fs: any, supplies: SupplyRecord[]): Station & { _dbId: string } {
+  const stockStatus = (cur: number, cap: number): ProductStock["status"] => {
+    if (cap === 0 || cur === 0) return "Empty";
+    const pct = cur / cap;
+    if (pct < 0.15) return "Critical";
+    if (pct < 0.4)  return "Limited";
+    return "Available";
+  };
+  return {
+    _dbId:        fs._id,
+    id:           fs._id,
+    name:         fs.stationName,
+    address:      fs.address ?? "",
+    state:        fs.state ?? "",
+    licenseNo:    fs.dprLicenseNo ?? "",
+    dprNo:        fs.rcNumber ?? "",
+    phone:        fs.managerPhone ?? "",
+    email:        "",
     openingHours: "6:00 AM – 10:00 PM",
-    status: "Active",
-    manager: "Emeka Okonkwo",
-    managerPhone: "08098765432",
-    stock: [
-      { product: "PMS", capacity: 60000, current: 40800, price: "₦650", lastSupplied: "2025-03-25", status: "Available" },
-      { product: "AGO", capacity: 45000, current: 9000,  price: "₦720", lastSupplied: "2025-03-22", status: "Limited"   },
-      { product: "ATK", capacity: 30000, current: 0,     price: "₦780", lastSupplied: "2025-02-18", status: "Empty"     },
-    ],
-    staff: [
-      { id: "S1", name: "Emeka Okonkwo",    role: "Station Manager",  phone: "08098765432", email: "emeka@stn.ng",  shift: "Morning",   status: "Active"   },
-      { id: "S2", name: "Bola Adewale",     role: "Shift Supervisor", phone: "08023456789", email: "bola@stn.ng",   shift: "Morning",   status: "Active"   },
-      { id: "S3", name: "Chidi Eze",        role: "Shift Supervisor", phone: "08034567890", email: "chidi@stn.ng",  shift: "Night",     status: "Off Duty" },
-      { id: "S4", name: "Fatima Usman",     role: "Pump Attendant",   phone: "08045678901", email: "fatima@stn.ng", shift: "Morning",   status: "Active"   },
-      { id: "S5", name: "Segun Ajayi",      role: "Pump Attendant",   phone: "08056789012", email: "segun@stn.ng",  shift: "Afternoon", status: "Active"   },
-      { id: "S6", name: "Ngozi Obi",        role: "Pump Attendant",   phone: "08067890123", email: "ngozi@stn.ng",  shift: "Night",     status: "Off Duty" },
-      { id: "S7", name: "Tunde Bakare",     role: "Security Officer", phone: "08078901234", email: "tunde@stn.ng",  shift: "Night",     status: "Active"   },
-      { id: "S8", name: "Amara Nwachukwu", role: "Cashier",          phone: "08089012345", email: "amara@stn.ng",  shift: "Morning",   status: "On Leave" },
-    ],
-    supplies: [
-      { id: "SUP-2025-001", date: "2025-03-25", product: "PMS", quantity: "33,000 L", depot: "Lagos Main Depot",        status: "Completed",  truckReg: "LND-341-XY" },
-      { id: "SUP-2025-002", date: "2025-03-22", product: "AGO", quantity: "15,000 L", depot: "Lagos Main Depot",        status: "Completed",  truckReg: "ABC-123-XY" },
-      { id: "SUP-2025-003", date: "2025-03-28", product: "PMS", quantity: "33,000 L", depot: "Port Harcourt Terminal",  status: "Pending",    truckReg: "—"          },
-      { id: "SUP-2025-004", date: "2025-03-29", product: "AGO", quantity: "30,000 L", depot: "Lagos Main Depot",        status: "Processing", truckReg: "PQR-678-HI" },
-    ],
-  },
-  {
-    id: "STN-002",
-    name: "Lekki Junction Station",
-    address: "Km 23, Lekki-Epe Expressway",
-    state: "Lagos",
-    licenseNo: "DPR/LIC/2024/0228",
-    dprNo: "DPR-0228-LAG",
-    phone: "08011223344",
-    email: "lekki@energystation.ng",
-    openingHours: "24 Hours",
-    status: "Active",
-    manager: "Amaka Adeyemi",
-    managerPhone: "08099887766",
-    stock: [
-      { product: "PMS", capacity: 90000, current: 28800, price: "₦650", lastSupplied: "2025-03-24", status: "Limited"   },
-      { product: "AGO", capacity: 60000, current: 48000, price: "₦720", lastSupplied: "2025-03-26", status: "Available" },
-      { product: "ATK", capacity: 45000, current: 36000, price: "₦780", lastSupplied: "2025-03-20", status: "Available" },
-    ],
-    staff: [
-      { id: "S9",  name: "Amaka Adeyemi",  role: "Station Manager",  phone: "08099887766", email: "amaka@stn.ng",   shift: "Morning",   status: "Active"   },
-      { id: "S10", name: "Kelechi Okafor", role: "Shift Supervisor", phone: "08022334455", email: "kelechi@stn.ng", shift: "Afternoon", status: "Active"   },
-      { id: "S11", name: "Ibrahim Musa",   role: "Shift Supervisor", phone: "08033445566", email: "ibrahim@stn.ng", shift: "Night",     status: "Active"   },
-      { id: "S12", name: "Chioma Ike",     role: "Pump Attendant",   phone: "08044556677", email: "chioma@stn.ng",  shift: "Morning",   status: "Active"   },
-      { id: "S13", name: "Yusuf Garba",    role: "Pump Attendant",   phone: "08055667788", email: "yusuf@stn.ng",   shift: "Afternoon", status: "Active"   },
-      { id: "S14", name: "Nneka Obiora",   role: "Cashier",          phone: "08066778899", email: "nneka@stn.ng",   shift: "Morning",   status: "On Leave" },
-    ],
-    supplies: [
-      { id: "SUP-2025-005", date: "2025-03-26", product: "AGO", quantity: "45,000 L", depot: "Port Harcourt Terminal",  status: "Completed",  truckReg: "DEF-456-ZA" },
-      { id: "SUP-2025-006", date: "2025-03-24", product: "PMS", quantity: "33,000 L", depot: "Lagos Main Depot",        status: "Completed",  truckReg: "GHI-789-BC" },
-      { id: "SUP-2025-007", date: "2025-03-20", product: "ATK", quantity: "45,000 L", depot: "Abuja Central Terminal",  status: "Completed",  truckReg: "STU-901-JK" },
-      { id: "SUP-2025-008", date: "2025-03-30", product: "PMS", quantity: "60,000 L", depot: "Lagos Main Depot",        status: "Pending",    truckReg: "—"          },
-    ],
-  },
-];
+    status:       (fs.status ? fs.status.charAt(0).toUpperCase() + fs.status.slice(1) : "Active") as Station["status"],
+    manager:      fs.managerName ?? "",
+    managerPhone: fs.managerPhone ?? "",
+    stock: (fs.tanks ?? []).map((t: any) => ({
+      product:      t.product as "PMS" | "AGO" | "ATK",
+      capacity:     t.capacityLitres ?? 0,
+      current:      t.currentLitres  ?? 0,
+      price:        "—",
+      lastSupplied: t.lastRestocked ? t.lastRestocked.slice(0, 10) : "—",
+      status:       stockStatus(t.currentLitres ?? 0, t.capacityLitres ?? 0),
+    })),
+    staff:    [],
+    supplies,
+  };
+}
 
-// ─── Daily report generator ───────────────────────────────────────────────────
+// ─── Daily report from DB sales ───────────────────────────────────────────────
 
-function buildDailyReport(station: Station) {
-  const s = station.id === "STN-001" ? 1 : 2;
-  const pmsPrice = 650, agoPrice = 720, atkPrice = 780;
-  const pmsSold  = s * 8500,  agoSold  = s * 3200,  atkSold  = s * 800;
-  const pmsRev   = pmsSold * pmsPrice;
-  const agoRev   = agoSold * agoPrice;
-  const atkRev   = atkSold * atkPrice;
-  const total    = pmsRev + agoRev + atkRev;
-  const pmsStock = station.stock.find((x) => x.product === "PMS");
-  const agoStock = station.stock.find((x) => x.product === "AGO");
-  const atkStock = station.stock.find((x) => x.product === "ATK");
+function buildDailyReport(station: Station & { _dbId?: string }, todaySales: any[]) {
+  const stSales = todaySales.filter((s: any) => s.stationName === station.name);
+  const totalRevenue = stSales.reduce((a: number, s: any) => a + (s.totalRevenue ?? 0), 0);
+  const rows = (["PMS", "AGO", "ATK"] as const).map((p) => {
+    const prodSales = stSales.flatMap((s: any) => (s.sales ?? []).filter((x: any) => x.product === p));
+    const sold = prodSales.reduce((a: number, x: any) => a + (x.litresSold ?? 0), 0);
+    const rev  = prodSales.reduce((a: number, x: any) => a + (x.revenue    ?? 0), 0);
+    const st   = station.stock.find((x) => x.product === p);
+    return { product: p, sold, remaining: st?.current ?? 0, capacity: st?.capacity ?? 0, txns: prodSales.length, revenue: rev, price: st?.price ?? "—" };
+  });
   return {
     date: new Date().toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
-    rows: [
-      { product: "PMS", sold: pmsSold, remaining: pmsStock?.current ?? 0, capacity: pmsStock?.capacity ?? 0, txns: s * 34, revenue: pmsRev, price: `₦${pmsPrice}` },
-      { product: "AGO", sold: agoSold, remaining: agoStock?.current ?? 0, capacity: agoStock?.capacity ?? 0, txns: s * 12, revenue: agoRev, price: `₦${agoPrice}` },
-      { product: "ATK", sold: atkSold, remaining: atkStock?.current ?? 0, capacity: atkStock?.capacity ?? 0, txns: s * 4,  revenue: atkRev, price: `₦${atkPrice}` },
-    ],
-    totalRevenue: total,
-    cash: Math.round(total * 0.44),
-    pos:  Math.round(total * 0.56),
-    totalTxns: s * 50,
+    rows,
+    totalRevenue,
+    cash: 0,
+    pos:  totalRevenue,
+    totalTxns: stSales.length,
     activeStaff: station.staff.filter((x) => x.status === "Active").length,
-    openingStock: {
-      pms: (pmsStock?.current ?? 0) + pmsSold,
-      ago: (agoStock?.current ?? 0) + agoSold,
-      atk: (atkStock?.current ?? 0) + atkSold,
-    },
+    openingStock: { pms: 0, ago: 0, atk: 0 },
   };
 }
 
@@ -221,9 +177,10 @@ export default function StationManager() {
   const router = useRouter();
   const { depots, depotProducts } = useDepot();
   const [user, setUser]           = useState<any>(null);
-  const [stations, setStations]   = useState<Station[]>(STATIONS_INIT);
+  const [stations, setStations]   = useState<Station[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [tab, setTab]             = useState<Tab>("overview");
+  const [todaySales, setTodaySales] = useState<any[]>([]);
 
   // Edit station modal
   const [editOpen, setEditOpen]   = useState(false);
@@ -239,6 +196,37 @@ export default function StationManager() {
         const u = data?.user;
         if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
         setUser(u);
+
+        import("@/lib/db-client").then(({ api }) => {
+          const today = new Date().toISOString().slice(0, 10);
+          Promise.allSettled([
+            api.fuelStations.list({ ownerEmail: u.email }),
+            api.supplyRequests.list({ requestedBy: u.email, limit: 100 } as any),
+            api.dailySales.list({ recordedBy: u.email, limit: 50 } as any),
+          ]).then(([stRes, supRes, salesRes]) => {
+            const fuelStations = (stRes.status === "fulfilled" ? stRes.value?.data : null) ?? [];
+            const supplyReqs   = (supRes.status === "fulfilled" ? supRes.value?.data : null) ?? [];
+            const sales        = (salesRes.status === "fulfilled" ? salesRes.value?.data : null) ?? [];
+
+            setTodaySales(sales.filter((s: any) => (s.saleDate || s.createdAt || "").startsWith(today)));
+
+            const mapped: Station[] = fuelStations.map((fs: any) => {
+              const supplies: SupplyRecord[] = supplyReqs
+                .filter((r: any) => r.stationName === fs.stationName || r.stationId === fs._id)
+                .map((r: any) => ({
+                  id:       r.requestId || r._id,
+                  date:     (r.createdAt || r.deliveryDate || "").slice(0, 10),
+                  product:  r.product as "PMS" | "AGO" | "ATK",
+                  quantity: `${Number(r.quantity ?? 0).toLocaleString()} L`,
+                  depot:    r.depot || r.aiAssignedDepot || "—",
+                  status:   (r.status === "Fulfilled" ? "Completed" : r.status === "In Transit" ? "Processing" : r.status) as SupplyRecord["status"],
+                  truckReg: "—",
+                }));
+              return adaptStation(fs, supplies);
+            });
+            setStations(mapped);
+          });
+        });
       })
       .catch(() => router.push("/auth/login"));
   }, [router]);
@@ -249,7 +237,20 @@ export default function StationManager() {
     </div>
   );
 
-  const station = stations[activeIdx];
+  if (stations.length === 0) return (
+    <div className="min-h-screen bg-cover bg-center text-white" style={{ backgroundImage: `url(${tower.src})` }}>
+      <div className="fixed inset-0 bg-black/65 z-0" />
+      <CustomerNavigation user={user} />
+      <div className="relative z-10 pt-16 md:pl-64 flex items-center justify-center min-h-screen">
+        <div className="text-center text-gray-400 p-8">
+          <p className="text-lg font-semibold text-white mb-2">No stations registered</p>
+          <p className="text-sm">Contact admin to register your fuel station on the platform.</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const station = stations[activeIdx] ?? stations[0];
   const totalCurrent  = station.stock.reduce((a, s) => a + s.current, 0);
   const totalCapacity = station.stock.reduce((a, s) => a + s.capacity, 0);
   const fillPct       = totalCapacity > 0 ? Math.round((totalCurrent / totalCapacity) * 100) : 0;
@@ -294,13 +295,26 @@ export default function StationManager() {
     if (!editDraft) return;
     setStations((prev) => prev.map((s, i) => (i === activeIdx ? editDraft : s)));
     setEditOpen(false);
+    if (editDraft._dbId) {
+      import("@/lib/db-client").then(({ api }) => {
+        api.fuelStations.update(editDraft._dbId!, {
+          stationName:  editDraft.name,
+          address:      editDraft.address,
+          state:        editDraft.state,
+          managerName:  editDraft.manager,
+          managerPhone: editDraft.managerPhone,
+          dprLicenseNo: editDraft.licenseNo,
+          status:       editDraft.status.toLowerCase() as any,
+        }).catch(() => null);
+      });
+    }
   };
 
   const setEditField = (key: keyof Station, val: string) =>
     setEditDraft((d) => d ? { ...d, [key]: val } : d);
 
   // ── Daily report data ─────────────────────────────────────────────────────
-  const report = buildDailyReport(station);
+  const report = buildDailyReport(station as Station & { _dbId?: string }, todaySales);
 
   return (
     <div

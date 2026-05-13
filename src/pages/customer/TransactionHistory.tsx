@@ -41,206 +41,6 @@ interface Transaction {
   invoice?: InvoiceData;
 }
 
-const MOCK_TRANSACTIONS: Transaction[] = [
-  // ── Fuel Purchases ──
-  {
-    id: "ENR-2025-001A",
-    date: "2025-03-20",
-    type: "Fuel Purchase",
-    depot: "Lagos Main Depot",
-    product: "PMS",
-    quantity: "33,000",
-    unitPrice: "₦650.00",
-    totalAmount: "₦21,450,000",
-    status: "Completed",
-    paymentMethod: "Bank Transfer",
-    truckNumber: "ABC-123-XY",
-  },
-  {
-    id: "ENR-2025-002B",
-    date: "2025-03-18",
-    type: "Fuel Purchase",
-    depot: "Port Harcourt Terminal",
-    product: "AGO",
-    quantity: "45,000",
-    unitPrice: "₦720.00",
-    totalAmount: "₦32,400,000",
-    status: "Completed",
-    paymentMethod: "Card Payment",
-    truckNumber: "DEF-456-ZA",
-  },
-  {
-    id: "ENR-2025-003C",
-    date: "2025-03-15",
-    type: "Fuel Purchase",
-    depot: "Warri Storage Facility",
-    product: "ATK",
-    quantity: "60,000",
-    unitPrice: "₦780.00",
-    totalAmount: "₦46,800,000",
-    status: "Completed",
-    paymentMethod: "OPay",
-    truckNumber: "GHI-789-BC",
-  },
-  {
-    id: "ENR-2025-004D",
-    date: "2025-03-12",
-    type: "Fuel Purchase",
-    depot: "Kaduna Distribution Center",
-    product: "PMS",
-    quantity: "33,000",
-    unitPrice: "₦650.00",
-    totalAmount: "₦21,450,000",
-    status: "Pending",
-    paymentMethod: "Bank Transfer",
-    truckNumber: "JKL-012-DE",
-  },
-  {
-    id: "ENR-2025-005E",
-    date: "2025-03-10",
-    type: "Fuel Purchase",
-    depot: "Ibadan Storage Terminal",
-    product: "AGO",
-    quantity: "45,000",
-    unitPrice: "₦720.00",
-    totalAmount: "₦32,400,000",
-    status: "Completed",
-    paymentMethod: "Paystack",
-    truckNumber: "MNO-345-FG",
-  },
-  {
-    id: "ENR-2025-006F",
-    date: "2025-03-08",
-    type: "Fuel Purchase",
-    depot: "Kano Distribution Hub",
-    product: "PMS",
-    quantity: "33,000",
-    unitPrice: "₦650.00",
-    totalAmount: "₦21,450,000",
-    status: "Failed",
-    paymentMethod: "Card Payment",
-    truckNumber: "PQR-678-HI",
-  },
-  {
-    id: "ENR-2025-007G",
-    date: "2025-03-05",
-    type: "Fuel Purchase",
-    depot: "Abuja Central Terminal",
-    product: "ATK",
-    quantity: "60,000",
-    unitPrice: "₦780.00",
-    totalAmount: "₦46,800,000",
-    status: "Completed",
-    paymentMethod: "Bank Transfer",
-    truckNumber: "STU-901-JK",
-  },
-  // ── Truck Rentals ──
-  {
-    id: "TRK-2025-001A",
-    date: "2025-03-22",
-    type: "Truck Rental",
-    depot: "Lagos Main Depot",
-    product: "Premium Tanker A",
-    quantity: "3 days",
-    unitPrice: "₦85,000/day",
-    totalAmount: "₦255,000",
-    status: "Completed",
-    paymentMethod: "Bank Transfer",
-    truckNumber: "TRK-001",
-  },
-  {
-    id: "TRK-2025-002B",
-    date: "2025-03-17",
-    type: "Truck Rental",
-    depot: "Port Harcourt Terminal",
-    product: "Heavy Duty Tanker B",
-    quantity: "5 days",
-    unitPrice: "₦120,000/day",
-    totalAmount: "₦600,000",
-    status: "Completed",
-    paymentMethod: "Paystack",
-    truckNumber: "TRK-002",
-  },
-  {
-    id: "TRK-2025-003C",
-    date: "2025-03-11",
-    type: "Truck Rental",
-    depot: "Abuja Central Terminal",
-    product: "Compact Tanker D",
-    quantity: "2 days",
-    unitPrice: "₦75,000/day",
-    totalAmount: "₦150,000",
-    status: "Pending",
-    paymentMethod: "Card Payment",
-    truckNumber: "TRK-004",
-  },
-  {
-    id: "TRK-2025-004D",
-    date: "2025-02-28",
-    type: "Truck Rental",
-    depot: "Warri Storage Facility",
-    product: "Mega Tanker C",
-    quantity: "7 days",
-    unitPrice: "₦150,000/day",
-    totalAmount: "₦1,050,000",
-    status: "Completed",
-    paymentMethod: "Bank Transfer",
-    truckNumber: "TRK-003",
-  },
-  // ── Union Dues ──
-  {
-    id: "DUE-2025-001A",
-    date: "2025-03-19",
-    type: "Union Dues",
-    depot: "Lagos Main Depot",
-    product: "Annual Membership",
-    quantity: "—",
-    unitPrice: "—",
-    totalAmount: "₦250,000",
-    status: "Completed",
-    paymentMethod: "Bank Transfer",
-    truckNumber: "—",
-  },
-  {
-    id: "DUE-2025-002B",
-    date: "2025-03-14",
-    type: "Union Dues",
-    depot: "Port Harcourt Terminal",
-    product: "Loading Fee",
-    quantity: "—",
-    unitPrice: "—",
-    totalAmount: "₦45,000",
-    status: "Completed",
-    paymentMethod: "Paystack",
-    truckNumber: "—",
-  },
-  {
-    id: "DUE-2025-003C",
-    date: "2025-03-07",
-    type: "Union Dues",
-    depot: "Abuja Central Terminal",
-    product: "Regulatory Compliance",
-    quantity: "—",
-    unitPrice: "—",
-    totalAmount: "₦75,000",
-    status: "Pending",
-    paymentMethod: "Card Payment",
-    truckNumber: "—",
-  },
-  {
-    id: "DUE-2025-004D",
-    date: "2025-02-20",
-    type: "Union Dues",
-    depot: "Kano Distribution Hub",
-    product: "Depot Access Fee + Annual Membership",
-    quantity: "—",
-    unitPrice: "—",
-    totalAmount: "₦300,000",
-    status: "Completed",
-    paymentMethod: "Bank Transfer",
-    truckNumber: "—",
-  },
-];
 
 // ─── Invoice helpers ──────────────────────────────────────────────────────────
 
@@ -446,7 +246,7 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
 export default function TransactionHistory() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -476,9 +276,7 @@ export default function TransactionHistory() {
               paymentMethod: t.paymentMethod || "—",
               truckNumber: t.truckNumber || "—",
             }));
-            const combined = [...apiTxns, ...MOCK_TRANSACTIONS];
-            const seen = new Set<string>();
-            setTransactions(combined.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; }) as Transaction[]);
+            setTransactions(apiTxns as Transaction[]);
           });
         });
       })

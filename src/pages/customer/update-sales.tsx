@@ -34,33 +34,12 @@ interface SalesForm {
   products:     ProductSale[];
 }
 
-const STATION_STOCK: Record<string, Record<string, number>> = {
-  "STN-001": { PMS: 40800, AGO: 9000,  ATK: 0     },
-  "STN-002": { PMS: 28800, AGO: 48000, ATK: 36000  },
-};
-
-const STATION_PUMPS: Record<string, string> = {
-  "STN-001": "6",
-  "STN-002": "8",
-};
-
-const PRODUCT_PRICES: Record<string, string> = {
-  PMS: "650",
-  AGO: "720",
-  ATK: "780",
-};
-
-const STATIONS_LIST = [
-  { id: "STN-001", name: "Ikeja Central Fuel Station"  },
-  { id: "STN-002", name: "Lekki Junction Station"      },
-];
-
-function makeProducts(stationId: string): ProductSale[] {
-  const stock = STATION_STOCK[stationId] || { PMS: 0, AGO: 0, ATK: 0 };
+function makeProducts(tanks: { product: string; currentLitres: number }[], prices: Record<string, number>): ProductSale[] {
+  const stock = (p: string) => tanks.find((t) => t.product === p)?.currentLitres ?? 0;
   return [
-    { product: "PMS", label: "Premium Motor Spirit",    color: "text-red-400",   openingStock: stock.PMS, quantitySold: "", unitPrice: PRODUCT_PRICES.PMS, cashSales: "", posSales: "", transactions: "", pumpsUsed: "", notes: "" },
-    { product: "AGO", label: "Automotive Gas Oil",      color: "text-blue-400",  openingStock: stock.AGO, quantitySold: "", unitPrice: PRODUCT_PRICES.AGO, cashSales: "", posSales: "", transactions: "", pumpsUsed: "", notes: "" },
-    { product: "ATK", label: "Aviation Turbine Kerosene", color: "text-green-400", openingStock: stock.ATK, quantitySold: "", unitPrice: PRODUCT_PRICES.ATK, cashSales: "", posSales: "", transactions: "", pumpsUsed: "", notes: "" },
+    { product: "PMS", label: "Premium Motor Spirit",      color: "text-red-400",   openingStock: stock("PMS"), quantitySold: "", unitPrice: String(prices.PMS ?? 0), cashSales: "", posSales: "", transactions: "", pumpsUsed: "", notes: "" },
+    { product: "AGO", label: "Automotive Gas Oil",        color: "text-blue-400",  openingStock: stock("AGO"), quantitySold: "", unitPrice: String(prices.AGO ?? 0), cashSales: "", posSales: "", transactions: "", pumpsUsed: "", notes: "" },
+    { product: "ATK", label: "Aviation Turbine Kerosene", color: "text-green-400", openingStock: stock("ATK"), quantitySold: "", unitPrice: String(prices.ATK ?? 0), cashSales: "", posSales: "", transactions: "", pumpsUsed: "", notes: "" },
   ];
 }
 
@@ -76,6 +55,8 @@ export default function UpdateSales() {
   const [submitted, setSubmitted] = useState(false);
   const [entryId, setEntryId]   = useState("");
   const [errors, setErrors]     = useState<Record<string, string>>({});
+  const [stationsList, setStationsList] = useState<any[]>([]);
+  const [prices, setPrices]             = useState<Record<string, number>>({ PMS: 0, AGO: 0, ATK: 0 });
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -87,7 +68,7 @@ export default function UpdateSales() {
     staffOnDuty: "",
     pumpsActive: "",
     incidents:   "",
-    products:    makeProducts(""),
+    products:    makeProducts([], {}),
   });
 
   useEffect(() => {
@@ -98,17 +79,36 @@ export default function UpdateSales() {
         if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
         setUser(u);
 
-        const { station, name } = router.query;
-        if (station) {
-          const sid = String(station);
-          setForm((f) => ({
-            ...f,
-            stationId:   sid,
-            stationName: name ? String(name) : "",
-            pumpsActive: STATION_PUMPS[sid] || "",
-            products:    makeProducts(sid),
-          }));
-        }
+        import("@/lib/db-client").then(({ api }) => {
+          Promise.allSettled([
+            api.fuelStations.list({ ownerEmail: u.email }),
+            api.platformSettings.get(),
+          ]).then(([stationsRes, settingsRes]) => {
+            const stations = (stationsRes.status === "fulfilled" ? stationsRes.value?.data : null) ?? [];
+            setStationsList(stations);
+
+            const s = settingsRes.status === "fulfilled" ? settingsRes.value : null;
+            const p = {
+              PMS: s?.pmsPricePerLitre ?? 0,
+              AGO: s?.agoPricePerLitre ?? 0,
+              ATK: s?.atkPricePerLitre ?? 0,
+            };
+            setPrices(p);
+
+            const { station, name } = router.query;
+            if (station) {
+              const sid = String(station);
+              const found = stations.find((x: any) => x._id === sid || x.stationName === String(name));
+              setForm((f) => ({
+                ...f,
+                stationId:   sid,
+                stationName: found?.stationName ?? (name ? String(name) : sid),
+                pumpsActive: "",
+                products:    makeProducts(found?.tanks ?? [], p),
+              }));
+            }
+          });
+        });
       })
       .catch(() => router.push("/auth/login"));
   }, [router]);
@@ -125,11 +125,10 @@ export default function UpdateSales() {
     setForm((f) => {
       const next = { ...f, [key]: val } as SalesForm;
       if (key === "stationId") {
-        const sid = val;
-        const s = STATIONS_LIST.find((x) => x.id === sid);
-        next.stationName = s?.name || "";
-        next.pumpsActive = STATION_PUMPS[sid] || "";
-        next.products    = makeProducts(sid);
+        const found = stationsList.find((x: any) => x._id === val);
+        next.stationName = found?.stationName ?? val;
+        next.pumpsActive = "";
+        next.products    = makeProducts(found?.tanks ?? [], prices);
       }
       return next;
     });
@@ -283,7 +282,8 @@ export default function UpdateSales() {
                     setSubmitted(false);
                     setEntryId("");
                     setErrors({});
-                    setForm({ stationId: form.stationId, stationName: form.stationName, date: todayStr, shift: "full-day", staffOnDuty: "", pumpsActive: STATION_PUMPS[form.stationId] || "", incidents: "", products: makeProducts(form.stationId) });
+                    const found = stationsList.find((x: any) => x._id === form.stationId);
+                    setForm({ stationId: form.stationId, stationName: form.stationName, date: todayStr, shift: "full-day", staffOnDuty: "", pumpsActive: "", incidents: "", products: makeProducts(found?.tanks ?? [], prices) });
                   }}
                   className="flex-1 py-2.5 border border-gray-700 text-gray-300 hover:text-white text-sm font-semibold rounded-lg transition"
                 >
@@ -345,8 +345,8 @@ export default function UpdateSales() {
                   </label>
                   <select className={selectCls} value={form.stationId} onChange={(e) => setField("stationId", e.target.value)}>
                     <option value="">Select station</option>
-                    {STATIONS_LIST.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.id})</option>
+                    {stationsList.map((s: any) => (
+                      <option key={s._id} value={s._id}>{s.stationName} ({s.state})</option>
                     ))}
                   </select>
                   {errors.stationId && <p className="text-xs text-red-400 mt-1">{errors.stationId}</p>}
