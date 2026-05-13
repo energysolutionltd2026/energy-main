@@ -5,6 +5,7 @@ import {
   supplyRequestStatusTemplate,
   paymentConfirmedTemplate,
   orderConfirmationTemplate,
+  truckApprovedTemplate,
 } from "./email-templates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -40,6 +41,14 @@ export async function sendSupplyRequestStatus(
   opts: { name: string; requestId: string; product: string; status: string; adminNote?: string }
 ) {
   const { subject, html } = supplyRequestStatusTemplate(opts);
+  await send(to, subject, html);
+}
+
+export async function sendTruckApprovalCredentials(
+  to: string,
+  opts: { name: string; email: string; password: string; truckRegNumber: string; reviewNote?: string }
+) {
+  const { subject, html } = truckApprovedTemplate(opts);
   await send(to, subject, html);
 }
 

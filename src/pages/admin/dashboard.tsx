@@ -1571,7 +1571,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
         if (!result || result.data.length === 0) return;
         const apiTrucks: TruckRecord[] = result.data.map((t: any) => ({
           id:              t._id,
-          ownerName:       t.ownerEmail || "—",
+          ownerName:       t.ownerName  || "—",
           ownerEmail:      t.ownerEmail || "",
           ownerPhone:      t.ownerPhone || "",
           vehicleType:     t.vehicleType || "Tanker",
@@ -1651,6 +1651,18 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
     }
     if (status === "Approved") {
       pushNotification("truck_owner_notifications", { type: "system", title: "Truck Approved", message: `Your truck ${truck.truckRegNumber} has been approved and is now listed on the platform.${note ? ` Note: ${note}` : ""}`, href: "/truck-owner/dashboard" });
+      // Create account + send credentials via email & SMS
+      fetch("/api/notify/truck-approved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ownerName:      truck.ownerName,
+          ownerEmail:     truck.ownerEmail,
+          ownerPhone:     truck.ownerPhone,
+          truckRegNumber: truck.truckRegNumber,
+          reviewNote:     note || undefined,
+        }),
+      }).catch(() => null);
     } else {
       pushNotification("truck_owner_notifications", { type: "system", title: "Truck Rejected", message: `Your truck ${truck.truckRegNumber} was not approved.${note ? ` Reason: ${note}` : " Please review your documentation and resubmit."}`, href: "/truck-owner/dashboard" });
     }

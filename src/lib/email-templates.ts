@@ -271,6 +271,67 @@ export function orderConfirmationTemplate({ name, orderId, companyName, product,
   };
 }
 
+// ─── Truck Approved + Login Credentials ──────────────────────────────────────
+
+export function truckApprovedTemplate({ name, email, password, truckRegNumber, reviewNote }: {
+  name: string;
+  email: string;
+  password: string;
+  truckRegNumber: string;
+  reviewNote?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Your truck ${truckRegNumber} has been approved — e-Nergy`,
+    html: base(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:#f0fdf4;border:2px solid ${brand.green};border-radius:50%;width:56px;height:56px;line-height:56px;font-size:26px;">✅</div>
+      </div>
+
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:800;color:${brand.text};text-align:center;">Truck Approved!</h1>
+      <p style="margin:0 0 32px;font-size:14px;color:${brand.muted};text-align:center;line-height:1.6;">
+        Hi <strong style="color:${brand.text};">${name}</strong>, your truck <strong style="color:${brand.text};">${truckRegNumber}</strong> has been reviewed and approved.
+        Your account is now active on the e-Nergy platform.
+      </p>
+
+      <!-- Login credentials box -->
+      <div style="background:#f0fdf4;border:2px solid ${brand.green};border-radius:14px;padding:28px 24px;text-align:center;margin-bottom:24px;">
+        <p style="margin:0 0 16px;font-size:10px;font-weight:700;color:${brand.green};text-transform:uppercase;letter-spacing:4px;">Your Login Credentials</p>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:8px 0;font-size:12px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;width:100px;text-align:left;">Email</td>
+            <td style="padding:8px 0;font-size:14px;color:${brand.text};font-weight:700;text-align:left;">${email}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;font-size:12px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;text-align:left;">Password</td>
+            <td style="padding:8px 0;font-size:22px;font-weight:900;color:${brand.text};letter-spacing:4px;font-family:'Courier New',monospace;text-align:left;">${password}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background:#fafafa;border-left:3px solid ${brand.green};border-radius:4px;padding:14px 16px;margin-bottom:20px;">
+        <p style="margin:0;font-size:12px;color:${brand.muted};line-height:1.7;">
+          🔒 <strong style="color:${brand.text};">Change your password</strong> after your first login. Keep these credentials private.
+        </p>
+      </div>
+
+      ${reviewNote ? `
+      <div style="background:#fafafa;border:1px solid ${brand.border};border-radius:10px;padding:16px;margin-bottom:20px;">
+        <p style="margin:0 0 6px;font-size:11px;color:${brand.subtle};text-transform:uppercase;letter-spacing:1px;">Note from Admin</p>
+        <p style="margin:0;font-size:13px;color:${brand.muted};line-height:1.6;">${reviewNote}</p>
+      </div>
+      ` : ""}
+
+      <div style="text-align:center;">
+        <a href="https://e-nergy.com.ng/auth/login"
+          style="display:inline-block;background:${brand.orange};color:#ffffff;font-size:14px;font-weight:700;
+                 padding:14px 40px;border-radius:10px;text-decoration:none;">
+          Log In to Your Dashboard →
+        </a>
+      </div>
+    `),
+  };
+}
+
 // ─── Payment Confirmed ────────────────────────────────────────────────────────
 
 export function paymentConfirmedTemplate({ name, amount, reference, type }: {
