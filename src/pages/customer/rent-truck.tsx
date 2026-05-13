@@ -6,7 +6,6 @@ import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
 import { useDepot } from "@/context/DepotContext";
-import { logTransaction } from "@/utils/logTransaction";
 
 // ─── Geo Zones & Pricing ─────────────────────────────────────────────────────
 
@@ -75,34 +74,50 @@ export default function CustomerRentTruck() {
 
   const price = STATE_PRICES[rentBook.state] || 0;
 
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     const txnId = `TRK-${Date.now().toString().slice(-8)}`;
     const txnDate = new Date().toISOString().slice(0, 10);
-    const invoice = {
-      invoiceNumber: txnId,
-      issuedDate: txnDate,
-      customerName: user.name,
-      customerEmail: user.email,
-      items: [{ description: `Truck Rental — ${rentBook.state} (${rentBook.zone})`, qty: "1 trip", unitPrice: `₦${price.toLocaleString()}`, amount: `₦${price.toLocaleString()}` }],
-      total: `₦${price.toLocaleString()}`,
-      paymentMethod: rentBook.paymentMethod,
-      status: "Pending",
-      notes: `Product: ${rentBook.productType} | Depot: ${rentBook.depot} | Destination: ${rentBook.state}${rentBook.lga ? ", " + rentBook.lga : ""}`,
-    };
-    const txn = {
+    const { api } = await import("@/lib/db-client");
+
+    await Promise.allSettled([
+      api.truckRentals.create({
+        rentedBy: user.email,
+        pickupDepot: rentBook.depot,
+        destinationState: rentBook.state,
+        destinationLga: rentBook.lga || undefined,
+        geoZone: rentBook.zone,
+        productType: rentBook.productType as any || undefined,
+        vehicleType: rentBook.vehicleType || undefined,
+        capacityLitres: rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, "")) : undefined,
+        tripPrice: price,
+        paymentMethod: rentBook.paymentMethod as any,
+        status: "pending",
+        notes: rentBook.notes || undefined,
+        company: rentBook.company || undefined,
+        reference: txnId,
+      } as any),
+      api.transactions.create({
+        type: "Truck Rental",
+        user: user.name,
+        userRole: "Customer",
+        product: `Truck to ${rentBook.state}`,
+        quantity: "1 trip",
+        totalAmount: `₦${price.toLocaleString()}`,
+        status: "Pending",
+        paymentMethod: rentBook.paymentMethod,
+        depot: rentBook.depot,
+        reference: txnId,
+        date: txnDate,
+      } as any),
+    ]);
+
+    setConfirmedTxn({
       id: txnId, date: txnDate, type: "Truck Rental",
       depot: rentBook.depot, product: `Truck to ${rentBook.state}`,
       quantity: "1 trip", unitPrice: `₦${price.toLocaleString()}`,
       totalAmount: `₦${price.toLocaleString()}`,
-      status: "Pending", paymentMethod: rentBook.paymentMethod, invoice,
-    };
-    logTransaction({
-      type: "Truck Rental", user: user.name, userRole: "Customer",
-      product: `Truck to ${rentBook.state}`, quantity: "1 trip",
-      totalAmount: `₦${price.toLocaleString()}`, status: "Pending",
-      paymentMethod: rentBook.paymentMethod, depot: rentBook.depot, reference: txnId,
+      status: "Pending", paymentMethod: rentBook.paymentMethod,
     });
-    setConfirmedTxn(txn);
     setRentStep(4);
   };
 

@@ -938,19 +938,31 @@ function SectionAllocations() {
     }
     const qty = parseInt(form.qty);
     const amount = qty * (PRICE_PER_LITRE[form.product] ?? 617);
-    const id = `ALLOC-2026-${String(orders.length + 1).padStart(3, "0")}`;
-    const newOrder = {
-      id, date: form.date, product: form.product,
-      qty: `${qty.toLocaleString()} L`, depot: form.depot,
-      amount: `₦${amount.toLocaleString()}`, status: "Pending",
-    };
-    const updated = [newOrder, ...orders];
-    setOrders(updated);
-    logTransaction({ type: "Purchase Order", user: _dealerName || "Bulk Dealer", userRole: "Bulk Dealer", product: form.product, quantity: `${qty.toLocaleString()} L`, totalAmount: `₦${amount.toLocaleString()}`, status: "Pending", depot: form.depot, reference: id });
-    setShowForm(false);
-    setForm({ product: "PMS", depot: "", qty: "", date: "" });
-    setToast(`Allocation ${id} submitted successfully!`);
-    setTimeout(() => setToast(""), 3000);
+    import("@/lib/db-client").then(({ api }) => {
+      api.purchaseOrders.create({
+        dealer: _dealerEmail,
+        product: form.product as any,
+        depot: form.depot,
+        quantityLitres: qty,
+        totalAmount: amount,
+        status: "pending",
+        orderDate: form.date,
+      } as any).then((result) => {
+        const id = result?._id || `ALLOC-${Date.now()}`;
+        const newOrder = {
+          id, date: form.date, product: form.product,
+          qty: `${qty.toLocaleString()} L`, depot: form.depot,
+          amount: `₦${amount.toLocaleString()}`, status: "Pending",
+        };
+        setOrders((prev) => [newOrder, ...prev]);
+        setShowForm(false);
+        setForm({ product: "PMS", depot: "", qty: "", date: "" });
+        setToast(`Allocation submitted successfully!`);
+        setTimeout(() => setToast(""), 3000);
+      }).catch(() => {
+        setToast("Failed to submit allocation"); setTimeout(() => setToast(""), 3000);
+      });
+    });
   };
 
   const receiveOrder = (o: typeof orders[0]) => {
@@ -1050,13 +1062,35 @@ function SectionAllocations() {
 function SectionSalesHistory() {
   const [search, setSearch] = useState("");
   const [productFilter, setProductFilter] = useState("All");
-  const filtered = MOCK_SALES.filter((s) => {
+  const [sales, setSales] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!_dealerEmail) return;
+    import("@/lib/db-client").then(({ api }) => {
+      api.transactions.list({ userRole: "Bulk Dealer", limit: 200 } as any).then((result) => {
+        if (!result?.data?.length) return;
+        const dealerTxns = result.data.filter((t: any) => t.user === _dealerName || t.userEmail === _dealerEmail);
+        setSales(dealerTxns.map((t: any) => ({
+          date:    t.date || t.createdAt?.split("T")[0] || "",
+          product: t.product || "",
+          qty:     t.quantity || "",
+          buyer:   t.notes || t.reference || "",
+          amount:  t.totalAmount || "",
+          margin:  "—",
+        })));
+      }).catch(() => null);
+    });
+  }, []);
+
+  const filtered = sales.filter((s) => {
     if (productFilter !== "All" && s.product !== productFilter) return false;
-    if (search && ![s.buyer, s.product, s.date].some((v) => v.toLowerCase().includes(search.toLowerCase()))) return false;
+    if (search && ![s.buyer, s.product, s.date].some((v) => String(v).toLowerCase().includes(search.toLowerCase()))) return false;
     return true;
   });
-  const totalRev = "₦152,800,000";
-  const totalVol = "180,000 L";
+  const totalRev = sales.length
+    ? "₦" + sales.reduce((acc, s) => acc + parseFloat(String(s.amount).replace(/[₦,]/g, "") || "0"), 0).toLocaleString()
+    : "₦0";
+  const totalVol = `${sales.length} records`;
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-3 gap-4">
@@ -1275,26 +1309,48 @@ const MOCK_BUYERS: any[] = [];
 
 function SectionBuyers() {
   const [search, setSearch]     = useState("");
-  const [selected, setSelected] = useState<typeof MOCK_BUYERS[0] | null>(null);
+  const [selected, setSelected] = useState<any | null>(null);
   const [stateFilter, setStateFilter] = useState("All States");
-  const states = ["All States", ...Array.from(new Set(MOCK_BUYERS.map((b) => b.state)))];
+  const [buyers, setBuyers] = useState<any[]>([]);
 
-  const filtered = MOCK_BUYERS.filter((b) => {
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.users.list({ role: "customer", limit: 200 } as any).then((result) => {
+        if (!result?.data?.length) return;
+        setBuyers(result.data.map((u: any) => ({
+          id:          u._id || u.id,
+          name:        u.name || u.email,
+          state:       u.state || u.location || "—",
+          contact:     u.email,
+          phone:       u.phone || "—",
+          products:    ["PMS"],
+          orders:      0,
+          total:       "₦0",
+          outstanding: "₦0",
+          status:      u.status === "suspended" ? "Inactive" : "Active",
+        })));
+      }).catch(() => null);
+    });
+  }, []);
+
+  const states = ["All States", ...Array.from(new Set(buyers.map((b) => b.state))).filter((s) => s !== "—")];
+
+  const filtered = buyers.filter((b) => {
     if (stateFilter !== "All States" && b.state !== stateFilter) return false;
-    if (search && ![b.name, b.contact, b.id].some((v) => v.toLowerCase().includes(search.toLowerCase()))) return false;
+    if (search && ![b.name, b.contact, b.id].some((v) => String(v).toLowerCase().includes(search.toLowerCase()))) return false;
     return true;
   });
 
-  const totalRevenue = MOCK_BUYERS.reduce((s, b) => s + parseFloat(b.total.replace(/[₦,]/g, "")), 0);
-  const totalOutstanding = MOCK_BUYERS.reduce((s, b) => s + parseFloat(b.outstanding.replace(/[₦,]/g, "")), 0);
+  const totalRevenue = buyers.reduce((s, b) => s + parseFloat(b.total.replace(/[₦,]/g, "")), 0);
+  const totalOutstanding = buyers.reduce((s, b) => s + parseFloat(b.outstanding.replace(/[₦,]/g, "")), 0);
 
   return (
     <div className="space-y-5">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Buyers",      value: MOCK_BUYERS.length.toString(),                              color: "text-green-400"  },
-          { label: "Active",            value: MOCK_BUYERS.filter((b) => b.status === "Active").length.toString(), color: "text-green-400" },
+          { label: "Total Buyers",      value: buyers.length.toString(),                              color: "text-green-400"  },
+          { label: "Active",            value: buyers.filter((b) => b.status === "Active").length.toString(), color: "text-green-400" },
           { label: "Total Revenue",     value: "₦" + (totalRevenue / 1e9).toFixed(2) + "B",               color: "text-white"      },
           { label: "Outstanding",       value: "₦" + (totalOutstanding / 1e6).toFixed(1) + "M",           color: "text-yellow-400" },
         ].map((s) => (
@@ -1331,7 +1387,7 @@ function SectionBuyers() {
                   <td className="px-3 py-2.5 text-gray-300 whitespace-nowrap">{b.contact}</td>
                   <td className="px-3 py-2.5">
                     <div className="flex gap-1 flex-wrap">
-                      {b.products.map((p) => <span key={p} className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${PRODUCT_COLORS[p].light} ${PRODUCT_COLORS[p].text} border ${PRODUCT_COLORS[p].border}`}>{p}</span>)}
+                      {b.products.map((p: string) => <span key={p} className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${PRODUCT_COLORS[p]?.light} ${PRODUCT_COLORS[p]?.text} border ${PRODUCT_COLORS[p]?.border}`}>{p}</span>)}
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-gray-300 text-center">{b.orders}</td>
@@ -1383,7 +1439,7 @@ function SectionBuyers() {
               <div className="bg-gray-900/50 rounded-lg px-3 py-2.5">
                 <p className="text-xs text-gray-500 mb-2">Products Purchased</p>
                 <div className="flex gap-2">
-                  {selected.products.map((p) => <span key={p} className={`text-xs font-bold px-3 py-1 rounded-lg ${PRODUCT_COLORS[p].light} ${PRODUCT_COLORS[p].text} border ${PRODUCT_COLORS[p].border}`}>{p}</span>)}
+                  {selected.products.map((p: string) => <span key={p} className={`text-xs font-bold px-3 py-1 rounded-lg ${PRODUCT_COLORS[p]?.light} ${PRODUCT_COLORS[p]?.text} border ${PRODUCT_COLORS[p]?.border}`}>{p}</span>)}
                 </div>
               </div>
               <div className="bg-gray-900/50 rounded-lg px-3 py-2.5">
