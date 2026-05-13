@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import Image from "next/image";
 import tower from "@/../public/tower.jpg";
 import truck1 from "@/../public/truck1.jpg";
@@ -469,13 +468,15 @@ function generateOrderId(): string {
 
 const PAYSTACK_PUBLIC_KEY = "pk_test_REPLACE_WITH_YOUR_KEY";
 
+const mapPaymentMethod = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m;
+
 export default function BuyNow() {
-  const router = useRouter();
   const [stage, setStage] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [copied, setCopied] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [isCustomer, setIsCustomer] = useState(false);
 
   useEffect(() => {
@@ -525,14 +526,68 @@ export default function BuyNow() {
   const updatePurchase = (d: Partial<PurchaseInfo>) => setFormData((f) => ({ ...f, purchase: { ...f.purchase, ...d } }));
   const updatePayment  = (d: Partial<PaymentInfo>)  => setFormData((f) => ({ ...f, payment:  { ...f.payment,  ...d } }));
 
+  const submitOrder = async (id: string, paystackRef?: string) => {
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const { api } = await import("@/lib/db-client");
+      const p = formData.purchase;
+      const ullages = [p.ownedTruck.ullage1, p.ownedTruck.ullage2, p.ownedTruck.ullage3, p.ownedTruck.ullage4, p.ownedTruck.ullage5]
+        .filter(Boolean).map(Number);
+      await api.purchaseOrders.create({
+        orderId: id,
+        status: "Pending",
+        loadingDepot: formData.company.loadingDepot,
+        companyName: formData.company.name,
+        dprRegNo: formData.company.dprRegNo,
+        cacRegNo: formData.company.cacRegNo,
+        companyAddress: formData.company.headOfficeAddress,
+        companyTelephone: formData.company.telephone,
+        companyEmail: formData.company.email,
+        stationAddress: formData.company.stationAddress,
+        ownerName: formData.owner.name,
+        ownerTelephone: formData.owner.telephone,
+        ownerAddress: formData.owner.address,
+        ownerEmail: formData.owner.email,
+        ownerIdType: formData.owner.officialIdType,
+        ownerIdNumber: formData.owner.idNumber,
+        productType: p.productType,
+        productQuantity: Number(p.productQuantity),
+        haulageTruck: p.haulageTruck as "Owned Truck" | "Rent Truck",
+        ...(p.haulageTruck === "Owned Truck" && {
+          vehicleType: p.ownedTruck.vehicleType || undefined,
+          tankCapacity: p.ownedTruck.tankCapacity ? Number(p.ownedTruck.tankCapacity) : undefined,
+          truckRegNumber: p.ownedTruck.truckRegNumber || undefined,
+          tractorColor: p.ownedTruck.tractorColor || undefined,
+          tankColor: p.ownedTruck.tankColor || undefined,
+          bodyInscription: p.ownedTruck.bodyInscription || undefined,
+          ullages: ullages.length ? ullages : undefined,
+          driverName: p.driverName || undefined,
+          driverIdType: p.driverIdType || undefined,
+          driverIdNumber: p.driverIdNumber || undefined,
+        }),
+        paymentMethod: mapPaymentMethod(formData.payment.paymentMethod) as any,
+        bankName: formData.payment.bankName || undefined,
+        bankAccountName: formData.payment.accountName || undefined,
+        transactionRef: paystackRef || formData.payment.transactionRef || `MANUAL-${Date.now()}`,
+      } as any);
+      setOrderId(id);
+      setSubmitted(true);
+    } catch {
+      setSubmitError("Failed to save order. Please try again.");
+    }
+    setSubmitting(false);
+  };
+
   const handlePaystack = () => {
+    const id = generateOrderId();
     // @ts-ignore
     const handler = window.PaystackPop.setup({
       key: PAYSTACK_PUBLIC_KEY, email: formData.owner.email || formData.company.email, amount: 0, currency: "NGN",
       ref: `PB-${Date.now()}`,
       metadata: { companyName: formData.company.name, productType: formData.purchase.productType, productQuantity: formData.purchase.productQuantity, haulageTruck: formData.purchase.haulageTruck },
       onClose: () => {},
-      callback: (_response: { reference: string }) => { const id = generateOrderId(); setOrderId(id); setSubmitted(true); },
+      callback: (response: { reference: string }) => { submitOrder(id, response.reference); },
     });
     handler.openIframe();
   };
@@ -581,7 +636,7 @@ export default function BuyNow() {
     if (err) { setSubmitError(err); return; }
     if (stage < 3) { setStage((s) => s + 1); return; }
     if (formData.payment.paymentMethod === "paystack") handlePaystack();
-    else { const id = generateOrderId(); setOrderId(id); setSubmitted(true); }
+    else { submitOrder(generateOrderId()); }
   };
   const handleBack = () => { if (stage > 0) setStage((s) => s - 1); };
   const handleCopyId = () => { navigator.clipboard.writeText(orderId).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
@@ -662,8 +717,8 @@ export default function BuyNow() {
               {submitError && <p className="text-sm text-red-500 text-center mt-4">{submitError}</p>}
               <div className="flex justify-between items-center mt-4 pt-6 border-t border-gray-100">
                 {stage > 0 ? <button onClick={handleBack} className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition">‹ Back</button> : <div />}
-                <button onClick={handleNext} className="px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 active:scale-95 transition-all">
-                  {stage === 3 ? (formData.payment.paymentMethod === "paystack" ? "Pay Now →" : formData.payment.paymentMethod ? "Proceed with Payment →" : "Submit Order") : "Next ›"}
+                <button onClick={handleNext} disabled={submitting} className="px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                  {submitting ? "Submitting…" : stage === 3 ? (formData.payment.paymentMethod === "paystack" ? "Pay Now →" : formData.payment.paymentMethod ? "Proceed with Payment →" : "Submit Order") : "Next ›"}
                 </button>
               </div>
             </div>
