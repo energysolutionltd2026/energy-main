@@ -154,7 +154,7 @@ function HomeContent() {
                           Price
                         </th>
                         <th className="w-1/4 px-2 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm text-gray-700">
-                          Qty
+                          Stock
                         </th>
                       </tr>
                     </thead>
@@ -191,7 +191,7 @@ function HomeContent() {
                               {data.price}
                             </td>
                             <td className="px-2 sm:px-4 py-3 sm:py-4 text-gray-600 text-xs sm:text-sm">
-                              {data.quantity.split("/")[1]?.trim() ?? data.quantity}
+                              {data.quantity.split("/")[0]?.trim() ?? data.quantity}
                             </td>
                           </tr>
                         ))}
