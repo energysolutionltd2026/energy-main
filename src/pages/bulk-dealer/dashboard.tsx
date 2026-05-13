@@ -11,48 +11,12 @@ import { startTracking } from "@/utils/onlineTracker";
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Tank { id: string; label: string; level: number; max: number; }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const TANKS: Record<string, Tank[]> = {
-  PMS: [
-    { id: "PMS-T1", label: "Tank 1", level: 3.25, max: 5 },
-    { id: "PMS-T2", label: "Tank 2", level: 3.75, max: 5 },
-    { id: "PMS-T3", label: "Tank 3", level: 2.25, max: 5 },
-  ],
-  ATK: [
-    { id: "ATK-T1", label: "Tank 1", level: 2.8, max: 5 },
-    { id: "ATK-T2", label: "Tank 2", level: 1.9, max: 5 },
-  ],
-  AGO: [
-    { id: "AGO-T1", label: "Tank 1", level: 4.1, max: 5 },
-    { id: "AGO-T2", label: "Tank 2", level: 3.2, max: 5 },
-  ],
-};
-
 const PRODUCT_COLORS: Record<string, { text: string; fill: string; light: string; border: string; stripe: string }> = {
   PMS: { text: "text-red-400",    fill: "#ef4444", light: "bg-red-500/20",    border: "border-red-500/40",    stripe: "rgba(239,68,68,0.6)"   },
   ATK: { text: "text-orange-400", fill: "#f97316", light: "bg-orange-500/20", border: "border-orange-500/40", stripe: "rgba(249,115,22,0.6)"  },
   AGO: { text: "text-blue-400",   fill: "#3b82f6", light: "bg-blue-500/20",   border: "border-blue-500/40",   stripe: "rgba(59,130,246,0.6)"  },
 };
 
-const STOCK_VALUE = {
-  total: "₦64,345,210.78",
-  ATK: { amount: "₦18,435,032.03", buyPrice: 650,  sellPrice: 720  },
-  AGO: { amount: "₦28,258,392.04", buyPrice: 1050, sellPrice: 1200 },
-  PMS: { amount: "₦17,345,985.90", buyPrice: 617,  sellPrice: 680  },
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MOCK_DISPENSE: any[] = [];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MOCK_DELIVERIES: any[] = [];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MOCK_PURCHASE_ORDERS: any[] = [];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MOCK_SALES: any[] = [];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const RECONCILIATION: any[] = [];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const RECON_HISTORY: any[] = [];
 
 const NAV_SECTIONS = [
   ["Current Stock Level", "Stock Value", "Stock Reconciliation"],
@@ -110,10 +74,11 @@ function TankBar({ tank, color }: { tank: Tank; color: string }) {
 }
 
 // ─── Mini SVG Line Chart ──────────────────────────────────────────────────────
-function MiniChart() {
+function MiniChart({ tanks }: { tanks?: Record<string, { level: number; max: number }> }) {
   const W = 180; const H = 160; const PAD = 20;
-  const data = { AGO: [3.2, 4.5, 4.1], ATK: [2.1, 3.0, 2.8], PMS: [2.5, 4.2, 3.5] };
-  const maxVal = 5; const minVal = 0;
+  const t = tanks ?? getDealerTanks();
+  const data = { AGO: [t.AGO.level], ATK: [t.ATK.level], PMS: [t.PMS.level] };
+  const maxVal = Math.max(5, ...Object.values(t).map(x => x.max)); const minVal = 0;
   const x = (i: number) => PAD + (i / 2) * (W - PAD * 2);
   const y = (v: number) => H - PAD - ((v - minVal) / (maxVal - minVal)) * (H - PAD * 2);
   const path = (pts: number[]) => pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
@@ -172,6 +137,7 @@ const NEW_DEALER_DEFAULT = { PMS: { level: 0, max: 5 }, AGO: { level: 0, max: 5 
 let _dealerEmail = "";
 let _dealerName = "";
 let _dealerTanks: Record<string, { level: number; max: number }> = { ...NEW_DEALER_DEFAULT };
+let _platformPrices: Record<string, number> = { PMS: 617, ATK: 650, AGO: 1050 };
 
 function getDealerTanks(): Record<string, { level: number; max: number }> {
   return _dealerTanks;
@@ -191,6 +157,14 @@ function updateDealerStock(product: string, deltaLiters: number) {
 
 function parseLiters(qty: string): number {
   return parseInt(qty.replace(/[^0-9]/g, "")) || 0;
+}
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
+function computeStockValue() {
+  return (["PMS", "AGO", "ATK"] as const).reduce((acc, p) => {
+    const litres = _dealerTanks[p].level * 1_000_000;
+    return acc + litres * (_platformPrices[p] ?? 0);
+  }, 0);
 }
 
 // ─── Account Maintenance Fee Bar ─────────────────────────────────────────────
@@ -277,27 +251,7 @@ function SectionCurrentStock() {
           </div>
           <div className={card}>
             <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-lg mb-3">Recalibration Log</span>
-            <button
-              onClick={() => setShowCalibrationLog(!showCalibrationLog)}
-              className="text-orange-400 text-xs font-semibold mb-2 hover:underline text-left w-full"
-            >
-              {showCalibrationLog ? "▲ Hide calibration data" : "▾ Last tank calibration data"}
-            </button>
-            {showCalibrationLog ? (
-              <div className="space-y-1.5 mb-3">
-                {CALIBRATION_LOG.map((c) => (
-                  <div key={c.tank} className="flex justify-between text-xs bg-gray-900/50 rounded px-2 py-1.5">
-                    <span className="text-gray-400 font-mono">{c.tank}</span>
-                    <span className="text-white">{c.reading}</span>
-                    <span className="text-gray-600">{c.date}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex gap-3 text-xs text-gray-300 mb-3">
-                <span>3.25M</span><span>3.75M</span><span>2.25M</span>
-              </div>
-            )}
+            <p className="text-xs text-gray-500 italic">No calibration records on file. Contact your depot manager to log tank readings.</p>
           </div>
         </div>
 
@@ -307,7 +261,7 @@ function SectionCurrentStock() {
           {dealerProducts.map((product) => {
             const { level, max } = MERGED_TANKS[product];
             const pct = Math.min(100, (level / max) * 100);
-            const valueNaira = level * 1_000_000 * STOCK_PRICES[product];
+            const valueNaira = level * 1_000_000 * (_platformPrices[product] ?? 0);
             const fillColor = PRODUCT_COLORS[product].fill;
             const tankH = 200;
             const scales = Array.from({ length: 6 }, (_, i) => parseFloat(((max / 6) * (6 - i)).toFixed(1)));
@@ -424,93 +378,101 @@ function SectionCurrentStock() {
 }
 
 // ─── Section: Stock Value ──────────────────────────────────────────────────────
-const ALL_TIME_HIGH = [
-  { date: "2026-03-27", product: "PMS", qty: "60,000 L", buyer: "Surulere Gas Station", amount: "₦40,800,000" },
-  { date: "2026-03-26", product: "AGO", qty: "30,000 L", buyer: "Lekki Junction",       amount: "₦36,000,000" },
-  { date: "2026-02-14", product: "PMS", qty: "80,000 L", buyer: "Ikeja Fuel Ltd",        amount: "₦12,385,485.90" },
-];
-const ALL_TIME_LOW = [
-  { date: "2026-01-08", product: "ATK", qty: "5,000 L",  buyer: "Mainland Petroleum",  amount: "₦3,657,384.89" },
-  { date: "2026-02-01", product: "ATK", qty: "8,000 L",  buyer: "Delta Gas Co.",        amount: "₦5,200,000" },
-  { date: "2026-03-10", product: "PMS", qty: "10,000 L", buyer: "Surulere Gas Station", amount: "₦6,800,000" },
-];
-
 function SectionStockValue() {
-  const [showPriceLog, setShowPriceLog] = useState(false);
   const [salesModal, setSalesModal] = useState<"high" | "low" | null>(null);
-  const priceLog = [
-    { date: "2026-03-27", product: "PMS", old: "₦610", new_: "₦617", by: "Market Update" },
-    { date: "2026-03-22", product: "AGO", old: "₦1,020", new_: "₦1,050", by: "NNPC Directive" },
-    { date: "2026-03-15", product: "ATK", old: "₦630", new_: "₦650", by: "Market Update" },
-  ];
+  const [allTimeHigh, setAllTimeHigh] = useState<any[]>([]);
+  const [allTimeLow, setAllTimeLow]   = useState<any[]>([]);
+  const [tanks, setTanks] = useState(() => getDealerTanks());
+
+  useEffect(() => {
+    const refresh = () => setTanks(getDealerTanks());
+    window.addEventListener("dealer-stock-updated", refresh);
+    window.addEventListener("dealer-prices-updated", refresh);
+    return () => {
+      window.removeEventListener("dealer-stock-updated", refresh);
+      window.removeEventListener("dealer-prices-updated", refresh);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!_dealerEmail) return;
+    import("@/lib/db-client").then(({ api }) => {
+      api.transactions.list({ userRole: "Bulk Dealer", limit: 500 } as any).then((result) => {
+        if (!result?.data?.length) return;
+        const txns = result.data
+          .filter((t: any) => t.user === _dealerName || t.userEmail === _dealerEmail)
+          .map((t: any) => ({
+            date:    (t.date || t.createdAt || "").split("T")[0],
+            product: t.product || "",
+            qty:     t.quantity || "",
+            buyer:   t.notes || t.reference || "",
+            amount:  t.totalAmount || "",
+          }));
+        const sorted = [...txns].sort((a, b) => {
+          const aNum = parseFloat(String(a.amount).replace(/[₦,]/g, "") || "0");
+          const bNum = parseFloat(String(b.amount).replace(/[₦,]/g, "") || "0");
+          return bNum - aNum;
+        });
+        setAllTimeHigh(sorted.slice(0, 3));
+        setAllTimeLow([...sorted].reverse().slice(0, 3));
+      }).catch(() => null);
+    });
+  }, []);
+
+  const totalValue = computeStockValue();
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left */}
       <div className="space-y-4">
         <div className={card}>
           <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-lg mb-3">Worth of current stock in NAIRA</span>
-          <p className="text-3xl font-bold text-white mb-4">₦64,345,210.78</p>
+          <p className="text-3xl font-bold text-white mb-4">₦{totalValue.toLocaleString()}</p>
           <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-lg mb-3">Product Valuation</span>
           <div className="grid grid-cols-3 gap-px bg-gray-700 rounded-lg overflow-hidden text-center">
-            {(["ATK","AGO","PMS"] as const).map((p) => (
-              <div key={p} className={`${PRODUCT_COLORS[p].light} py-2`}>
-                <p className={`text-xs font-bold ${PRODUCT_COLORS[p].text}`}>{p}</p>
-                <p className="text-xs text-white font-semibold mt-1">{STOCK_VALUE[p].amount}</p>
-              </div>
-            ))}
+            {(["ATK","AGO","PMS"] as const).map((p) => {
+              const val = tanks[p].level * 1_000_000 * (_platformPrices[p] ?? 0);
+              return (
+                <div key={p} className={`${PRODUCT_COLORS[p].light} py-2`}>
+                  <p className={`text-xs font-bold ${PRODUCT_COLORS[p].text}`}>{p}</p>
+                  <p className="text-xs text-white font-semibold mt-1">₦{val.toLocaleString()}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className={card}>
-          <button
-            onClick={() => setShowPriceLog(!showPriceLog)}
-            className={`${gBtn} w-full flex items-center justify-between`}
-          >
-            <span>Price Update Log History</span>
-            <span>{showPriceLog ? "▲" : "▾"}</span>
-          </button>
-          {showPriceLog && (
-            <div className="mt-3 space-y-2">
-              {priceLog.map((l, i) => (
-                <div key={i} className="flex items-center justify-between text-xs border border-gray-800 rounded-lg px-3 py-2">
-                  <span className={PRODUCT_COLORS[l.product].text}>{l.product}</span>
-                  <span className="text-gray-500">{l.date}</span>
-                  <span className="text-gray-400">{l.old} → <span className="text-green-400">{l.new_}</span></span>
-                  <span className="text-gray-600">{l.by}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Price Update Log</p>
+          <p className="text-xs text-gray-500 italic">No price update history on file.</p>
         </div>
       </div>
 
       {/* Right */}
       <div className="space-y-4">
         <div className={card}>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-white">Value Change Tracker</span>
-            <select className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-green-500">
-              <option>This week</option><option>This month</option><option>Last 3 months</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <button onClick={() => setSalesModal("high")} className={`${gBtn} w-full mb-2 text-xs`}>All time high sales</button>
-              <p className="text-white font-bold text-center">₦12,385,485.90</p>
-              <p className="text-[10px] text-gray-500 text-center">PMS</p>
+              {allTimeHigh.length > 0 ? (
+                <>
+                  <p className="text-white font-bold text-center">{allTimeHigh[0].amount}</p>
+                  <p className="text-[10px] text-gray-500 text-center">{allTimeHigh[0].product}</p>
+                </>
+              ) : <p className="text-xs text-gray-500 text-center">No data</p>}
             </div>
             <div>
               <button onClick={() => setSalesModal("low")} className="bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition w-full mb-2">All time low sales</button>
-              <p className="text-white font-bold text-center">₦3,657,384.89</p>
-              <p className="text-[10px] text-gray-500 text-center">ATK</p>
+              {allTimeLow.length > 0 ? (
+                <>
+                  <p className="text-white font-bold text-center">{allTimeLow[0].amount}</p>
+                  <p className="text-[10px] text-gray-500 text-center">{allTimeLow[0].product}</p>
+                </>
+              ) : <p className="text-xs text-gray-500 text-center">No data</p>}
             </div>
-          </div>
-          <div className="flex items-center justify-between border border-gray-700 rounded-lg px-3 py-2">
-            <span className="text-xs font-semibold text-green-400">Price Update Log</span>
-            <span className="text-xs text-gray-500">Last view: 6 mins ago</span>
           </div>
         </div>
         <div className={`${card} flex flex-col items-center`}>
-          <MiniChart />
+          <MiniChart tanks={tanks} />
         </div>
       </div>
 
@@ -528,16 +490,19 @@ function SectionStockValue() {
               </button>
             </div>
             <div className="px-6 py-4 space-y-3">
-              {(salesModal === "high" ? ALL_TIME_HIGH : ALL_TIME_LOW).map((s, i) => (
-                <div key={i} className="flex items-center justify-between bg-gray-900/50 rounded-lg px-4 py-3">
-                  <div>
-                    <p className="text-xs text-gray-500">{s.date}</p>
-                    <p className="text-sm text-white font-semibold">{s.buyer}</p>
-                    <p className="text-xs text-gray-400">{s.qty} · <span className={PRODUCT_COLORS[s.product].text}>{s.product}</span></p>
+              {(salesModal === "high" ? allTimeHigh : allTimeLow).length === 0
+                ? <p className="text-gray-500 text-sm text-center py-4">No transaction records found.</p>
+                : (salesModal === "high" ? allTimeHigh : allTimeLow).map((s, i) => (
+                  <div key={i} className="flex items-center justify-between bg-gray-900/50 rounded-lg px-4 py-3">
+                    <div>
+                      <p className="text-xs text-gray-500">{s.date}</p>
+                      <p className="text-sm text-white font-semibold">{s.buyer}</p>
+                      <p className="text-xs text-gray-400">{s.qty} · <span className={PRODUCT_COLORS[s.product]?.text}>{s.product}</span></p>
+                    </div>
+                    <p className={`text-base font-bold ${salesModal === "high" ? "text-green-400" : "text-red-400"}`}>{s.amount}</p>
                   </div>
-                  <p className={`text-base font-bold ${salesModal === "high" ? "text-green-400" : "text-red-400"}`}>{s.amount}</p>
-                </div>
-              ))}
+                ))
+              }
             </div>
             <div className="px-6 py-3 border-t border-gray-800">
               <button onClick={() => setSalesModal(null)} className={`${gBtn} w-full`}>Close</button>
@@ -552,13 +517,32 @@ function SectionStockValue() {
 // ─── Section: Daily Dispense/Usage ────────────────────────────────────────────
 function SectionDailyDispense() {
   const [subTab, setSubTab] = useState("Dispense Record");
-  const subTabs = ["Dispense Record", "Time & Operator Log", "Daily Usage Summary", "Variance Report"];
-  const dailySummary = { PMS: { vol: "120,000 L", rev: "₦81,600,000" }, ATK: { vol: "20,000 L", rev: "₦14,400,000" }, AGO: { vol: "55,000 L", rev: "₦66,000,000" } };
-  const variance = [
-    { product: "PMS", expected: "121,200 L", actual: "120,000 L", variance: "−1,200 L", status: "Minor"    },
-    { product: "ATK", expected: "19,850 L",  actual: "20,000 L",  variance: "+150 L",   status: "OK"       },
-    { product: "AGO", expected: "55,000 L",  actual: "55,000 L",  variance: "0 L",      status: "Balanced" },
-  ];
+  const subTabs = ["Dispense Record", "Daily Usage Summary"];
+  const [dispenseRecords, setDispenseRecords] = useState<any[]>([]);
+  const today = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    if (!_dealerEmail) return;
+    import("@/lib/db-client").then(({ api }) => {
+      api.transactions.list({ type: "Supply Fulfillment", userRole: "Bulk Dealer", limit: 200 } as any).then((result) => {
+        if (!result?.data) return;
+        const todayTxns = result.data.filter((t: any) =>
+          (t.user === _dealerName || t.userEmail === _dealerEmail) &&
+          (t.date || t.createdAt || "").startsWith(today)
+        );
+        setDispenseRecords(todayTxns);
+      }).catch(() => null);
+    });
+  }, [today]);
+
+  const summary = (["PMS","AGO","ATK"] as const).map((p) => {
+    const recs = dispenseRecords.filter((r) => r.product === p);
+    const vol = recs.reduce((acc, r) => acc + parseLiters(r.quantity || ""), 0);
+    const rev = recs.reduce((acc, r) => acc + parseFloat(String(r.totalAmount || "0").replace(/[₦,]/g, "")), 0);
+    return { product: p, vol, rev };
+  });
+  const totalRev = summary.reduce((acc, s) => acc + s.rev, 0);
+
   return (
     <div>
       <div className="flex gap-2 mb-5 flex-wrap">
@@ -575,88 +559,46 @@ function SectionDailyDispense() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-gray-800">
-                {["Time","Operator","Product","Qty Dispensed","Pump","Variance"].map((h) => (
+                {["Date","Reference","Product","Qty Dispensed","Amount","Status"].map((h) => (
                   <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">{h}</th>
                 ))}
               </tr></thead>
               <tbody className="divide-y divide-gray-800/50">
-                {MOCK_DISPENSE.map((r, i) => (
-                  <tr key={i} className="hover:bg-white/5 transition">
-                    <td className="px-3 py-2.5 text-gray-300 font-mono text-xs">{r.time}</td>
-                    <td className="px-3 py-2.5 text-white">{r.operator}</td>
-                    <td className="px-3 py-2.5"><span className={`text-xs font-bold ${PRODUCT_COLORS[r.product].text}`}>{r.product}</span></td>
-                    <td className="px-3 py-2.5 text-gray-300">{r.qty}</td>
-                    <td className="px-3 py-2.5 text-gray-400 text-xs">{r.pump}</td>
-                    <td className={`px-3 py-2.5 text-xs font-semibold ${r.variance.startsWith("−") ? "text-red-400" : r.variance.startsWith("+") ? "text-green-400" : "text-gray-500"}`}>{r.variance}</td>
-                  </tr>
-                ))}
+                {dispenseRecords.length === 0
+                  ? <tr><td colSpan={6} className="text-center text-gray-500 py-8 text-sm">No dispense records for today.</td></tr>
+                  : dispenseRecords.map((r, i) => (
+                    <tr key={i} className="hover:bg-white/5 transition">
+                      <td className="px-3 py-2.5 text-gray-300 text-xs">{(r.date || r.createdAt || "").split("T")[0]}</td>
+                      <td className="px-3 py-2.5 text-green-400 font-mono text-xs">{r.reference || r._id}</td>
+                      <td className="px-3 py-2.5"><span className={`text-xs font-bold ${PRODUCT_COLORS[r.product]?.text}`}>{r.product}</span></td>
+                      <td className="px-3 py-2.5 text-gray-300">{r.quantity}</td>
+                      <td className="px-3 py-2.5 text-white font-semibold">{r.totalAmount}</td>
+                      <td className="px-3 py-2.5"><span className={statusBadge(r.status || "Pending")}>{r.status || "Pending"}</span></td>
+                    </tr>
+                  ))
+                }
               </tbody>
             </table>
           </div>
-        </div>
-      )}
-
-      {subTab === "Time & Operator Log" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[{ shift: "Morning Shift", time: "06:00 – 14:00", operators: ["Emeka Okafor", "Fatima Bello"] },
-            { shift: "Afternoon Shift", time: "14:00 – 22:00", operators: ["James Adeyemi", "Chioma Eze"] },
-            { shift: "Night Shift", time: "22:00 – 06:00", operators: ["Biodun Afolabi"] }
-          ].map((s) => (
-            <div key={s.shift} className={card}>
-              <p className="text-green-400 font-semibold text-sm mb-1">{s.shift}</p>
-              <p className="text-gray-500 text-xs mb-3">{s.time}</p>
-              {s.operators.map((op) => (
-                <div key={op} className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 rounded-full bg-green-600/30 flex items-center justify-center text-green-400 text-xs font-bold">{op.charAt(0)}</div>
-                  <span className="text-sm text-white">{op}</span>
-                </div>
-              ))}
-            </div>
-          ))}
         </div>
       )}
 
       {subTab === "Daily Usage Summary" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(["PMS","ATK","AGO"] as const).map((p) => (
+            {summary.map(({ product: p, vol, rev }) => (
               <div key={p} className={`${card} text-center`}>
                 <span className={`inline-block text-xs font-bold px-3 py-1 rounded-lg mb-3 ${PRODUCT_COLORS[p].light} ${PRODUCT_COLORS[p].text} border ${PRODUCT_COLORS[p].border}`}>{p}</span>
-                <p className="text-2xl font-bold text-white">{dailySummary[p].vol}</p>
-                <p className="text-xs text-gray-500 mt-1">Volume Dispensed</p>
-                <p className="text-green-400 font-semibold mt-2">{dailySummary[p].rev}</p>
+                <p className="text-2xl font-bold text-white">{vol.toLocaleString()} L</p>
+                <p className="text-xs text-gray-500 mt-1">Volume Dispensed Today</p>
+                <p className="text-green-400 font-semibold mt-2">₦{rev.toLocaleString()}</p>
                 <p className="text-xs text-gray-500">Revenue</p>
               </div>
             ))}
           </div>
           <div className={`${card} text-center`}>
             <p className="text-gray-400 text-sm">Total Daily Revenue</p>
-            <p className="text-3xl font-bold text-white mt-1">₦162,000,000</p>
-          </div>
-        </div>
-      )}
-
-      {subTab === "Variance Report" && (
-        <div className={card}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="border-b border-gray-800">
-                {["Product","Expected","Actual","Variance","Status"].map((h) => (
-                  <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">{h}</th>
-                ))}
-              </tr></thead>
-              <tbody className="divide-y divide-gray-800/50">
-                {variance.map((r) => (
-                  <tr key={r.product} className="hover:bg-white/5 transition">
-                    <td className="px-3 py-3"><span className={`text-xs font-bold ${PRODUCT_COLORS[r.product].text}`}>{r.product}</span></td>
-                    <td className="px-3 py-3 text-gray-300">{r.expected}</td>
-                    <td className="px-3 py-3 text-gray-300">{r.actual}</td>
-                    <td className={`px-3 py-3 font-semibold text-sm ${r.variance.startsWith("−") ? "text-red-400" : r.variance === "0 L" ? "text-gray-500" : "text-green-400"}`}>{r.variance}</td>
-                    <td className="px-3 py-3"><span className={statusBadge(r.status)}>{r.status}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p className="text-3xl font-bold text-white mt-1">₦{totalRev.toLocaleString()}</p>
           </div>
         </div>
       )}
@@ -671,7 +613,7 @@ const DAILY_REMINDER_KEY = "bulk_dealer_daily_reminder_dismissed";
 function SectionReconciliation() {
   const [running, setRunning]   = useState(false);
   const [toast, setToast]       = useState("");
-  const [history, setHistory]   = useState(RECON_HISTORY);
+  const [history, setHistory]   = useState<any[]>([]);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [soldForm, setSoldForm] = useState({ pms: "", ago: "", atk: "" });
   const [lastUpdateDate, setLastUpdateDate] = useState<string>("");
@@ -845,7 +787,7 @@ function SectionReconciliation() {
 
       {/* Product cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {RECONCILIATION.map((r) => (
+        {([] as any[]).map((r: any) => (
           <div key={r.product} className={card}>
             <span className={`inline-block text-xs font-bold px-3 py-1 rounded-lg mb-3 ${PRODUCT_COLORS[r.product].light} ${PRODUCT_COLORS[r.product].text} border ${PRODUCT_COLORS[r.product].border}`}>
               {r.product}
@@ -900,10 +842,9 @@ function SectionReconciliation() {
 }
 
 // ─── Section: Allocations ────────────────────────────────────────────────────────
-const PRICE_PER_LITRE: Record<string, number> = { PMS: 617, ATK: 650, AGO: 1050 };
 
 function SectionAllocations() {
-  const [orders, setOrders]   = useState(MOCK_PURCHASE_ORDERS);
+  const [orders, setOrders]   = useState<any[]>([]);
   const [filter, setFilter]   = useState("All");
   const [showForm, setShowForm] = useState(false);
   const [toast, setToast]     = useState("");
@@ -937,7 +878,7 @@ function SectionAllocations() {
       setToast("Please fill all required fields"); setTimeout(() => setToast(""), 2500); return;
     }
     const qty = parseInt(form.qty);
-    const amount = qty * (PRICE_PER_LITRE[form.product] ?? 617);
+    const amount = qty * (_platformPrices[form.product] ?? 617);
     import("@/lib/db-client").then(({ api }) => {
       api.purchaseOrders.create({
         dealer: _dealerEmail,
@@ -1148,41 +1089,44 @@ function SectionSalesHistory() {
 
 // ─── Section: View Profit Margin ──────────────────────────────────────────────
 function SectionProfitMargin() {
-  const marginHistory = [
-    { week: "Week 1 (Mar 1–7)",   PMS: "9.2%", ATK: "9.5%", AGO: "12.1%" },
-    { week: "Week 2 (Mar 8–14)",  PMS: "9.5%", ATK: "10.0%", AGO: "12.5%" },
-    { week: "Week 3 (Mar 15–21)", PMS: "9.8%", ATK: "9.8%", AGO: "13.0%" },
-    { week: "Week 4 (Mar 22–28)", PMS: "9.6%", ATK: "10.3%", AGO: "12.5%" },
-  ];
+  const [tanks, setTanks] = useState(() => getDealerTanks());
+  const [prices, setPrices] = useState({ ..._platformPrices });
+
+  useEffect(() => {
+    const refresh = () => { setTanks(getDealerTanks()); setPrices({ ..._platformPrices }); };
+    window.addEventListener("dealer-stock-updated", refresh);
+    window.addEventListener("dealer-prices-updated", refresh);
+    return () => {
+      window.removeEventListener("dealer-stock-updated", refresh);
+      window.removeEventListener("dealer-prices-updated", refresh);
+    };
+  }, []);
+
+  const totalValue = (["PMS","AGO","ATK"] as const).reduce((acc, p) => acc + tanks[p].level * 1_000_000 * (prices[p] ?? 0), 0);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(["PMS","ATK","AGO"] as const).map((p) => {
-          const sv = STOCK_VALUE[p];
-          const margin = sv.sellPrice - sv.buyPrice;
-          const pct = ((margin / sv.sellPrice) * 100).toFixed(1);
+          const buyPrice = prices[p] ?? 0;
           return (
             <div key={p} className={card}>
               <span className={`inline-block text-xs font-bold px-3 py-1 rounded-lg mb-4 ${PRODUCT_COLORS[p].light} ${PRODUCT_COLORS[p].text} border ${PRODUCT_COLORS[p].border}`}>{p}</span>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Buy Price / L</span><span className="text-white">₦{sv.buyPrice.toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Sell Price / L</span><span className="text-white">₦{sv.sellPrice.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Platform Price / L</span><span className="text-white">₦{buyPrice.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Current Stock</span><span className="text-white">{tanks[p].level}M L</span></div>
                 <div className="flex justify-between border-t border-gray-800 pt-2">
-                  <span className="text-gray-500">Margin / L</span><span className="text-green-400 font-bold">₦{margin.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Margin %</span>
-                  <span className="bg-green-500/20 text-green-400 border border-green-500/40 text-xs font-bold px-2 py-0.5 rounded-full">{pct}%</span>
+                  <span className="text-gray-500">Stock Value</span>
+                  <span className="text-green-400 font-bold">₦{(tanks[p].level * 1_000_000 * buyPrice).toLocaleString()}</span>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[{ label: "Total Portfolio Value", value: "₦64,345,210.78", color: "text-white" },
-          { label: "Average Margin %", value: "10.9%", color: "text-green-400" },
-          { label: "Total Profit This Month", value: "₦16,265,000", color: "text-green-400" },
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[{ label: "Total Portfolio Value", value: `₦${totalValue.toLocaleString()}`, color: "text-white" },
+          { label: "Platform Prices Source", value: "Live from admin settings", color: "text-green-400" },
         ].map((s) => (
           <div key={s.label} className={`${card} text-center`}>
             <p className="text-xs text-gray-500 mb-1">{s.label}</p>
@@ -1191,26 +1135,8 @@ function SectionProfitMargin() {
         ))}
       </div>
       <div className={card}>
-        <p className="text-sm font-semibold text-white mb-3">Margin History by Week</p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="border-b border-gray-800">
-              {["Week","PMS Margin","ATK Margin","AGO Margin"].map((h) => (
-                <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">{h}</th>
-              ))}
-            </tr></thead>
-            <tbody className="divide-y divide-gray-800/50">
-              {marginHistory.map((r) => (
-                <tr key={r.week} className="hover:bg-white/5 transition">
-                  <td className="px-3 py-2.5 text-gray-300">{r.week}</td>
-                  <td className="px-3 py-2.5 text-red-400 font-semibold">{r.PMS}</td>
-                  <td className="px-3 py-2.5 text-orange-400 font-semibold">{r.ATK}</td>
-                  <td className="px-3 py-2.5 text-blue-400 font-semibold">{r.AGO}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <p className="text-sm font-semibold text-white mb-2">Margin History by Week</p>
+        <p className="text-xs text-gray-500 italic">Weekly margin history is not yet available. Data will appear here once transaction history builds up.</p>
       </div>
     </div>
   );
@@ -1218,15 +1144,16 @@ function SectionProfitMargin() {
 
 // ─── Section: Low Stock Alert ──────────────────────────────────────────────────
 function SectionLowStockAlert() {
-  const thresholds: Record<string, number> = { PMS: 1.5, ATK: 1.0, AGO: 1.5 };
-  const currentLevels: Record<string, number> = { PMS: 9.25, ATK: 4.70, AGO: 7.30 };
-  const [thresh, setThresh] = useState(thresholds);
+  const [thresh, setThresh] = useState<Record<string, number>>({ PMS: 1.5, ATK: 1.0, AGO: 1.5 });
+  const [tanks, setTanks] = useState(() => getDealerTanks());
   const [toast, setToast] = useState("");
-  const alertHistory = [
-    { date: "2026-03-10", product: "ATK", level: "0.8M L", threshold: "1.0M L", resolved: "2026-03-12" },
-    { date: "2026-02-28", product: "PMS", level: "1.2M L", threshold: "1.5M L", resolved: "2026-03-01" },
-    { date: "2026-02-15", product: "AGO", level: "1.3M L", threshold: "1.5M L", resolved: "2026-02-16" },
-  ];
+
+  useEffect(() => {
+    const refresh = () => setTanks(getDealerTanks());
+    window.addEventListener("dealer-stock-updated", refresh);
+    return () => window.removeEventListener("dealer-stock-updated", refresh);
+  }, []);
+
   const saveThreshold = (p: string) => {
     setToast(`${p} threshold saved — ${thresh[p]}M L`);
     setTimeout(() => setToast(""), 2500);
@@ -1237,7 +1164,7 @@ function SectionLowStockAlert() {
       {toast && <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-semibold shadow-lg">{toast}</div>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(["PMS","ATK","AGO"] as const).map((p) => {
-          const level = currentLevels[p];
+          const level = tanks[p].level;
           const t = thresh[p];
           const status = level < t ? "Critical" : level < t * 1.5 ? "Warning" : "OK";
           const statusColor = status === "Critical" ? "text-red-400" : status === "Warning" ? "text-yellow-400" : "text-green-400";
@@ -1270,42 +1197,29 @@ function SectionLowStockAlert() {
       </div>
       <div className={card}>
         <p className="text-sm font-semibold text-white mb-1">Current Status</p>
-        <p className="text-xs text-gray-500 mb-4">All products are currently above alert thresholds</p>
-        <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-          <div className="w-3 h-3 rounded-full bg-green-500" />
-          <p className="text-green-400 text-sm font-semibold">No active alerts — all stock levels are healthy</p>
-        </div>
+        {(["PMS","ATK","AGO"] as const).some(p => tanks[p].level < thresh[p]) ? (
+          <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <p className="text-red-400 text-sm font-semibold">
+              {(["PMS","ATK","AGO"] as const).filter(p => tanks[p].level < thresh[p]).join(", ")} below threshold — restock needed
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <p className="text-green-400 text-sm font-semibold">No active alerts — all stock levels are healthy</p>
+          </div>
+        )}
       </div>
       <div className={card}>
-        <p className="text-sm font-semibold text-white mb-3">Alert History</p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="border-b border-gray-800">
-              {["Date","Product","Level at Alert","Threshold","Resolved"].map((h) => (
-                <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">{h}</th>
-              ))}
-            </tr></thead>
-            <tbody className="divide-y divide-gray-800/50">
-              {alertHistory.map((a, i) => (
-                <tr key={i} className="hover:bg-white/5 transition">
-                  <td className="px-3 py-2.5 text-gray-300">{a.date}</td>
-                  <td className="px-3 py-2.5"><span className={`text-xs font-bold ${PRODUCT_COLORS[a.product].text}`}>{a.product}</span></td>
-                  <td className="px-3 py-2.5 text-red-400 font-semibold">{a.level}</td>
-                  <td className="px-3 py-2.5 text-gray-400">{a.threshold}</td>
-                  <td className="px-3 py-2.5 text-green-400">{a.resolved}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <p className="text-sm font-semibold text-white mb-2">Alert History</p>
+        <p className="text-xs text-gray-500 italic">No historical alert records on file.</p>
       </div>
     </div>
   );
 }
 
 // ─── Section: Buyers ──────────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MOCK_BUYERS: any[] = [];
 
 function SectionBuyers() {
   const [search, setSearch]     = useState("");
@@ -1669,8 +1583,17 @@ export default function BulkDealerDashboard() {
         _dealerName = u.name || "";
         stopTracking = startTracking({ id: u.email, name: u.name, email: u.email, role: u.role, lastSeen: Date.now() });
 
-        // Load unread notification count from API
+        // Load platform prices + notifications
         import("@/lib/db-client").then(({ api }) => {
+          api.platformSettings.get().then((s: any) => {
+            if (!s) return;
+            _platformPrices = {
+              PMS: s.pmsPricePerLitre ?? 617,
+              AGO: s.agoPricePerLitre ?? 1050,
+              ATK: s.atkPricePerLitre ?? 650,
+            };
+            window.dispatchEvent(new CustomEvent("dealer-prices-updated"));
+          }).catch(() => null);
           (api.notifications as any)?.list?.({ limit: 50 }).then((result: any) => {
             if (result?.data) setUnread(result.data.filter((n: any) => !n.read).length);
           }).catch(() => null);
