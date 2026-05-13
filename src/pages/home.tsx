@@ -66,15 +66,8 @@ function HomeContent() {
   }, []);
 
 
-  /* ============== CUMULATIVE LEVELS (sum total across all depots as %) ============== */
-  const depotCumulativeLevel = (product: ProductKey): number => {
-    const values = Object.values(depotProducts).map(d => d[product]?.level ?? 0);
-    if (!values.length) return 0;
-    return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
-  };
-
   const tankLevel = (product: ProductKey): number =>
-    platformLevels[product] ?? depotCumulativeLevel(product);
+    platformLevels[product] ?? depotProducts[selectedDepot]?.[product]?.level ?? 0;
 
   /* ============== TANK RENDER ============== */
   const renderTankSimulation = () => {
