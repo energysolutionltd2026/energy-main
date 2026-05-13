@@ -43,7 +43,7 @@ function HomeContent() {
   const [dealerLevels] = useState<Record<string, number>>({});
 
   const tankLevel = (product: ProductKey): number =>
-    dealerLevels[product] ?? depotCumulativeLevel(product);
+    dealerLevels[product] ?? activeDepotProducts?.[product]?.level ?? depotCumulativeLevel(product);
 
   /* ============== TANK RENDER ============== */
   const renderTankSimulation = () => {
