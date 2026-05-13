@@ -3,33 +3,31 @@ import React, { useState, useEffect } from 'react';
 type AgoTankSimulationProps = {
   level: number;
   logo?: string;
+  maxVolume?: number;
+  isAdmin?: boolean;
 };
 
-const AgoTankSimulation = ({ level, logo }: AgoTankSimulationProps) => {
+const AgoTankSimulation = ({ level, logo, maxVolume: maxVolumeProp, isAdmin: isAdminProp }: AgoTankSimulationProps) => {
   const [liquidLevel, setLiquidLevel] = useState(level);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [maxVolume, setMaxVolume] = useState(16000000);
-  const [inputVolume, setInputVolume] = useState('16000000');
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [maxVolume, setMaxVolume] = useState(maxVolumeProp ?? 16000000);
+  const [inputVolume, setInputVolume] = useState(String(maxVolumeProp ?? 16000000));
+  const [isAdmin, setIsAdmin] = useState(isAdminProp ?? false);
 
   useEffect(() => {
+    if (isAdminProp !== undefined) return;
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.user?.role === "admin") setIsAdmin(true); })
       .catch(() => null);
-  }, []);
+  }, [isAdminProp]);
 
   useEffect(() => {
-    fetch("/api/db/platform-settings")
-      .then(r => r.ok ? r.json() : null)
-      .then(s => {
-        if (s?.agoMaxVolume) {
-          setMaxVolume(s.agoMaxVolume);
-          setInputVolume(String(s.agoMaxVolume));
-        }
-      })
-      .catch(() => null);
-  }, []);
+    if (maxVolumeProp !== undefined) {
+      setMaxVolume(maxVolumeProp);
+      setInputVolume(String(maxVolumeProp));
+    }
+  }, [maxVolumeProp]);
 
   useEffect(() => { setLiquidLevel(level); }, [level]);
 
