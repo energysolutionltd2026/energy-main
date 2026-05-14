@@ -3147,11 +3147,16 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
         await api.users.update(userId, { name: profileDraft.name, ...(profileDraft.email ? { email: profileDraft.email } : {}) } as any);
       }
       if (showPassFields && profileDraft.newPassword) {
-        await fetch("/api/auth/reset-password", {
+        const pwRes = await fetch("/api/auth/change-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newPassword: profileDraft.newPassword }),
+          body: JSON.stringify({ currentPassword: profileDraft.currentPassword, newPassword: profileDraft.newPassword }),
         });
+        if (!pwRes.ok) {
+          const err = await pwRes.json().catch(() => null);
+          setToast(err?.error ?? "Password change failed");
+          return;
+        }
       }
     } catch { /**/ }
     setAdminName(profileDraft.name);

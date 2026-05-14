@@ -11,6 +11,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { connectDB } from "@/lib/db";
 import { PlatformSettings } from "@/lib/models/PlatformSettings";
+import { getSessionUser } from "@/lib/auth";
 
 const IMMUTABLE = ["_id", "__v", "settingsKey", "createdAt", "apiKey", "depotCodeSecret"];
 
@@ -28,6 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "PUT") {
+    const user = await getSessionUser(req);
+    if (!user || user.role !== "admin") return res.status(403).json({ error: "Forbidden" });
+
     const updates = { ...req.body };
     for (const field of IMMUTABLE) delete updates[field];
 
