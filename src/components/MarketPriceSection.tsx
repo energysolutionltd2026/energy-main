@@ -194,6 +194,7 @@ export default function MarketPriceSection() {
                       <span className="text-gray-600">Sold (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.ATK.toLocaleString()}</span>
                     </div>
+                    <hr className="border-gray-100" />
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.ATK.toLocaleString()}</span>
@@ -217,6 +218,7 @@ export default function MarketPriceSection() {
                       <span className="text-gray-600">Sold (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.AGO.toLocaleString()}</span>
                     </div>
+                    <hr className="border-gray-100" />
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.AGO.toLocaleString()}</span>
