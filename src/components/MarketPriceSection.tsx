@@ -170,6 +170,7 @@ export default function MarketPriceSection() {
                       <span className="text-gray-600">Sold (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.PMS.toLocaleString()}</span>
                     </div>
+                    <hr className="border-gray-100" />
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.PMS.toLocaleString()}</span>
