@@ -81,6 +81,9 @@ const PlatformSettingsSchema = new Schema(
     pmsMaxVolume: { type: Number, default: 16000000 },
     agoMaxVolume: { type: Number, default: 16000000 },
     atkMaxVolume: { type: Number, default: 16000000 },
+
+    // ── Truck rental rates by state (₦) ───────────────────────────────────────
+    truckRates: { type: Map, of: Number, default: {} },
   },
   { timestamps: true }
 );

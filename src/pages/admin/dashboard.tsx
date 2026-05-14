@@ -3055,9 +3055,19 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
   // Sync from DB on mount
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
-      api.platformSettings.get().then(result => {
+      api.platformSettings.get().then((result: any) => {
         if (!result) return;
         setCfg({ ...DEFAULT_ADMIN_SETTINGS, ...result } as typeof DEFAULT_ADMIN_SETTINGS);
+        if (result.truckRates && typeof result.truckRates === "object") {
+          const rates: Record<string, number> = {};
+          const drafts: Record<string, string> = {};
+          Object.entries(result.truckRates).forEach(([k, v]) => {
+            rates[k] = Number(v);
+            drafts[k] = String(v);
+          });
+          setStatePrices(prev => ({ ...prev, ...rates }));
+          setStatePriceDrafts(prev => ({ ...prev, ...drafts }));
+        }
       });
     });
   }, []);
@@ -3110,13 +3120,15 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
     }
   };
 
-  const saveStatePrices = () => {
+  const saveStatePrices = async () => {
     const parsed: Record<string, number> = {};
     Object.entries(statePriceDrafts).forEach(([k, v]) => {
       const n = parseInt(v.replace(/,/g, ""));
       if (!isNaN(n) && n > 0) parsed[k] = n;
     });
     setStatePrices(parsed);
+    const { api } = await import("@/lib/db-client");
+    await api.platformSettings.update({ truckRates: parsed } as any);
     setToast("Truck rental rates updated");
   };
 
@@ -3148,17 +3160,27 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
     setProfileDraft(p => ({ ...p, currentPassword: "", newPassword: "", confirmPassword: "" }));
   };
 
-  const runMaintenance = (action: string) => {
-    if (action === "clear_activity") {
-      setToast("Activity log cleared");
-    } else if (action === "clear_transactions") {
-      setToast("Transaction history cleared");
-    } else if (action === "clear_notifications") {
-      setToast("All notifications cleared");
-    } else if (action === "reset_stock") {
-      setToast("Stock data reset to defaults");
-    }
+  const runMaintenance = async (action: string) => {
     setMaintConfirm(null);
+    setToast("Running…");
+    try {
+      const res = await fetch("/api/admin/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setToast("Action failed — check your connection");
+        return;
+      }
+      if (action === "clear_activity")      setToast("Activity log cleared");
+      else if (action === "clear_transactions") setToast(`Cleared ${data.deleted} transaction records`);
+      else if (action === "clear_notifications") setToast(`Cleared ${data.deleted} notifications`);
+      else if (action === "reset_stock")    setToast(`Stock reset to full capacity on ${data.updated} depots`);
+    } catch {
+      setToast("Action failed — network error");
+    }
   };
 
   const TABS = [
