@@ -2431,16 +2431,18 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
       setFormError("Email already in use."); return;
     }
 
-    // Create in DB
-    const { api } = await import("@/lib/db-client");
-    const result = await api.stationManagers.create({
-      name: form.name.trim(),
-      email: form.email.trim().toLowerCase(),
-      passwordHash: form.password.trim(),
-      depot: form.depot,
-      status: "Active",
-      assignedBy: "",
-    } as any);
+    // Create in DB (hashes password server-side)
+    const res = await fetch("/api/admin/create-station-manager", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: form.name.trim(), email: form.email.trim(), password: form.password.trim(), depot: form.depot }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      setFormError(err?.error ?? "Failed to create station manager");
+      return;
+    }
+    const result = await res.json();
 
     const sm: StationManager = {
       id: (result as any)?._id ?? `SM-${Date.now()}`,
