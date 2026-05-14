@@ -167,12 +167,12 @@ export default function MarketPriceSection() {
                       <span className="font-bold text-gray-800">₦{Math.round(depotMetrics.avgPrices.PMS).toLocaleString()}/L</span>
                     </div>
                     <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Remaining (L)</span>
-                      <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.PMS.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
                       <span className="text-gray-600">Sold (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.PMS.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Remaining (L)</span>
+                      <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.PMS.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -190,12 +190,12 @@ export default function MarketPriceSection() {
                       <span className="font-bold text-gray-800">₦{Math.round(depotMetrics.avgPrices.ATK).toLocaleString()}/L</span>
                     </div>
                     <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Remaining (L)</span>
-                      <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.ATK.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
                       <span className="text-gray-600">Sold (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.ATK.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Remaining (L)</span>
+                      <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.ATK.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -213,12 +213,12 @@ export default function MarketPriceSection() {
                       <span className="font-bold text-gray-800">₦{Math.round(depotMetrics.avgPrices.AGO).toLocaleString()}/L</span>
                     </div>
                     <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Remaining (L)</span>
-                      <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.AGO.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
                       <span className="text-gray-600">Sold (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.AGO.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Remaining (L)</span>
+                      <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.AGO.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
