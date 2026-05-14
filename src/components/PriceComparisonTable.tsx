@@ -13,9 +13,9 @@ export const PriceComparisonTable: React.FC<PriceComparisonTableProps> = ({
     {
       id: 'energy',
       label: 'e-Nergy',
-      pms: 91.50,
-      atk: 87.00,
-      ago: 95.80,
+      pms: 1330,
+      atk: 1390,
+      ago: 1780,
       badge: 'Company',
       badgeColor: 'bg-purple-500',
     },
@@ -31,7 +31,7 @@ export const PriceComparisonTable: React.FC<PriceComparisonTableProps> = ({
             <p className="text-xs sm:text-sm text-slate-300 mt-1">Current Month: April 2026</p>
           </div>
           <div className="text-right">
-            <p className="text-xs sm:text-sm font-semibold text-orange-400">All prices in USD/Liter</p>
+            <p className="text-xs sm:text-sm font-semibold text-orange-400">All prices in ₦/Liter</p>
           </div>
         </div>
       </div>
@@ -82,17 +82,17 @@ export const PriceComparisonTable: React.FC<PriceComparisonTableProps> = ({
                   </td>
                   <td className="px-2 sm:px-4 py-4 sm:py-5 text-center">
                     <span className="font-bold text-sm sm:text-base text-slate-800">
-                      ${row.pms.toFixed(2)}
+                      ₦{row.pms.toLocaleString()}
                     </span>
                   </td>
                   <td className="px-2 sm:px-4 py-4 sm:py-5 text-center">
                     <span className="font-bold text-sm sm:text-base text-slate-800">
-                      ${row.atk.toFixed(2)}
+                      ₦{row.atk.toLocaleString()}
                     </span>
                   </td>
                   <td className="px-2 sm:px-4 py-4 sm:py-5 text-center">
                     <span className="font-bold text-sm sm:text-base text-slate-800">
-                      ${row.ago.toFixed(2)}
+                      ₦{row.ago.toLocaleString()}
                     </span>
                   </td>
                 </tr>

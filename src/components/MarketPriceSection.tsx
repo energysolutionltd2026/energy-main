@@ -17,18 +17,37 @@ const months = ["Nov", "Dec", "Jan", "Feb"];
 /**
  * Generate realistic price variations with trends
  */
-const generateRealisticVariation = (base: number, trend: number = 0) => {
-  let current = base;
-  return months.map((month, index) => {
-    const trendValue = trend * (index + 1);
-    const fluctuation = (Math.random() - 0.5) * 4;
-    current = base + trendValue + fluctuation;
+const generateRealisticVariation = (base: number, trendPct: number = 0) => {
+  return months.map((_, index) => {
+    const trendValue = base * (trendPct / 100) * (index + 1);
+    const fluctuation = base * (Math.random() - 0.5) * 0.03;
     return {
-      month,
-      value: parseFloat(Math.max(current, 0).toFixed(2)),
+      month: months[index],
+      value: Math.round(Math.max(base + trendValue + fluctuation, 0)),
     };
   });
 };
+
+const statusColors: Record<string, string> = {
+  Available: "bg-green-100 text-green-700",
+  Limited: "bg-yellow-100 text-yellow-700",
+  Unavailable: "bg-red-100 text-red-600",
+};
+
+const StatusBadge = ({ status }: { status?: string }) => {
+  if (!status) return null;
+  return (
+    <span className={`ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full ${statusColors[status] ?? "bg-gray-100 text-gray-600"}`}>
+      {status}
+    </span>
+  );
+};
+
+const LevelBar = ({ level, color }: { level: number; color: string }) => (
+  <div className="w-full bg-gray-100 rounded-full h-1.5 mt-0.5 mb-1">
+    <div className={`${color} h-1.5 rounded-full transition-all duration-500`} style={{ width: `${Math.min(100, level)}%` }} />
+  </div>
+);
 
 export default function MarketPriceSection() {
   const { selectedDepot, depotProducts } = useDepot();
@@ -47,43 +66,36 @@ export default function MarketPriceSection() {
     }
 
     const prices = {
-      PMS: parseFloat(depot.PMS.price.replace("$", "").trim()) || 0,
-      ATK: parseFloat(depot.ATK.price.replace("$", "").trim()) || 0,
-      AGO: parseFloat(depot.AGO.price.replace("$", "").trim()) || 0,
+      PMS: parseFloat(depot.PMS.price.replace(/[₦$,]/g, "").trim()) || 0,
+      ATK: parseFloat(depot.ATK.price.replace(/[₦$,]/g, "").trim()) || 0,
+      AGO: parseFloat(depot.AGO.price.replace(/[₦$,]/g, "").trim()) || 0,
     };
 
-    const soldLiters = { PMS: 0, ATK: 0, AGO: 0 };
-    const remainingLiters = { PMS: 0, ATK: 0, AGO: 0 };
-
-    (["PMS", "ATK", "AGO"] as const).forEach((product) => {
-      const qtyRaw = depot[product].quantity.trim();
-      const [sold, remaining] = qtyRaw.split("/").map((x) => {
-        const num = parseInt(x.replace(/[^0-9]/g, ""), 10);
-        return isNaN(num) ? 0 : num;
-      });
-
-      soldLiters[product] = sold;
-      remainingLiters[product] = remaining;
-    });
-
+    const remainingLiters = {
+      PMS: depot.PMS.currentLitres,
+      ATK: depot.ATK.currentLitres,
+      AGO: depot.AGO.currentLitres,
+    };
+    const capacityLiters = {
+      PMS: depot.PMS.capacityLitres,
+      ATK: depot.ATK.capacityLitres,
+      AGO: depot.AGO.capacityLitres,
+    };
+    const soldLiters = {
+      PMS: Math.max(0, capacityLiters.PMS - remainingLiters.PMS),
+      ATK: Math.max(0, capacityLiters.ATK - remainingLiters.ATK),
+      AGO: Math.max(0, capacityLiters.AGO - remainingLiters.AGO),
+    };
     const totalLiters = {
-      PMS: parseFloat((soldLiters.PMS + remainingLiters.PMS).toFixed(2)),
-      ATK: parseFloat((soldLiters.ATK + remainingLiters.ATK).toFixed(2)),
-      AGO: parseFloat((soldLiters.AGO + remainingLiters.AGO).toFixed(2)),
+      PMS: capacityLiters.PMS,
+      ATK: capacityLiters.ATK,
+      AGO: capacityLiters.AGO,
     };
 
     return {
       avgPrices: prices,
-      totalSoldLiters: {
-        PMS: parseFloat(soldLiters.PMS.toFixed(2)),
-        ATK: parseFloat(soldLiters.ATK.toFixed(2)),
-        AGO: parseFloat(soldLiters.AGO.toFixed(2)),
-      },
-      totalRemainingLiters: {
-        PMS: parseFloat(remainingLiters.PMS.toFixed(2)),
-        ATK: parseFloat(remainingLiters.ATK.toFixed(2)),
-        AGO: parseFloat(remainingLiters.AGO.toFixed(2)),
-      },
+      totalSoldLiters: soldLiters,
+      totalRemainingLiters: remainingLiters,
       totalLiters,
     };
   }, [selectedDepot, depotProducts]);
@@ -102,7 +114,7 @@ export default function MarketPriceSection() {
     }));
   };
 
-  const trends = { PMS: 0.5, ATK: -0.3, AGO: 0.4 };
+  const trends = { PMS: 1.5, ATK: -0.8, AGO: 1.2 };
   const chartData = buildChartData(depotMetrics.avgPrices, trends);
 
   return (
@@ -152,24 +164,22 @@ export default function MarketPriceSection() {
                   <h5 className="text-sm font-bold text-red-600 mb-0.5 flex items-center gap-2">
                     <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                     PMS (Petrol)
+                    <StatusBadge status={depotProducts[selectedDepot]?.PMS?.status} />
                   </h5>
                   <div className="space-y-0.5 text-sm relative overflow-hidden">
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Price</span>
-                      <span className="font-bold text-gray-800">${depotMetrics.avgPrices.PMS.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Sold (L)</span>
-                      <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.PMS.toLocaleString()}</span>
+                      <span className="font-bold text-gray-800">₦{Math.round(depotMetrics.avgPrices.PMS).toLocaleString()}/L</span>
                     </div>
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.PMS.toLocaleString()}</span>
                     </div>
-                    <div className="border-t pt-0.5 flex justify-between py-2">
-                      <span className="text-gray-600 font-semibold">Total (L)</span>
-                      <span className="font-bold text-red-600">{depotMetrics.totalLiters.PMS.toLocaleString()}</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Tank Level</span>
+                      <span className="font-bold text-gray-800">{depotProducts[selectedDepot]?.PMS?.level ?? 0}%</span>
                     </div>
+                    <LevelBar level={depotProducts[selectedDepot]?.PMS?.level ?? 0} color="bg-red-500" />
                   </div>
                 </div>
 
@@ -178,24 +188,22 @@ export default function MarketPriceSection() {
                   <h5 className="text-sm font-bold text-green-600 mb-0.5 flex items-center gap-2">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     ATK (Jet Fuel)
+                    <StatusBadge status={depotProducts[selectedDepot]?.ATK?.status} />
                   </h5>
                   <div className="space-y-0.5 text-sm">
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Price</span>
-                      <span className="font-bold text-gray-800">${depotMetrics.avgPrices.ATK.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Sold (L)</span>
-                      <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.ATK.toLocaleString()}</span>
+                      <span className="font-bold text-gray-800">₦{Math.round(depotMetrics.avgPrices.ATK).toLocaleString()}/L</span>
                     </div>
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.ATK.toLocaleString()}</span>
                     </div>
-                    <div className="border-t pt-0.5 flex justify-between py-2">
-                      <span className="text-gray-600 font-semibold">Total (L)</span>
-                      <span className="font-bold text-green-600">{depotMetrics.totalLiters.ATK.toLocaleString()}</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Tank Level</span>
+                      <span className="font-bold text-gray-800">{depotProducts[selectedDepot]?.ATK?.level ?? 0}%</span>
                     </div>
+                    <LevelBar level={depotProducts[selectedDepot]?.ATK?.level ?? 0} color="bg-green-500" />
                   </div>
                 </div>
 
@@ -204,24 +212,22 @@ export default function MarketPriceSection() {
                   <h5 className="text-sm font-bold text-blue-600 mb-0.5 flex items-center gap-2">
                     <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
                     AGO (Diesel)
+                    <StatusBadge status={depotProducts[selectedDepot]?.AGO?.status} />
                   </h5>
                   <div className="space-y-0.5 text-sm">
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Price</span>
-                      <span className="font-bold text-gray-800">${depotMetrics.avgPrices.AGO.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Sold (L)</span>
-                      <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.AGO.toLocaleString()}</span>
+                      <span className="font-bold text-gray-800">₦{Math.round(depotMetrics.avgPrices.AGO).toLocaleString()}/L</span>
                     </div>
                     <div className="flex justify-between py-2">
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.AGO.toLocaleString()}</span>
                     </div>
-                    <div className="border-t pt-0.5 flex justify-between py-2">
-                      <span className="text-gray-600 font-semibold">Total (L)</span>
-                      <span className="font-bold text-blue-600">{depotMetrics.totalLiters.AGO.toLocaleString()}</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Tank Level</span>
+                      <span className="font-bold text-gray-800">{depotProducts[selectedDepot]?.AGO?.level ?? 0}%</span>
                     </div>
+                    <LevelBar level={depotProducts[selectedDepot]?.AGO?.level ?? 0} color="bg-blue-500" />
                   </div>
                 </div>
               </div>
@@ -276,7 +282,7 @@ export default function MarketPriceSection() {
                         padding: "10px",
                         fontSize: "12px",
                       }}
-                      formatter={(value: any) => `$${value.toFixed(2)}`}
+                      formatter={(value: any) => `₦${Number(value).toLocaleString()}/L`}
                     />
                     <Bar dataKey="PMS" fill="#ef4444" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="ATK" fill="#22c55e" radius={[4, 4, 0, 0]} />

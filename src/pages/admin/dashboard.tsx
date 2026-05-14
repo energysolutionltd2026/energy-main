@@ -820,11 +820,24 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
   }, []);
 
   const saveGlobalStock = () => {
+    const parsePrice = (s: string) => parseInt(s.replace(/[^0-9]/g, "")) || 0;
     setGlobalStock(draft);
     setEditing(false);
-    setToast("Global stock updated successfully");
-    import("@/lib/db-client").then(({ api }) => {
-      api.platformSettings.update({ productCatalog: draft } as any).catch(() => null);
+    setToast("Prices saved and propagating to all depots…");
+    import("@/lib/db-client").then(async ({ api }) => {
+      await api.platformSettings.update({ productCatalog: draft } as any).catch(() => null);
+      // Propagate prices (only) to every depot
+      const result = await api.depots.list({ limit: 100 } as any).catch(() => null);
+      if (result?.data?.length) {
+        await Promise.all(result.data.map((d: any) =>
+          api.depots.update(d._id, {
+            "PMS.price": parsePrice(draft.PMS?.price ?? "0"),
+            "AGO.price": parsePrice(draft.AGO?.price ?? "0"),
+            "ATK.price": parsePrice(draft.ATK?.price ?? "0"),
+          } as any).catch(() => null)
+        ));
+        setToast(`Prices updated across ${result.data.length} depots`);
+      }
     });
   };
 
@@ -3069,6 +3082,34 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
     setToast("Settings saved");
   };
 
+  const savePrices = async () => {
+    const patch = {
+      pmsPricePerLitre: cfg.pmsPricePerLitre,
+      agoPricePerLitre: cfg.agoPricePerLitre,
+      atkPricePerLitre: cfg.atkPricePerLitre,
+      lgpPricePerLitre: cfg.lgpPricePerLitre,
+    };
+    setCfg(prev => ({ ...prev, ...patch }));
+    setToast("Propagating prices to all depots…");
+    const { api } = await import("@/lib/db-client");
+    await api.platformSettings.update(patch as any);
+    const res = await fetch("/api/admin/update-depot-prices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pms: cfg.pmsPricePerLitre,
+        ago: cfg.agoPricePerLitre,
+        atk: cfg.atkPricePerLitre,
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      setToast("Failed to update depot prices — are you logged in as admin?");
+    } else {
+      setToast(`Prices updated across ${data.updated} depots`);
+    }
+  };
+
   const saveStatePrices = () => {
     const parsed: Record<string, number> = {};
     Object.entries(statePriceDrafts).forEach(([k, v]) => {
@@ -3335,7 +3376,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
                 <span className={`text-xs font-black mt-5 ${color}`}>₦{(cfg[key] as number).toLocaleString()}/L</span>
               </div>
             ))}
-            <button onClick={() => saveSettings(cfg)} className={saveBtnCls}>Update Prices</button>
+            <button onClick={savePrices} className={saveBtnCls}>Update Prices</button>
           </div>
 
           <div className={cardCls}>

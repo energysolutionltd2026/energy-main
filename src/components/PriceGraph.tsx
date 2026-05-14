@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { X, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 
 const PRICE_HISTORY = [
-  { month: 'January 2026', monthShort: 'Jan', pms: 91.20, atk: 86.50, ago: 95.10 },
-  { month: 'February 2026', monthShort: 'Feb', pms: 91.80, atk: 87.10, ago: 95.60 },
-  { month: 'March 2026', monthShort: 'Mar', pms: 92.10, atk: 87.40, ago: 96.00 },
-  { month: 'April 2026', monthShort: 'Apr', pms: 92.40, atk: 87.80, ago: 96.30 },
+  { month: 'January 2026', monthShort: 'Jan', pms: 1280, atk: 1350, ago: 1720 },
+  { month: 'February 2026', monthShort: 'Feb', pms: 1295, atk: 1360, ago: 1745 },
+  { month: 'March 2026', monthShort: 'Mar', pms: 1310, atk: 1375, ago: 1760 },
+  { month: 'April 2026', monthShort: 'Apr', pms: 1330, atk: 1390, ago: 1780 },
 ];
 
 const E_NERGY_SALES_HISTORY = [
@@ -260,7 +260,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ product, currentPrice, trend, col
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold text-gray-600 uppercase">Current {product}</p>
-          <p className={`text-2xl sm:text-3xl font-bold ${textColor} mt-2`}>${currentPrice.toFixed(2)}</p>
+          <p className={`text-2xl sm:text-3xl font-bold ${textColor} mt-2`}>₦{currentPrice.toLocaleString()}/L</p>
         </div>
         <div className="flex flex-col items-end">
           {trend.direction === 'up' ? (
@@ -328,7 +328,7 @@ const LineChart: React.FC<{ data: ChartData[] }> = ({ data }) => {
 
         {/* Y-axis labels */}
         {[0, 1, 2, 3, 4].map(i => {
-          const price = (maxPrice - (i * range) / 4).toFixed(2);
+          const price = Math.round(maxPrice - (i * range) / 4);
           return (
             <text
               key={`label-${i}`}
@@ -337,7 +337,7 @@ const LineChart: React.FC<{ data: ChartData[] }> = ({ data }) => {
               textAnchor="end"
               className="text-xs fill-gray-600"
             >
-              ${price}
+              ₦{price.toLocaleString()}
             </text>
           );
         })}
@@ -450,7 +450,7 @@ const BarChart: React.FC<{ data: ChartData[] }> = ({ data }) => {
 
         {/* Y-axis labels */}
         {[0, 1, 2, 3].map(i => {
-          const price = (minPrice + (i * range) / 3).toFixed(2);
+          const price = Math.round(minPrice + (i * range) / 3);
           return (
             <text
               key={`label-${i}`}
@@ -459,7 +459,7 @@ const BarChart: React.FC<{ data: ChartData[] }> = ({ data }) => {
               textAnchor="end"
               className="text-xs fill-gray-600"
             >
-              ${price}
+              ₦{price.toLocaleString()}
             </text>
           );
         })}
