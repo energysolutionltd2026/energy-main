@@ -28,8 +28,8 @@ async function readRawBody(req: NextApiRequest): Promise<Buffer> {
 function verifySignature(rawBody: Buffer, signature: string): boolean {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   if (!secret) {
-    console.warn("[paystack-webhook] PAYSTACK_SECRET_KEY not set — skipping verification");
-    return true;
+    console.error("[paystack-webhook] PAYSTACK_SECRET_KEY not set — rejecting request");
+    return false;
   }
   const expected = crypto.createHmac("sha512", secret).update(rawBody).digest("hex");
   return expected === signature;

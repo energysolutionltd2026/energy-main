@@ -13,6 +13,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
+import { StationManager } from "@/lib/models/StationManager";
 import { sendResetPassword } from "@/lib/email";
 
 const RESET_TTL_MINUTES = 30;
@@ -27,21 +28,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const ok = { ok: true, message: "If that email is registered, a reset link has been sent." };
 
   await connectDB();
-  const user = await User.findOne({ email: email.toLowerCase().trim() });
-  if (!user) return res.status(200).json(ok);
 
+  const normalizedEmail = email.toLowerCase().trim();
   const token = crypto.randomBytes(32).toString("hex");
   const exp = new Date(Date.now() + RESET_TTL_MINUTES * 60 * 1000);
-
-  await User.findByIdAndUpdate(user._id, {
-    resetToken: token,        // TODO in prod: store bcrypt hash of token
-    resetTokenExp: exp,
-  });
-
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
 
-  await sendResetPassword(user.email, user.name, resetUrl).catch(() => null);
+  // Check regular users first, then station managers
+  const user = await User.findOne({ email: normalizedEmail });
+  if (user) {
+    await User.findByIdAndUpdate(user._id, { resetToken: token, resetTokenExp: exp });
+    await sendResetPassword(user.email, user.name, resetUrl).catch(() => null);
+    return res.status(200).json(ok);
+  }
+
+  const sm = await StationManager.findOne({ email: normalizedEmail });
+  if (sm) {
+    await StationManager.findByIdAndUpdate(sm._id, { resetToken: token, resetTokenExp: exp });
+    await sendResetPassword(sm.email, sm.name, resetUrl).catch(() => null);
+  }
 
   return res.status(200).json(ok);
 }

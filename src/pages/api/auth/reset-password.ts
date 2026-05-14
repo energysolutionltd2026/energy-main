@@ -10,6 +10,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
+import { StationManager } from "@/lib/models/StationManager";
 import { Session } from "@/lib/models/Session";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -25,25 +26,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   await connectDB();
 
-  const user = await User.findOne({
-    resetToken: token,
-    resetTokenExp: { $gt: new Date() },
-  });
+  const tokenFilter = { resetToken: token, resetTokenExp: { $gt: new Date() } };
 
-  if (!user) {
+  const user = await User.findOne(tokenFilter);
+  const sm = !user ? await StationManager.findOne(tokenFilter) : null;
+
+  if (!user && !sm) {
     return res.status(400).json({ error: "Invalid or expired reset token" });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const unset = { $unset: { resetToken: 1, resetTokenExp: 1 } };
 
-  await Promise.all([
-    User.findByIdAndUpdate(user._id, {
-      passwordHash,
-      $unset: { resetToken: 1, resetTokenExp: 1 },
-    }),
-    // Invalidate all existing sessions for security
-    Session.updateMany({ userEmail: user.email }, { isValid: false }),
-  ]);
+  if (user) {
+    await Promise.all([
+      User.findByIdAndUpdate(user._id, { passwordHash, ...unset }),
+      Session.updateMany({ userEmail: user.email }, { isValid: false }),
+    ]);
+  } else if (sm) {
+    await Promise.all([
+      StationManager.findByIdAndUpdate(sm._id, { passwordHash, ...unset }),
+      Session.updateMany({ userEmail: sm.email }, { isValid: false }),
+    ]);
+  }
 
   return res.status(200).json({ ok: true, message: "Password reset successfully. Please log in." });
 }

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { sendTruckApprovalCredentials } from "@/lib/email";
 import { sendSms } from "@/lib/sms";
+import { getSessionUser } from "@/lib/auth";
 
 function generatePassword(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!";
@@ -12,6 +13,9 @@ function generatePassword(): string {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
+
+  const session = await getSessionUser(req);
+  if (!session || session.role !== "admin") return res.status(403).json({ error: "Forbidden" });
 
   const { ownerName, ownerEmail, ownerPhone, truckRegNumber, reviewNote } = req.body;
 

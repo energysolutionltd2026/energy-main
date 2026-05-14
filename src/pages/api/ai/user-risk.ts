@@ -17,6 +17,7 @@ import {
   type UserRiskConfidence,
 } from "@/lib/ai-types";
 import { connectDB } from "@/lib/db";
+import { getSessionUser } from "@/lib/auth";
 import { User } from "@/lib/models/User";
 import { Transaction } from "@/lib/models/Transaction";
 
@@ -27,6 +28,9 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  const session = await getSessionUser(req);
+  if (!session || session.role !== "admin") return res.status(403).json({ error: "Forbidden" });
 
   const { userId } = req.body as { userId?: string };
   if (!userId) {

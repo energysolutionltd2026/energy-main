@@ -41,6 +41,7 @@ import { Depot } from "@/lib/models/Depot";
 import { User } from "@/lib/models/User";
 import { Notification } from "@/lib/models/Notification";
 import { buildMetricsSnapshot } from "@/lib/db-metrics";
+import { getSessionUser } from "@/lib/auth";
 
 // ─── Depot coordinates (same as supply-routing) ──────────────────────────────
 
@@ -363,6 +364,9 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  const session = await getSessionUser(req);
+  if (!session || session.role !== "admin") return res.status(403).json({ error: "Forbidden" });
 
   const { stage, requestId, truckOwnerEmail } = req.body as {
     stage: FulfillmentStage;
