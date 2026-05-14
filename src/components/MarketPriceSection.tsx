@@ -43,11 +43,6 @@ const StatusBadge = ({ status }: { status?: string }) => {
   );
 };
 
-const LevelBar = ({ level, color }: { level: number; color: string }) => (
-  <div className="w-full bg-gray-100 rounded-full h-1.5 mt-0.5 mb-1">
-    <div className={`${color} h-1.5 rounded-full transition-all duration-500`} style={{ width: `${Math.min(100, level)}%` }} />
-  </div>
-);
 
 export default function MarketPriceSection() {
   const { selectedDepot, depotProducts } = useDepot();
@@ -175,11 +170,10 @@ export default function MarketPriceSection() {
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.PMS.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600">Tank Level</span>
-                      <span className="font-bold text-gray-800">{depotProducts[selectedDepot]?.PMS?.level ?? 0}%</span>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Sold (L)</span>
+                      <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.PMS.toLocaleString()}</span>
                     </div>
-                    <LevelBar level={depotProducts[selectedDepot]?.PMS?.level ?? 0} color="bg-red-500" />
                   </div>
                 </div>
 
@@ -199,11 +193,10 @@ export default function MarketPriceSection() {
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.ATK.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600">Tank Level</span>
-                      <span className="font-bold text-gray-800">{depotProducts[selectedDepot]?.ATK?.level ?? 0}%</span>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Sold (L)</span>
+                      <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.ATK.toLocaleString()}</span>
                     </div>
-                    <LevelBar level={depotProducts[selectedDepot]?.ATK?.level ?? 0} color="bg-green-500" />
                   </div>
                 </div>
 
@@ -223,11 +216,10 @@ export default function MarketPriceSection() {
                       <span className="text-gray-600">Remaining (L)</span>
                       <span className="font-bold text-gray-800">{depotMetrics.totalRemainingLiters.AGO.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600">Tank Level</span>
-                      <span className="font-bold text-gray-800">{depotProducts[selectedDepot]?.AGO?.level ?? 0}%</span>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Sold (L)</span>
+                      <span className="font-bold text-gray-800">{depotMetrics.totalSoldLiters.AGO.toLocaleString()}</span>
                     </div>
-                    <LevelBar level={depotProducts[selectedDepot]?.AGO?.level ?? 0} color="bg-blue-500" />
                   </div>
                 </div>
               </div>
