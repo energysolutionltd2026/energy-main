@@ -380,11 +380,30 @@ export default function RentTruck() {
       reader.readAsDataURL(file);
     });
 
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const base64 = await fileToBase64(file);
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: base64, folder: "trucks" }),
+    });
+    const json = await res.json() as { url?: string; error?: string };
+    if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+    return json.url;
+  };
+
   const handleSubmitRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const tractorImageUrl = registration.tractorImage ? await fileToBase64(registration.tractorImage) : "";
-    const tankImageUrl = registration.tankImage ? await fileToBase64(registration.tankImage) : "";
+    let tractorImageUrl = "";
+    let tankImageUrl = "";
+    try {
+      if (registration.tractorImage) tractorImageUrl = await uploadToCloudinary(registration.tractorImage);
+      if (registration.tankImage)    tankImageUrl    = await uploadToCloudinary(registration.tankImage);
+    } catch (err) {
+      console.error("[truck-register] image upload failed:", err);
+      // Continue with empty URLs rather than blocking submission
+    }
 
     setTractorPreview(null);
     setTankPreview(null);
