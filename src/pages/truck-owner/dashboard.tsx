@@ -84,7 +84,7 @@ export default function TruckOwnerDashboard() {
     fetch("/api/auth/me")
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!data?.user) { router.replace("/login"); return; }
+        if (!data?.user || data.user.role !== "truck_owner") { router.replace("/login"); return; }
         setUser({ name: data.user.name, email: data.user.email, phone: data.user.phone });
         const email = data.user.email;
         import("@/lib/db-client").then(({ api }) => {

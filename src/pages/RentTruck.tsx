@@ -313,11 +313,11 @@ export default function RentTruck() {
   const [showFlowModal, setShowFlowModal] = useState(false);
   const [lastBookingRef, setLastBookingRef] = useState("");
   const [bookingError, setBookingError] = useState("");
-  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "", opayNumber: "" });
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "", opayNumber: "" });
   const [statePrices, setStatePrices] = useState<Record<string, number>>(DEFAULT_statePrices);
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableCash: true, enableWallet: true });
-  const [platformInfo, setPlatformInfo] = useState({ supportEmail: "trucks@pipesandbarrels.com", supportPhone: "(+234) 08087550875" });
+  const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const rateLimit = useRateLimit({ maxAttempts: 5, windowMs: 60_000 });
   const [rentBook, setRentBook] = useState({
     depot: "", capacity: "", vehicleType: "", productType: "",
@@ -695,13 +695,13 @@ export default function RentTruck() {
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
       if (!s) return;
-      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "PNB Energy Ltd", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
       if (s.truckRates && Object.keys(s.truckRates).length > 0) {
         setStatePrices(Object.fromEntries(Object.entries(s.truckRates).map(([k, v]) => [k, Number(v)])));
       }
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
       setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false, enableCash: s.enableCash !== false, enableWallet: s.enableWallet !== false });
-      setPlatformInfo({ supportEmail: s.supportEmail || "trucks@pipesandbarrels.com", supportPhone: s.supportPhone || "(+234) 08087550875" });
+      setPlatformInfo({ supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
     }).catch(() => null);
   }, []);
 

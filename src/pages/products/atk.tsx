@@ -46,7 +46,7 @@ function Atk() {
           <p className="text-base sm:text-lg leading-relaxed">
             Our Diesel (often listed as DPK Diesel for Power/Kerosene-Product
             kits in some markets or simply Automotive Diesel) is designed for
-            compression-ignition engines. Pipes &amp; Barrels supplies low-sulfur
+            compression-ignition engines. e-Nergy supplies low-sulfur
             diesel with controlled cold-flow properties for reliable ignition in
             a variety of climates.
           </p>

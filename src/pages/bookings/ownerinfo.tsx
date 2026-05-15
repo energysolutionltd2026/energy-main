@@ -9,7 +9,7 @@ const STORAGE_KEY = "booking_owner_info";
 
 export default function ownerinfo() {
   const router = useRouter();
-  const [contactInfo, setContactInfo] = useState({ email: "info@pipesandbarrels.com", phone: "(+234) 08087550875" });
+  const [contactInfo, setContactInfo] = useState({ email: "info@e-nergy.com.ng", phone: "(+234) 08087550875" });
   const [form, setForm] = useState({
     ownerName: "",
     telephone: "",
@@ -23,7 +23,7 @@ export default function ownerinfo() {
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
       if (!s) return;
-      setContactInfo({ email: s.supportEmail || "info@pipesandbarrels.com", phone: s.supportPhone || "(+234) 08087550875" });
+      setContactInfo({ email: s.supportEmail || "info@e-nergy.com.ng", phone: s.supportPhone || "(+234) 08087550875" });
     }).catch(() => null);
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) { try { setForm(JSON.parse(saved)); } catch {} }

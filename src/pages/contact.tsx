@@ -94,7 +94,7 @@ export default function Contact() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [contactInfo, setContactInfo] = useState({
     phone: "(+234) 08087550875",
-    email: "info@pipesandbarrels.com",
+    email: "info@e-nergy.com.ng",
     address: "124, Marwa Road, Depot Bus-Stop, Ijegun Waterside, Lagos.",
   });
   const router = useRouter();
@@ -108,7 +108,7 @@ export default function Contact() {
       if (!s) return;
       setContactInfo({
         phone: s.supportPhone || "(+234) 08087550875",
-        email: s.supportEmail || "info@pipesandbarrels.com",
+        email: s.supportEmail || "info@e-nergy.com.ng",
         address: s.businessAddress || "124, Marwa Road, Depot Bus-Stop, Ijegun Waterside, Lagos.",
       });
     }).catch(() => null);
@@ -148,7 +148,7 @@ export default function Contact() {
             <h2 className="text-2xl font-bold text-gray-800">Message Sent!</h2>
             <p className="text-gray-500 text-sm leading-relaxed">
               Thank you for reaching out to{" "}
-              <span className="font-semibold text-orange-500">Pipes &amp; Barrels</span>. A member of
+              <span className="font-semibold text-orange-500">e-Nergy</span>. A member of
               our team will respond to your enquiry within <span className="font-semibold">24–48 hours</span>.
             </p>
             <button
