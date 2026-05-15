@@ -1,36 +1,35 @@
-const TERMII_API_KEY  = process.env.TERMII_API_KEY;
-const TERMII_SENDER   = process.env.TERMII_SENDER_ID ?? "e-Nergy";
-const TERMII_BASE_URL = "https://v3.api.termii.com/api/sms/send";
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN  = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_FROM        = process.env.TWILIO_FROM_NUMBER ?? "+2347065351912";
 
 export async function sendSms(to: string, message: string): Promise<void> {
-  if (!TERMII_API_KEY) {
-    console.warn("[sms] TERMII_API_KEY not set — skipping SMS to", to);
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+    console.warn("[sms] Twilio credentials not set — skipping SMS to", to);
     return;
   }
 
-  // Normalise to international format: 08012345678 → 2348012345678
-  const normalised = to.replace(/\s+/g, "").replace(/^\+/, "").replace(/^0/, "234");
+  // Normalise to E.164: 08012345678 → +2348012345678
+  const stripped = to.replace(/[\s\-]/g, "");
+  const e164 = stripped.startsWith("+")   ? stripped
+             : stripped.startsWith("234") ? `+${stripped}`
+             : `+234${stripped.replace(/^0/, "")}`;
+
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
+  const creds = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
 
   try {
-    const res = await fetch(TERMII_BASE_URL, {
+    const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key:  TERMII_API_KEY,
-        to:       normalised,
-        from:     TERMII_SENDER,
-        sms:      message,
-        type:     "plain",
-        channel:  "generic",
-      }),
+      headers: {
+        "Authorization": `Basic ${creds}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ To: e164, From: TWILIO_FROM, Body: message }).toString(),
     });
-    const data = await res.json();
-    if (data.code !== "ok" && data.message !== "Successfully Sent") {
-      console.error("[sms] Termii error:", JSON.stringify(data));
-    } else {
-      console.log("[sms] Sent OK to", normalised);
-    }
+    const data = await res.json() as { sid?: string; message?: string };
+    if (!res.ok) console.error("[sms] Twilio error:", data);
+    else console.log("[sms] Sent OK to", e164, "sid:", data.sid);
   } catch (err) {
-    console.error("[sms] Termii threw:", err);
+    console.error("[sms] Twilio threw:", err);
   }
 }

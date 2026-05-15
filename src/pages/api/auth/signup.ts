@@ -17,6 +17,7 @@ import { Session } from "@/lib/models/Session";
 import { PlatformSettings } from "@/lib/models/PlatformSettings";
 import { signToken, setTokenCookie } from "@/lib/auth";
 import { sendVerifyEmail } from "@/lib/email";
+import { sendSms } from "@/lib/sms";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -59,6 +60,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const otpHash = crypto.createHash("sha256").update(otpCode).digest("hex");
   const otpExp = new Date(Date.now() + 30 * 60 * 1000);
 
+  const dealerCode = role === "bulk_dealer"
+    ? `BD-${Date.now().toString(36).toUpperCase().slice(-6)}`
+    : undefined;
+
   const user = await User.create({
     name: name.trim(),
     email: email.toLowerCase().trim(),
@@ -70,6 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     emailVerifyExp: otpExp,
     emailVerifyAttempts: 0,
     status: "active",
+    ...(dealerCode ? { dealerCode } : {}),
   });
 
   // Create session
@@ -96,6 +102,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   setTokenCookie(res, token);
 
   await sendVerifyEmail(user.email, user.name, otpCode).catch((err) => console.error("[signup] email error:", err));
+
+  // SMS: OTP verification code
+  if (phone?.trim()) {
+    sendSms(phone.trim(), `e-Nergy: Your verification code is ${otpCode}. Valid for 30 minutes.`).catch(() => null);
+  }
+
+  // SMS: Bulk dealer ID
+  if (role === "bulk_dealer" && dealerCode && phone?.trim()) {
+    sendSms(phone.trim(), `e-Nergy: Welcome! Your Bulk Dealer ID is ${dealerCode}. Keep this safe for your records.`).catch(() => null);
+  }
 
   return res.status(201).json({
     token,

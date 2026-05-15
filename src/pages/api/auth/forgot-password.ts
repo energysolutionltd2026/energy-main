@@ -15,6 +15,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { StationManager } from "@/lib/models/StationManager";
 import { sendResetPassword } from "@/lib/email";
+import { sendSms } from "@/lib/sms";
 
 const RESET_TTL_MINUTES = 30;
 
@@ -41,6 +42,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (user) {
     await User.findByIdAndUpdate(user._id, { resetToken: tokenHash, resetTokenExp: exp });
     await sendResetPassword(user.email, user.name, resetUrl).catch(() => null);
+    if (user.phone) {
+      sendSms(user.phone, `e-Nergy: Reset your password here: ${resetUrl} (expires in ${RESET_TTL_MINUTES} mins)`).catch(() => null);
+    }
     return res.status(200).json(ok);
   }
 
@@ -48,6 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (sm) {
     await StationManager.findByIdAndUpdate(sm._id, { resetToken: tokenHash, resetTokenExp: exp });
     await sendResetPassword(sm.email, sm.name, resetUrl).catch(() => null);
+    if (sm.phone) {
+      sendSms(sm.phone, `e-Nergy: Reset your password here: ${resetUrl} (expires in ${RESET_TTL_MINUTES} mins)`).catch(() => null);
+    }
   }
 
   return res.status(200).json(ok);
