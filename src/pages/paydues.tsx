@@ -686,7 +686,7 @@ export default function PayDues() {
 
   const computeTotal = () => duesAmount;
 
-  const saveDuesTransaction = () => {
+  const saveDuesTransaction = (opts: { paystackRef?: string } = {}) => {
     const { member: rawMember, payment } = formData;
     const member = {
       ...rawMember,
@@ -698,25 +698,19 @@ export default function PayDues() {
       address:      sanitizeString(rawMember.address),
     };
     const total = duesAmount;
-
-    type LineItem = { description: string; qty: string; unitPrice: string; amount: string };
-    const invoiceItems: LineItem[] = [
-      { description: "Union Dues (All Applicable Fees)", qty: "1", unitPrice: "Fixed", amount: `₦${total.toLocaleString()}` },
-    ];
-
-    const txnId = `DUE-${Date.now().toString().slice(-8)}`;
+    const isPaystack = payment.paymentMethod === "paystack";
+    const txnId = opts.paystackRef ?? (payment.transactionRef?.trim() || `DUE-${Date.now().toString().slice(-8)}`);
     const txnDate = new Date().toISOString().slice(0, 10);
-
-    const selectedDues = invoiceItems.map((i) => i.description);
+    const isPaid = isPaystack;
 
     logTransaction({
       type: "Union Dues",
       user: member.fullName || "Member",
       userRole: "Customer",
-      product: selectedDues.join(" + ") || "Union Dues",
+      product: "Union Dues (All Applicable Fees)",
       totalAmount: `₦${total.toLocaleString()}`,
-      status: "Pending",
-      paymentMethod: payment.paymentMethod || "bank_transfer",
+      status: isPaid ? "Completed" : "Pending",
+      paymentMethod: isPaystack ? "card" : (payment.paymentMethod as any) || "bank_transfer",
       depot: member.paymentDepot || undefined,
       reference: txnId,
     });
@@ -724,20 +718,24 @@ export default function PayDues() {
     // Persist to DB
     import("@/lib/db-client").then(({ api }) => {
       api.unionDues.create({
-        paymentId:     txnId,
-        userEmail:     member.email,
-        userRole:      "customer",
-        fullName:      member.fullName,
-        companyName:   member.companyName,
-        membershipId:  member.membershipId,
-        telephone:     member.telephone,
-        address:       member.address,
-        paymentDepot:  member.paymentDepot,
-        amountDue:     total,
-        paymentMethod: payment.paymentMethod || "bank_transfer",
+        paymentId:      txnId,
+        userEmail:      member.email,
+        userRole:       "customer",
+        fullName:       member.fullName,
+        companyName:    member.companyName,
+        membershipId:   member.membershipId,
+        telephone:      member.telephone,
+        address:        member.address,
+        paymentDepot:   member.paymentDepot,
+        amountDue:      total,
+        amountPaid:     isPaid ? total : 0,
+        paymentMethod:  isPaystack ? "card" : (payment.paymentMethod as any) || "bank_transfer",
+        bankName:       payment.bankName || undefined,
+        bankAccountName: payment.accountName || undefined,
         transactionRef: txnId,
-        status:        "Pending",
-        duesPeriod:    txnDate.slice(0, 7),
+        status:         isPaid ? "Paid" : "Pending",
+        paidAt:         isPaid ? new Date().toISOString() : undefined,
+        duesPeriod:     txnDate.slice(0, 7),
       } as any).catch(() => null);
     });
   };
@@ -758,7 +756,7 @@ export default function PayDues() {
       },
       onClose: () => {},
       callback: (response: { reference: string }) => {
-        saveDuesTransaction();
+        saveDuesTransaction({ paystackRef: response.reference });
         setShowInvoice(true);
         setShowFlowModal(true);
       },
