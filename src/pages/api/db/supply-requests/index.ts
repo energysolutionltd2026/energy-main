@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { SupplyRequest } from "@/lib/models/SupplyRequest";
 import { sendSms } from "@/lib/sms";
 import { User } from "@/lib/models/User";
+import { notifyAdmins } from "@/lib/notifyAdmins";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await connectDB();
@@ -52,6 +53,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ).catch(() => null);
         }
       }
+
+      const requestId = doc.requestId ?? String(doc._id).slice(-6).toUpperCase();
+      const product   = req.body.product ?? "N/A";
+      const quantity  = req.body.quantity ?? "N/A";
+      const priority  = req.body.priority ?? "normal";
+      const station   = req.body.stationName ?? req.body.requestedBy ?? "Unknown";
+      notifyAdmins(
+        "New Supply Request",
+        `${station} requested ${quantity}L of ${product} (${priority} priority). Request ID: ${requestId}.`,
+        String(doc._id)
+      ).catch(() => null);
 
       return res.status(201).json(doc);
     } catch (err: unknown) {
