@@ -37,15 +37,21 @@ function HomeContent() {
   const depotProduct = (product: ProductKey) => depotProducts[selectedDepot]?.[product];
 
   /* ============== TANK RENDER ============== */
+  const preciseLevel = (p?: { currentLitres?: number; capacityLitres?: number; level?: number }) => {
+    if (p?.currentLitres != null && p?.capacityLitres && p.capacityLitres > 0)
+      return (p.currentLitres / p.capacityLitres) * 100;
+    return p?.level ?? 0;
+  };
+
   const renderTankSimulation = () => {
     const logo = depotLogos[selectedDepot];
     const pms = depotProduct("PMS");
     const atk = depotProduct("ATK");
     const ago = depotProduct("AGO");
     switch (activeProduct) {
-      case "PMS": return <PmsTankSimulation level={pms?.level ?? 0} logo={logo} maxVolume={pms?.capacityLitres ?? 220000} />;
-      case "ATK": return <AtkTankSimulation level={atk?.level ?? 0} logo={logo} maxVolume={atk?.capacityLitres ?? 120000} />;
-      case "AGO": return <AgoTankSimulation level={ago?.level ?? 0} logo={logo} maxVolume={ago?.capacityLitres ?? 260000} />;
+      case "PMS": return <PmsTankSimulation level={preciseLevel(pms)} logo={logo} maxVolume={pms?.capacityLitres ?? 220000} />;
+      case "ATK": return <AtkTankSimulation level={preciseLevel(atk)} logo={logo} maxVolume={atk?.capacityLitres ?? 120000} />;
+      case "AGO": return <AgoTankSimulation level={preciseLevel(ago)} logo={logo} maxVolume={ago?.capacityLitres ?? 260000} />;
       default:    return null;
     }
   };
