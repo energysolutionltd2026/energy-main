@@ -484,8 +484,8 @@ export default function BuyNow() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isCustomer, setIsCustomer] = useState(false);
-  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "", opayNumber: "" });
-  const [platformInfo, setPlatformInfo] = useState({ platformName: "Pipes & Barrels Oil & Gas Purchasing Portal", supportEmail: "info@pipesandbarrels.com", supportPhone: "(+234) 08087550875" });
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "", opayNumber: "" });
+  const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Oil & Gas Purchasing Portal", supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
   const [prices, setPrices] = useState({ pms: 0, ago: 0, atk: 0 });
@@ -493,8 +493,8 @@ export default function BuyNow() {
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
       if (!s) return;
-      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "PNB Energy Ltd", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
-      setPlatformInfo({ platformName: s.platformName || "Pipes & Barrels Oil & Gas Purchasing Portal", supportEmail: s.supportEmail || "info@pipesandbarrels.com", supportPhone: s.supportPhone || "(+234) 08087550875" });
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
+      setPlatformInfo({ platformName: s.platformName || "e-Nergy Oil & Gas Purchasing Portal", supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
       setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
       setPrices({ pms: s.pmsPricePerLitre || 0, ago: s.agoPricePerLitre || 0, atk: s.atkPricePerLitre || 0 });

@@ -714,7 +714,7 @@ export default function LoadPage() {
     setStage(1);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setLoadError("");
 
     if (stage === 2) {
@@ -744,8 +744,9 @@ export default function LoadPage() {
     const compartmentValues = keys.map(k => parseFloat(loadingDetails[k]) || 0).filter(v => v > 0);
     const totalLitres = compartmentValues.reduce((a, b) => a + b, 0);
 
-    import("@/lib/db-client").then(({ api }) => {
-      api.loadingRecords.create({
+    try {
+      const { api } = await import("@/lib/db-client");
+      await api.loadingRecords.create({
         loadId:            `LOAD-${Date.now()}`,
         orderId:           verifiedRecord!.orderId,
         product:           verifiedRecord!.productType as "PMS" | "AGO" | "ATK",
@@ -758,8 +759,12 @@ export default function LoadPage() {
         totalLitresLoaded: totalLitres,
         remarks:           sanitizedRemarks || undefined,
         status:            "Completed",
-      } as any).catch(() => null);
-    }).catch(() => null);
+      } as any);
+    } catch (err) {
+      console.error("[load] failed to save loading record:", err);
+      setLoadError("Failed to save loading record. Please try again.");
+      return;
+    }
 
     setComplete(true);
     setShowWaybill(true);
@@ -858,7 +863,13 @@ export default function LoadPage() {
                 </button>
                 <button
                   onClick={handleNext}
-                  className="px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 active:scale-95 transition-all"
+                  disabled={stage === 2 && (() => {
+                    const keys = ["compartment1","compartment2","compartment3","compartment4","compartment5"] as const;
+                    const filled = keys.reduce((acc, k) => acc + (parseFloat(loadingDetails[k]) || 0), 0);
+                    const max = parseFloat((verifiedRecord?.productQuantity ?? "").replace(/,/g, "")) || 0;
+                    return max > 0 && filled > max;
+                  })()}
+                  className="px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {stage === 2 ? "Complete & Generate Waybill →" : "Next ›"}
                 </button>

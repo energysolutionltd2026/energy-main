@@ -602,7 +602,7 @@ export default function PayDues() {
   const [isCustomer, setIsCustomer] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [duesAmount, setDuesAmount] = useState(DEFAULT_DUES_AMOUNT);
-  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "", opayNumber: "" });
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "", opayNumber: "" });
   const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@energy.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
@@ -645,7 +645,7 @@ export default function PayDues() {
       .then((settings) => {
         if (settings?.annualMembershipFee) setDuesAmount(settings.annualMembershipFee);
         if (settings) {
-          setBankSettings({ bankName: settings.bankName || "First Bank of Nigeria", bankAccountName: settings.bankAccountName || "PNB Energy Ltd", bankAccountNumber: settings.bankAccountNumber || "", opayNumber: settings.opayNumber || "" });
+          setBankSettings({ bankName: settings.bankName || "First Bank of Nigeria", bankAccountName: settings.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: settings.bankAccountNumber || "", opayNumber: settings.opayNumber || "" });
           setPlatformInfo({ supportEmail: settings.supportEmail || "info@energy.ng", supportPhone: settings.supportPhone || "(+234) 08087550875" });
           if (settings.paystackPublicKey) setPaystackKey(settings.paystackPublicKey);
           setEnabledMethods({ enableBankTransfer: settings.enableBankTransfer !== false, enablePaystack: settings.enablePaystack !== false, enableOpay: settings.enableOpay !== false });

@@ -695,8 +695,8 @@ export default function BookNow() {
   const [showFlowModal, setShowFlowModal] = useState(false);
   const [detectedProduct, setDetected]  = useState<ProductKey>("");
   const [submitError, setSubmitError]   = useState("");
-  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "" });
-  const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@pipesandbarrels.com", supportPhone: "(+234) 08087550875" });
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "" });
+  const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey]   = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
   const [prices, setPrices] = useState({ pms: 0, ago: 0, atk: 0 });
@@ -723,8 +723,8 @@ export default function BookNow() {
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
       if (!s) return;
-      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "PNB Energy Ltd", bankAccountNumber: s.bankAccountNumber || "" });
-      setPlatformInfo({ supportEmail: s.supportEmail || "info@pipesandbarrels.com", supportPhone: s.supportPhone || "(+234) 08087550875" });
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: s.bankAccountNumber || "" });
+      setPlatformInfo({ supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
       setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
       setPrices({ pms: s.pmsPricePerLitre || 0, ago: s.agoPricePerLitre || 0, atk: s.atkPricePerLitre || 0 });
@@ -843,33 +843,38 @@ export default function BookNow() {
   };
 
   const handleManualSubmit = async () => {
-    const { api } = await import("@/lib/db-client");
-    const orderId = `ENR-${Date.now()}`;
-    await api.purchaseOrders.create({
-      orderId,
-      companyName: sanitizeString(formData.company.name),
-      dprRegNo: sanitizeString(formData.company.dprRegNo),
-      cacRegNo: sanitizeString(formData.company.cacRegNo),
-      companyAddress: sanitizeString(formData.company.headOfficeAddress),
-      companyTelephone: sanitizeString(formData.company.telephone),
-      companyEmail: sanitizeString(formData.company.email),
-      stationAddress: sanitizeString(formData.company.deliveryAddress),
-      ownerName: sanitizeString(formData.owner.name),
-      ownerTelephone: sanitizeString(formData.owner.telephone),
-      ownerAddress: sanitizeString(formData.owner.address),
-      ownerEmail: sanitizeString(formData.owner.email),
-      ownerIdType: sanitizeString(formData.owner.officialIdType),
-      ownerIdNumber: sanitizeString(formData.owner.idNumber),
-      productType: formData.booking.productType.toUpperCase(),
-      productQuantity: parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
-      haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "Rent Truck" : "Owned Truck") as "Owned Truck" | "Rent Truck",
-      paymentMethod: formData.payment.paymentMethod as import("@/lib/db-types").PaymentMethod,
-      bankName: sanitizeString(formData.payment.bankName),
-      bankAccountName: sanitizeString(formData.payment.accountName),
-      transactionRef: sanitizeString(formData.payment.transactionRef),
-    });
-    setSubmitted(true);
-    setShowFlowModal(true);
+    try {
+      const { api } = await import("@/lib/db-client");
+      const orderId = `ENR-${Date.now()}`;
+      await api.purchaseOrders.create({
+        orderId,
+        companyName: sanitizeString(formData.company.name),
+        dprRegNo: sanitizeString(formData.company.dprRegNo),
+        cacRegNo: sanitizeString(formData.company.cacRegNo),
+        companyAddress: sanitizeString(formData.company.headOfficeAddress),
+        companyTelephone: sanitizeString(formData.company.telephone),
+        companyEmail: sanitizeString(formData.company.email),
+        stationAddress: sanitizeString(formData.company.deliveryAddress),
+        ownerName: sanitizeString(formData.owner.name),
+        ownerTelephone: sanitizeString(formData.owner.telephone),
+        ownerAddress: sanitizeString(formData.owner.address),
+        ownerEmail: sanitizeString(formData.owner.email),
+        ownerIdType: sanitizeString(formData.owner.officialIdType),
+        ownerIdNumber: sanitizeString(formData.owner.idNumber),
+        productType: formData.booking.productType.toUpperCase(),
+        productQuantity: parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
+        haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "Rent Truck" : "Owned Truck") as "Owned Truck" | "Rent Truck",
+        paymentMethod: formData.payment.paymentMethod as import("@/lib/db-types").PaymentMethod,
+        bankName: sanitizeString(formData.payment.bankName),
+        bankAccountName: sanitizeString(formData.payment.accountName),
+        transactionRef: sanitizeString(formData.payment.transactionRef),
+      });
+      setSubmitted(true);
+      setShowFlowModal(true);
+    } catch (err) {
+      console.error("[booknow] order create failed:", err);
+      setSubmitError("Failed to submit booking. Please check your connection and try again.");
+    }
   };
 
   const handleNext = () => {
@@ -949,7 +954,7 @@ export default function BookNow() {
             {/* Left sidebar */}
             <div className="hidden md:flex flex-col justify-center px-8 py-8 min-w-[240px] max-w-[260px] pt-0">
               <h1 className="text-gray-900 text-xl font-extrabold uppercase leading-snug mb-4">
-                Welcome to<br />Pipes &amp; Barrels<br />Oil &amp; Gas<br />Booking Portal
+                Welcome to<br />e-Nergy<br />Oil &amp; Gas<br />Booking Portal
               </h1>
 
               {/* Detected product pill in sidebar */}

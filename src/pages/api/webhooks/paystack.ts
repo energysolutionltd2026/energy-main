@@ -72,7 +72,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   ]);
 
   if (txn) {
-    await Transaction.findByIdAndUpdate(txn._id, { status: "Completed" });
+    await Transaction.findByIdAndUpdate(txn._id, { status: "Completed", totalAmount: amountNaira });
+  } else {
+    // Payment succeeded but no pre-created transaction — create one now
+    await Transaction.create({
+      txnId:         `TXN-PS-${reference.slice(-8).toUpperCase()}`,
+      type:          meta.type === "union_dues" ? "Union Dues" : "Purchase Order",
+      user:          customerEmail,
+      userEmail:     customerEmail,
+      userRole:      "Customer",
+      totalAmount:   amountNaira,
+      status:        "Completed",
+      paymentMethod: "card",
+      reference,
+      referenceType: meta.type === "union_dues" ? "union_dues" : "purchase_order",
+    });
   }
 
   if (meta.type === "union_dues" || meta.type === "Union Dues") {
