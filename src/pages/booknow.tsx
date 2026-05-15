@@ -7,6 +7,7 @@ import NavBar from "@/components/NavBar";
 import FlowCompleteModal from "@/components/FlowCompleteModal";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { sanitizeString } from "@/lib/security/sanitize";
+import { useDepot } from "@/context/DepotContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface CompanyInfo {
   telephone: string;
   email: string;
   deliveryAddress: string;
+  loadingDepot: string;
 }
 
 interface OwnerInfo {
@@ -144,7 +146,9 @@ const CompanyStage = ({
 }: {
   data: CompanyInfo;
   onChange: (d: Partial<CompanyInfo>) => void;
-}) => (
+}) => {
+  const { depots } = useDepot();
+  return (
   <div className="space-y-4">
     <div>
       <h2 className="text-2xl font-bold text-gray-800">Company Information</h2>
@@ -152,6 +156,12 @@ const CompanyStage = ({
         Carefully enter your company details into the columns provided.
       </p>
     </div>
+    <Field label="Loading Depot">
+      <select className={selectClass} value={data.loadingDepot} onChange={(e) => onChange({ loadingDepot: e.target.value })}>
+        <option value="">select a loading depot</option>
+        {depots.map((d) => <option key={d} value={d}>{d}</option>)}
+      </select>
+    </Field>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Field label="Name of Company">
         <input
@@ -214,7 +224,8 @@ const CompanyStage = ({
       />
     </Field>
   </div>
-);
+  );
+};
 
 // ─── Stage 2: Owner's Information ─────────────────────────────────────────────
 
@@ -751,7 +762,7 @@ export default function BookNow() {
   const [formData, setFormData] = useState<FormData>({
     company: {
       name: "", dprRegNo: "", cacRegNo: "",
-      headOfficeAddress: "", telephone: "", email: "", deliveryAddress: "",
+      headOfficeAddress: "", telephone: "", email: "", deliveryAddress: "", loadingDepot: "",
     },
     owner: {
       name: "", telephone: "", address: "",
@@ -813,6 +824,7 @@ export default function BookNow() {
   const validateStage = (s: number): string => {
     if (s === 0) {
       const c = formData.company;
+      if (!c.loadingDepot)             return "Please select a loading depot.";
       if (!c.name.trim())              return "Company name is required.";
       if (!c.dprRegNo.trim())          return "Marketer's License Number is required.";
       if (!c.cacRegNo.trim())          return "CAC Registration number is required.";
@@ -846,8 +858,10 @@ export default function BookNow() {
     try {
       const { api } = await import("@/lib/db-client");
       const orderId = `ENR-${Date.now()}`;
+      const mapPM = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m;
       await api.purchaseOrders.create({
         orderId,
+        loadingDepot: sanitizeString(formData.company.loadingDepot),
         companyName: sanitizeString(formData.company.name),
         dprRegNo: sanitizeString(formData.company.dprRegNo),
         cacRegNo: sanitizeString(formData.company.cacRegNo),
@@ -864,7 +878,7 @@ export default function BookNow() {
         productType: formData.booking.productType.toUpperCase(),
         productQuantity: parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
         haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "Rent Truck" : "Owned Truck") as "Owned Truck" | "Rent Truck",
-        paymentMethod: formData.payment.paymentMethod as import("@/lib/db-types").PaymentMethod,
+        paymentMethod: mapPM(formData.payment.paymentMethod) as import("@/lib/db-types").PaymentMethod,
         bankName: sanitizeString(formData.payment.bankName),
         bankAccountName: sanitizeString(formData.payment.accountName),
         transactionRef: sanitizeString(formData.payment.transactionRef),

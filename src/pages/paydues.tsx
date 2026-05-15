@@ -710,7 +710,7 @@ export default function PayDues() {
       product: "Union Dues (All Applicable Fees)",
       totalAmount: `₦${total.toLocaleString()}`,
       status: isPaid ? "Completed" : "Pending",
-      paymentMethod: isPaystack ? "card" : (payment.paymentMethod as any) || "bank_transfer",
+      paymentMethod: isPaystack ? "card" : (payment.paymentMethod === "bank-transfer" ? "bank_transfer" : (payment.paymentMethod as any)) || "bank_transfer",
       depot: member.paymentDepot || undefined,
       reference: txnId,
     });
