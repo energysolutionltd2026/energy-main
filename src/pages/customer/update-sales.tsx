@@ -215,9 +215,9 @@ export default function UpdateSales() {
       products:     mappedProducts,
     };
 
-    // Try API first (stations aren't seeded yet so this will gracefully return null)
-    import("@/lib/db-client").then(({ api }) => {
-      api.dailySales.create({
+    try {
+      const { api } = await import("@/lib/db-client");
+      await api.dailySales.create({
         saleDate:     form.date,
         stationName:  form.stationName,
         recordedBy:   user.email,
@@ -230,8 +230,12 @@ export default function UpdateSales() {
           revenue:           p.revenue,
         })),
         totalRevenue,
-      }).catch(() => null);
-    });
+      });
+    } catch (err) {
+      console.error("[update-sales] create failed:", err);
+      alert("Failed to save sales record. Please check your connection and try again.");
+      return;
+    }
 
     setEntryId(id);
     setSubmitted(true);

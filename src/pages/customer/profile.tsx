@@ -178,17 +178,22 @@ export default function CustomerProfilePage() {
   const set = (key: keyof CustomerProfile, val: string) =>
     setDraft((d) => ({ ...d, [key]: val }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (user?._id) {
+      try {
+        const { api } = await import("@/lib/db-client");
+        const { password: _pw, role: _r, ...patch } = draft;
+        await api.users.update(user._id, patch);
+      } catch (err) {
+        console.error("[profile] update failed:", err);
+        alert("Failed to save profile. Please check your connection and try again.");
+        return;
+      }
+    }
     setProfile(draft);
     setEditing(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
-    if (user?._id) {
-      import("@/lib/db-client").then(({ api }) => {
-        const { password: _pw, role: _r, ...patch } = draft;
-        api.users.update(user._id, patch).catch(() => null);
-      });
-    }
   };
 
   const handleCancel = () => { setDraft(profile); setEditing(false); };

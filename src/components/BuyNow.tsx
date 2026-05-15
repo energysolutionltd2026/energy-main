@@ -627,6 +627,8 @@ export default function BuyNow() {
   };
 
   const handlePaystack = () => {
+    // @ts-ignore
+    if (!window.PaystackPop) { alert("Payment gateway is still loading. Please wait a moment and try again."); return; }
     const id = generateOrderId();
     // @ts-ignore
     const handler = window.PaystackPop.setup({

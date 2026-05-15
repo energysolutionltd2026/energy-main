@@ -134,19 +134,25 @@ export default function RequestSupply() {
     };
 
     // Persist to DB via API
-    const { api } = await import("@/lib/db-client");
-    await api.supplyRequests.create({
-      requestId:    id,
-      stationName:  entry.stationName,
-      product:      form.product as "PMS" | "AGO" | "ATK",
-      depot:        form.depot,
-      quantity:     Number(form.quantity),
-      priority:     form.priority as "normal" | "urgent" | "emergency",
-      deliveryDate: form.deliveryDate || undefined,
-      notes:        form.notes || undefined,
-      requestedBy:  user.email || user.name,
-      status:       "Pending",
-    });
+    try {
+      const { api } = await import("@/lib/db-client");
+      await api.supplyRequests.create({
+        requestId:    id,
+        stationName:  entry.stationName,
+        product:      form.product as "PMS" | "AGO" | "ATK",
+        depot:        form.depot,
+        quantity:     Number(form.quantity),
+        priority:     form.priority as "normal" | "urgent" | "emergency",
+        deliveryDate: form.deliveryDate || undefined,
+        notes:        form.notes || undefined,
+        requestedBy:  user.email || user.name,
+        status:       "Pending",
+      });
+    } catch (err) {
+      console.error("[request-supply] create failed:", err);
+      setErrors((e) => ({ ...e, notes: "Failed to submit request. Please check your connection and try again." }));
+      return;
+    }
 
 
     // Deduct requested quantity from the depot's live context data

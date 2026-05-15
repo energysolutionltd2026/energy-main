@@ -90,7 +90,7 @@ export default function CustomerRentTruck() {
     const txnDate = new Date().toISOString().slice(0, 10);
     const { api } = await import("@/lib/db-client");
 
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       api.truckRentals.create({
         rentedBy: user.email,
         pickupDepot: rentBook.depot,
@@ -121,6 +121,13 @@ export default function CustomerRentTruck() {
         date: txnDate,
       } as any),
     ]);
+
+    const rentalFailed = results[0].status === "rejected";
+    if (rentalFailed) {
+      console.error("[rent-truck] rental create failed:", (results[0] as PromiseRejectedResult).reason);
+      alert("Failed to save rental booking. Please check your connection and try again.");
+      return;
+    }
 
     setConfirmedTxn({
       id: txnId, date: txnDate, type: "Truck Rental",
