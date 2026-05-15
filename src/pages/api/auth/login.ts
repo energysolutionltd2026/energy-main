@@ -99,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userEmail: sm.email,
       userId: sm._id,
       token: "pending",
-      role: "customer" as any,  // SM role stored separately — use email to identify in routes
+      role: "station_manager" as any,
       ipAddress: req.headers["x-forwarded-for"] as string || req.socket.remoteAddress,
       userAgent: req.headers["user-agent"],
       expiresAt,
@@ -109,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = signToken({
       userId: String(sm._id),
       email: sm.email,
-      role: "customer" as any,
+      role: "station_manager" as any,
       sessionId: String(session._id),
     });
 

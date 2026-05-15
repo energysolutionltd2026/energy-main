@@ -205,10 +205,32 @@ function Modal({ onClose, title, subtitle, children, wide }: { onClose: () => vo
 // ─── Section: Overview ────────────────────────────────────────────────────────
 
 function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: (s: string) => void }) {
-  const pendingSupply = BASE_SUPPLY_REQUESTS.filter(s => s.status === "Pending").length;
-  const pendingTrucks = BASE_TRUCKS.filter(t => t.status === "Pending Review").length;
-  const pendingPOs = BASE_PURCHASE_ORDERS.filter(p => p.status === "Pending").length;
   const suspended = users.filter(u => u.status === "Suspended").length;
+
+  const [supplyCounts, setSupplyCounts] = useState({ total: 0, pending: 0 });
+  const [poCounts, setPoCounts]         = useState({ total: 0, pending: 0 });
+  const [truckCounts, setTruckCounts]   = useState({ pending: 0 });
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.supplyRequests.list({ limit: 200 } as any).then((r: any) => {
+        if (!r?.data) return;
+        setSupplyCounts({ total: r.total ?? r.data.length, pending: r.data.filter((x: any) => x.status === "Pending").length });
+      }).catch(() => null);
+      api.purchaseOrders.list({ limit: 200 } as any).then((r: any) => {
+        if (!r?.data) return;
+        setPoCounts({ total: r.total ?? r.data.length, pending: r.data.filter((x: any) => x.status === "Pending").length });
+      }).catch(() => null);
+      api.trucks.list({ limit: 200 } as any).then((r: any) => {
+        if (!r?.data) return;
+        setTruckCounts({ pending: r.data.filter((x: any) => x.status === "pending" || x.status === "Pending Review").length });
+      }).catch(() => null);
+    }).catch(() => null);
+  }, []);
+
+  const pendingSupply = supplyCounts.pending;
+  const pendingTrucks = truckCounts.pending;
+  const pendingPOs    = poCounts.pending;
 
   const [overviewDepots, setOverviewDepots] = useState<Depot[]>([]);
   useEffect(() => {
@@ -217,9 +239,9 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
         if (!result?.data?.length) return;
         setOverviewDepots(result.data.map((d: any) => ({
           name: d.name, location: d.location || "",
-          PMS: { level: d.PMS?.level ?? d.pmsLevel ?? 60, price: String(d.PMS?.price ?? d.pmsPrice ?? 1300), status: "Available" },
-          AGO: { level: d.AGO?.level ?? d.agoLevel ?? 60, price: String(d.AGO?.price ?? d.agoPrice ?? 1900), status: "Available" },
-          ATK: { level: d.ATK?.level ?? d.atkLevel ?? 60, price: String(d.ATK?.price ?? d.atkPrice ?? 1300), status: "Available" },
+          PMS: { level: d.PMS?.level ?? 60, price: String(d.PMS?.price ?? 1300), status: "Available" },
+          AGO: { level: d.AGO?.level ?? 60, price: String(d.AGO?.price ?? 1900), status: "Available" },
+          ATK: { level: d.ATK?.level ?? 60, price: String(d.ATK?.price ?? 1300), status: "Available" },
         })));
       });
     });
@@ -298,10 +320,10 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
 
       <div className="grid grid-cols-3 gap-4">
         <button onClick={() => setActive("Supply Requests")} className="text-left">
-          <StatCard label="Supply Requests" value={BASE_SUPPLY_REQUESTS.length} sub={`${pendingSupply} pending — click to view`} />
+          <StatCard label="Supply Requests" value={supplyCounts.total} sub={`${pendingSupply} pending — click to view`} />
         </button>
         <button onClick={() => setActive("Purchase Orders")} className="text-left">
-          <StatCard label="Purchase Orders" value={BASE_PURCHASE_ORDERS.length} sub={`${pendingPOs} pending — click to view`} />
+          <StatCard label="Purchase Orders" value={poCounts.total} sub={`${pendingPOs} pending — click to view`} />
         </button>
         <button onClick={() => setActive("Transactions")} className="text-left">
           <StatCard label="Transactions" value={allTransactions.length} sub={`${allTransactions.filter(t => t.status === "Completed").length} completed — click to view`} />
@@ -2236,9 +2258,9 @@ function SectionReports({ users }: { users: AdminUser[] }) {
         if (!result?.data?.length) return;
         setReportDepots(result.data.map((d: any) => ({
           name: d.name, location: d.location || "",
-          PMS: { level: d.PMS?.level ?? d.pmsLevel ?? 60, price: String(d.PMS?.price ?? d.pmsPrice ?? 1300), status: "Available" },
-          AGO: { level: d.AGO?.level ?? d.agoLevel ?? 60, price: String(d.AGO?.price ?? d.agoPrice ?? 1900), status: "Available" },
-          ATK: { level: d.ATK?.level ?? d.atkLevel ?? 60, price: String(d.ATK?.price ?? d.atkPrice ?? 1300), status: "Available" },
+          PMS: { level: d.PMS?.level ?? 60, price: String(d.PMS?.price ?? 1300), status: "Available" },
+          AGO: { level: d.AGO?.level ?? 60, price: String(d.AGO?.price ?? 1900), status: "Available" },
+          ATK: { level: d.ATK?.level ?? 60, price: String(d.ATK?.price ?? 1300), status: "Available" },
         })));
       });
     });
@@ -2280,11 +2302,19 @@ function SectionReports({ users }: { users: AdminUser[] }) {
     return out;
   });
 
+  const [supplyList, setSupplyList] = useState<{ status: string }[]>([]);
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.supplyRequests.list({ limit: 500 } as any).then((r: any) => {
+        if (r?.data) setSupplyList(r.data.map((x: any) => ({ status: x.status || "Pending" })));
+      }).catch(() => null);
+    }).catch(() => null);
+  }, []);
   const supplyStats = {
-    total: BASE_SUPPLY_REQUESTS.length,
-    pending: BASE_SUPPLY_REQUESTS.filter(s => s.status === "Pending").length,
-    delivered: BASE_SUPPLY_REQUESTS.filter(s => s.status === "Delivered").length,
-    cancelled: BASE_SUPPLY_REQUESTS.filter(s => s.status === "Cancelled").length,
+    total: supplyList.length,
+    pending: supplyList.filter(s => s.status === "Pending").length,
+    delivered: supplyList.filter(s => s.status === "Delivered").length,
+    cancelled: supplyList.filter(s => s.status === "Cancelled").length,
   };
 
   return (
@@ -2653,18 +2683,45 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    const map: Record<string, string> = {
-      "SM-001": "Adebayo Okafor",
-      "SM-002": "Chidi Amaechi",
-      "SM-003": "Fatima Bello",
-    };
-    setManagers(map);
     import("@/lib/db-client").then(({ api }) => {
+      const nameMap: Record<string, string> = {};
+      // Load SM name map
       (api.stationManagers as any)?.list?.()?.then?.((result: any) => {
-        if (!result?.data?.length) return;
-        result.data.forEach((m: any) => { map[m._id] = m.name; });
-        setManagers({ ...map });
-      });
+        if (result?.data) result.data.forEach((m: any) => { nameMap[m._id] = m.name; });
+        setManagers({ ...nameMap });
+      }).catch(() => null);
+      // Load loading records → "stock" entries
+      api.loadingRecords.list({ limit: 100 } as any).then((r: any) => {
+        if (!r?.data?.length) return;
+        const stockEntries: ActivityEntry[] = r.data.map((rec: any) => ({
+          id: rec._id || rec.loadId,
+          managerId: rec.loaderId || rec.loaderName || "—",
+          action: `Stock received: ${rec.totalLitresLoaded ? Number(rec.totalLitresLoaded).toLocaleString() : "—"}L of ${rec.product || "product"} at ${rec.depot || "depot"}`,
+          depot: rec.depot || "—",
+          timestamp: rec.loadingDate || rec.createdAt || new Date().toISOString(),
+        }));
+        setLogs(prev => {
+          const seen = new Set(prev.map(l => l.id));
+          return [...prev, ...stockEntries.filter(e => !seen.has(e.id))]
+            .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+        });
+      }).catch(() => null);
+      // Load daily sales → "sales" entries
+      api.dailySales.list({ limit: 100 } as any).then((r: any) => {
+        if (!r?.data?.length) return;
+        const salesEntries: ActivityEntry[] = r.data.map((rec: any) => ({
+          id: rec._id,
+          managerId: rec.recordedBy || "—",
+          action: `Sales recorded: ₦${Number(rec.totalRevenue || 0).toLocaleString()} at ${rec.stationName || "station"} on ${(rec.saleDate || rec.createdAt || "").slice(0, 10)}`,
+          depot: rec.stationName || "—",
+          timestamp: rec.createdAt || rec.saleDate || new Date().toISOString(),
+        }));
+        setLogs(prev => {
+          const seen = new Set(prev.map(l => l.id));
+          return [...prev, ...salesEntries.filter(e => !seen.has(e.id))]
+            .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+        });
+      }).catch(() => null);
     }).catch(() => null);
   }, []);
 
@@ -2677,9 +2734,18 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
   const confirmDelete = (id: string) => setDeleteId(id);
   const doDelete = () => {
     if (!deleteId) return;
+    const entry = logs.find(l => l.id === deleteId);
     setLogs(logs.filter(l => l.id !== deleteId));
     setDeleteId(null);
     setToast("Activity entry deleted");
+    if (!entry) return;
+    import("@/lib/db-client").then(({ api }) => {
+      if (entry.action.startsWith("Stock received")) {
+        api.loadingRecords.delete(deleteId).catch(() => null);
+      } else {
+        (api.dailySales as any).delete(deleteId).catch(() => null);
+      }
+    }).catch(() => null);
   };
 
   const parseAction = (action: string) => {
@@ -2866,6 +2932,7 @@ const DEFAULT_ADMIN_SETTINGS = {
   bankName: "First Bank of Nigeria",
   bankAccountName: "PNB Energy Ltd",
   bankAccountNumber: "",
+  opayNumber: "",
   enablePaystack: true,
   enableBankTransfer: true,
   enableCash: true,
@@ -3659,6 +3726,11 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               <label className={labelCls}>Account Number</label>
               <input className={inputCls} placeholder="0123456789" maxLength={10} value={cfg.bankAccountNumber}
                 onChange={e => setCfg(p => ({ ...p, bankAccountNumber: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelCls}>OPay Number</label>
+              <input className={inputCls} placeholder="e.g. 08012345678" value={(cfg as any).opayNumber ?? ""}
+                onChange={e => setCfg(p => ({ ...p, opayNumber: e.target.value } as any))} />
             </div>
             <button onClick={() => saveSettings(cfg)} className={saveBtnCls}>Save Bank Details</button>
           </div>

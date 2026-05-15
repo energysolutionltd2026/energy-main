@@ -10,10 +10,10 @@ export interface StationManager {
   id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   depot: string;
   status: "Active" | "Blocked";
-  createdAt: string;
+  createdAt?: string;
 }
 
 type ProductKey = "PMS" | "AGO" | "ATK" | string;
@@ -76,13 +76,13 @@ export default function StationManagerDashboard() {
             const depot: any = result.data.find((d: any) => d.name === sm.depot);
             if (!depot) return;
             setDepotDbId(depot._id);
-            const pmsLvl = depot.pmsLevel ?? 60;
-            const agoLvl = depot.agoLevel ?? 60;
-            const atkLvl = depot.atkLevel ?? 60;
+            const pmsLvl = depot.PMS?.level ?? 60;
+            const agoLvl = depot.AGO?.level ?? 60;
+            const atkLvl = depot.ATK?.level ?? 60;
             setStock({
-              PMS: { level: pmsLvl, price: depot.pmsPrice || "₦1,300/L", status: pmsLvl < 20 ? "Unavailable" : pmsLvl < 40 ? "Limited" : "Available" },
-              AGO: { level: agoLvl, price: depot.agoPrice || "₦1,900/L", status: agoLvl < 20 ? "Unavailable" : agoLvl < 40 ? "Limited" : "Available" },
-              ATK: { level: atkLvl, price: depot.atkPrice || "₦1,300/L", status: atkLvl < 20 ? "Unavailable" : atkLvl < 40 ? "Limited" : "Available" },
+              PMS: { level: pmsLvl, price: depot.PMS?.price ? `₦${Number(depot.PMS.price).toLocaleString()}/L` : "₦1,300/L", status: pmsLvl < 20 ? "Unavailable" : pmsLvl < 40 ? "Limited" : "Available" },
+              AGO: { level: agoLvl, price: depot.AGO?.price ? `₦${Number(depot.AGO.price).toLocaleString()}/L` : "₦1,900/L", status: agoLvl < 20 ? "Unavailable" : agoLvl < 40 ? "Limited" : "Available" },
+              ATK: { level: atkLvl, price: depot.ATK?.price ? `₦${Number(depot.ATK.price).toLocaleString()}/L` : "₦1,300/L", status: atkLvl < 20 ? "Unavailable" : atkLvl < 40 ? "Limited" : "Available" },
             });
           });
         });
@@ -129,9 +129,9 @@ export default function StationManagerDashboard() {
     if (depotDbId) {
       import("@/lib/db-client").then(({ api }) => {
         api.depots.update(depotDbId, {
-          pmsLevel: newStock.PMS?.level,
-          agoLevel: newStock.AGO?.level,
-          atkLevel: newStock.ATK?.level,
+          "PMS.level": newStock.PMS?.level,
+          "AGO.level": newStock.AGO?.level,
+          "ATK.level": newStock.ATK?.level,
         } as any).catch(() => null);
       });
     }
@@ -169,9 +169,9 @@ export default function StationManagerDashboard() {
     if (depotDbId) {
       import("@/lib/db-client").then(({ api }) => {
         api.depots.update(depotDbId, {
-          pmsLevel: newStock.PMS?.level,
-          agoLevel: newStock.AGO?.level,
-          atkLevel: newStock.ATK?.level,
+          "PMS.level": newStock.PMS?.level,
+          "AGO.level": newStock.AGO?.level,
+          "ATK.level": newStock.ATK?.level,
         } as any).catch(() => null);
       });
     }

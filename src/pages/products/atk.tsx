@@ -1,10 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import AtkTankSimulation from "@/components/AtkTankSimulation";
 import Link from "next/link";
 
 function Atk() {
   const [level, setLevel] = useState(65);
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.depots.list().then((r: any) => {
+        if (!r?.data?.length) return;
+        const levels = r.data.map((d: any) => d.ATK?.level ?? 0).filter((l: number) => l > 0);
+        if (levels.length) setLevel(Math.round(levels.reduce((a: number, b: number) => a + b, 0) / levels.length));
+      }).catch(() => null);
+    }).catch(() => null);
+  }, []);
   return (
     <div className="relative min-h-screen w-screen overflow-hidden">
       <Head><title>ATK (Jet Fuel) | e-Nergy</title></Head>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import NavBar from "@/components/NavBar";
 import FlowCompleteModal from "@/components/FlowCompleteModal";
@@ -39,9 +39,6 @@ interface LoadingDetails {
   remarks: string;
 }
 
-// ─── Mock purchase records (replace with API call) ───────────────────────────
-
-const MOCK_RECORDS: Record<string, PurchaseRecord> = {};
 
 const inputClass =
   "w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition placeholder-gray-400 bg-white";
@@ -110,7 +107,7 @@ const VerificationStage = ({
   const [status, setStatus] = useState<"idle" | "checking" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const trimmed = inputId.trim().toUpperCase();
     if (!trimmed) {
       setErrorMsg("Please enter your Order ID.");
@@ -118,19 +115,40 @@ const VerificationStage = ({
       return;
     }
     setStatus("checking");
-    // Simulate async lookup — replace with real API call
-    setTimeout(() => {
-      const record = MOCK_RECORDS[trimmed];
-      if (record) {
+    try {
+      const { api } = await import("@/lib/db-client");
+      const result = await (api.purchaseOrders.list as Function)({ orderId: trimmed });
+      const order = result?.data?.[0];
+      if (order) {
         setStatus("idle");
-        onVerified(record);
+        onVerified({
+          orderId: order.orderId || trimmed,
+          companyName: order.companyName || "",
+          ownerName: order.ownerName || "",
+          email: order.ownerEmail || order.companyEmail || "",
+          telephone: order.ownerTelephone || order.companyTelephone || "",
+          productType: order.productType || "",
+          productQuantity: String(order.productQuantity ?? ""),
+          haulageTruck: order.haulageTruck || "",
+          driverName: "",
+          driverIdType: order.ownerIdType || "",
+          driverIdNumber: order.ownerIdNumber || "",
+          truckRegNumber: "",
+          tankCapacity: "",
+          paymentMethod: order.paymentMethod || "",
+          transactionRef: order.transactionRef || "",
+          purchaseDate: (order as any).createdAt || "",
+          stationAddress: order.stationAddress || "",
+          loadingDepot: order.loadingDepot || "",
+        });
       } else {
         setStatus("error");
-        setErrorMsg(
-          "Order ID not found or payment not yet confirmed. Please check the ID and try again."
-        );
+        setErrorMsg("Order ID not found or payment not yet confirmed. Please check the ID and try again.");
       }
-    }, 1200);
+    } catch {
+      setStatus("error");
+      setErrorMsg("Unable to verify order. Please check your connection and try again.");
+    }
   };
 
   return (
@@ -150,9 +168,6 @@ const VerificationStage = ({
           Your Order ID (e.g. <span className="font-mono font-bold text-orange-600">ENR-2025-001A</span>) was
           generated on your waybill document after your purchase was confirmed. It is also included in
           your confirmation email. <br />
-          <span className="text-gray-400 italic mt-1 block">
-            Try demo IDs: ENR-2025-001A or ENR-2025-002B
-          </span>
         </div>
       </div>
 
@@ -401,10 +416,12 @@ const WaybillModal = ({
   record,
   loading,
   onClose,
+  platformInfo,
 }: {
   record: PurchaseRecord;
   loading: LoadingDetails;
   onClose: () => void;
+  platformInfo: { platformName: string; supportEmail: string; supportPhone: string; rcNumber: string };
 }) => {
   const waybillRef = `WB-${record.orderId}-${Date.now().toString().slice(-6)}`;
   const issueDate = new Date().toLocaleDateString("en-NG", {
@@ -463,7 +480,7 @@ const WaybillModal = ({
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-orange-400 text-xs font-bold uppercase tracking-[0.3em] mb-1">
-                  e-Nergy Oil & Gas Platform
+                  {platformInfo.platformName}
                 </p>
                 <h1 className="text-white font-black text-3xl tracking-tight leading-none">
                   LOADING ORDER
@@ -621,21 +638,21 @@ const WaybillModal = ({
                 Important Notice
               </p>
               This is an <span className="font-bold text-gray-600">e-Waybill (Electronic Waybill)</span> generated 
-              to confirm your purchase with e-Nergy Oil & Gas Platform. This document serves as proof of your 
+              to confirm your purchase with {platformInfo.platformName}. This document serves as proof of your
               transaction and authorisation to proceed to the loading depot.
               <br /><br />
-              <span className="font-bold text-orange-600">PLEASE NOTE:</span> This e-Waybill does NOT replace the 
+              <span className="font-bold text-orange-600">PLEASE NOTE:</span> This e-Waybill does NOT replace the
               official physical waybill that will be issued by the depot at the time of loading. Upon arrival at{" "}
-              <span className="font-semibold text-gray-600">{record.loadingDepot}</span>, you must present this 
-              e-Waybill to receive your official depot-issued loading waybill, which is the legally binding document 
+              <span className="font-semibold text-gray-600">{record.loadingDepot}</span>, you must present this
+              e-Waybill to receive your official depot-issued loading waybill, which is the legally binding document
               for transportation and delivery of petroleum products.
               <br /><br />
-              Any tampering, falsification, or unauthorised reproduction of this document is an offence punishable 
-              under the Petroleum Act CAP P10 LFN 2004 and other applicable Nigerian laws. The e-Nergy platform 
+              Any tampering, falsification, or unauthorised reproduction of this document is an offence punishable
+              under the Petroleum Act CAP P10 LFN 2004 and other applicable Nigerian laws. The {platformInfo.platformName}{" "}
               and its partners accept no liability for misuse of this document.
               <br /><br />
-              <span className="font-bold text-gray-500">e-Nergy Oil & Gas Platform</span> · info@energy.ng ·
-              (+234) 08087550875 · RC No. 1234567 · DPR Licensed Operator
+              <span className="font-bold text-gray-500">{platformInfo.platformName}</span> · {platformInfo.supportEmail} ·
+              {platformInfo.supportPhone}{platformInfo.rcNumber ? ` · RC No. ${platformInfo.rcNumber}` : ""} · DPR Licensed Operator
             </div>
           </div>
         </div>
@@ -663,6 +680,14 @@ const WaybillModal = ({
 // ─── Main Load Page ───────────────────────────────────────────────────────────
 
 export default function LoadPage() {
+  const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Oil & Gas Platform", supportEmail: "info@energy.ng", supportPhone: "(+234) 08087550875", rcNumber: "" });
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (s) setPlatformInfo({ platformName: s.platformName || "e-Nergy Oil & Gas Platform", supportEmail: s.supportEmail || "info@energy.ng", supportPhone: s.supportPhone || "(+234) 08087550875", rcNumber: s.rcNumber || "" });
+    }).catch(() => null);
+  }, []);
+
   const [stage, setStage] = useState(0);
   const [verifiedRecord, setVerifiedRecord] = useState<PurchaseRecord | null>(null);
   const [showWaybill, setShowWaybill] = useState(false);
@@ -712,7 +737,30 @@ export default function LoadPage() {
       setLoadError(`Too many submissions. Please wait ${Math.ceil(rateLimit.remainingMs / 1000)}s.`);
       return;
     }
-    setLoadingDetails((prev) => ({ ...prev, remarks: sanitizeString(prev.remarks) }));
+    const sanitizedRemarks = sanitizeString(loadingDetails.remarks);
+    setLoadingDetails((prev) => ({ ...prev, remarks: sanitizedRemarks }));
+
+    const keys = ["compartment1","compartment2","compartment3","compartment4","compartment5"] as const;
+    const compartmentValues = keys.map(k => parseFloat(loadingDetails[k]) || 0).filter(v => v > 0);
+    const totalLitres = compartmentValues.reduce((a, b) => a + b, 0);
+
+    import("@/lib/db-client").then(({ api }) => {
+      api.loadingRecords.create({
+        loadId:            `LOAD-${Date.now()}`,
+        orderId:           verifiedRecord!.orderId,
+        product:           verifiedRecord!.productType as "PMS" | "AGO" | "ATK",
+        depot:             verifiedRecord!.loadingDepot || undefined,
+        truckRegNumber:    verifiedRecord!.truckRegNumber || undefined,
+        driverName:        verifiedRecord!.driverName || undefined,
+        companyName:       verifiedRecord!.companyName || undefined,
+        loadingDate:       loadingDetails.loadingDate || new Date().toISOString(),
+        compartments:      compartmentValues,
+        totalLitresLoaded: totalLitres,
+        remarks:           sanitizedRemarks || undefined,
+        status:            "Completed",
+      } as any).catch(() => null);
+    }).catch(() => null);
+
     setComplete(true);
     setShowWaybill(true);
     setShowFlowModal(true);
@@ -747,7 +795,7 @@ export default function LoadPage() {
               </svg>
             </div>
             <h1 className="text-gray-900 text-xl font-extrabold uppercase leading-snug mb-4">
-              e-Nergy<br />Loading<br />Portal
+              {platformInfo.platformName}<br />Loading<br />Portal
             </h1>
             <p className="text-gray-500 text-xs italic mb-6">
               Verify your purchase and complete the loading process to generate your official waybill.
@@ -773,11 +821,11 @@ export default function LoadPage() {
             <div className="mt-8 space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-orange-500">✉</span>
-                <span className="text-gray-600 text-xs">info@energy.ng</span>
+                <span className="text-gray-600 text-xs">{platformInfo.supportEmail}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-orange-500">📞</span>
-                <span className="text-gray-600 text-xs">(+234) 08087550875</span>
+                <span className="text-gray-600 text-xs">{platformInfo.supportPhone}</span>
               </div>
             </div>
           </div>
@@ -825,6 +873,7 @@ export default function LoadPage() {
           record={verifiedRecord}
           loading={loadingDetails}
           onClose={() => setShowWaybill(false)}
+          platformInfo={platformInfo}
         />
       )}
 

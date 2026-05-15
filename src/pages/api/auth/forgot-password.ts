@@ -30,22 +30,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await connectDB();
 
   const normalizedEmail = email.toLowerCase().trim();
-  const token = crypto.randomBytes(32).toString("hex");
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
   const exp = new Date(Date.now() + RESET_TTL_MINUTES * 60 * 1000);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
+  const resetUrl = `${appUrl}/auth/reset-password?token=${rawToken}`;
 
   // Check regular users first, then station managers
   const user = await User.findOne({ email: normalizedEmail });
   if (user) {
-    await User.findByIdAndUpdate(user._id, { resetToken: token, resetTokenExp: exp });
+    await User.findByIdAndUpdate(user._id, { resetToken: tokenHash, resetTokenExp: exp });
     await sendResetPassword(user.email, user.name, resetUrl).catch(() => null);
     return res.status(200).json(ok);
   }
 
   const sm = await StationManager.findOne({ email: normalizedEmail });
   if (sm) {
-    await StationManager.findByIdAndUpdate(sm._id, { resetToken: token, resetTokenExp: exp });
+    await StationManager.findByIdAndUpdate(sm._id, { resetToken: tokenHash, resetTokenExp: exp });
     await sendResetPassword(sm.email, sm.name, resetUrl).catch(() => null);
   }
 

@@ -7,6 +7,7 @@ import truck1 from "@/../public/truck1.jpg";
 import truck2 from "@/../public/truck2.jpg";
 import truck3 from "@/../public/truck3.jpg";
 import NavBar from "@/components/NavBar";
+import { useDepot } from "@/context/DepotContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -185,7 +186,9 @@ const OwnedTruckPanel = ({ data, onChange }: { data: OwnedTruckInfo; onChange: (
   </div>
 );
 
-const CompanyStage = ({ data, onChange }: { data: CompanyInfo; onChange: (d: Partial<CompanyInfo>) => void }) => (
+const CompanyStage = ({ data, onChange }: { data: CompanyInfo; onChange: (d: Partial<CompanyInfo>) => void }) => {
+  const { depots } = useDepot();
+  return (
   <div className="space-y-4">
     <div>
       <h2 className="text-2xl font-bold text-gray-800">Company Information</h2>
@@ -195,10 +198,14 @@ const CompanyStage = ({ data, onChange }: { data: CompanyInfo; onChange: (d: Par
       <Field label="select loading depot">
             <select className={selectClass} value={data.loadingDepot} onChange={(e) => onChange({ loadingDepot: e.target.value })}>
               <option value="">select a loading depot</option>
-              <option value="Lagos Main Depot">Lagos Main Depot</option>
-              <option value="Port Harcourt Terminal">Port Harcourt Terminal</option>
-              <option value="Abuja Central Terminal">Abuja Central Terminal</option>
-              <option value="Warri Storage Facility">Warri Storage Facility</option>
+              {depots.length > 0 ? depots.map(d => <option key={d} value={d}>{d}</option>) : (
+                <>
+                  <option value="Lagos Main Depot">Lagos Main Depot</option>
+                  <option value="Port Harcourt Terminal">Port Harcourt Terminal</option>
+                  <option value="Abuja Central Terminal">Abuja Central Terminal</option>
+                  <option value="Warri Storage Facility">Warri Storage Facility</option>
+                </>
+              )}
             </select>
           </Field>
     </div>
@@ -214,7 +221,8 @@ const CompanyStage = ({ data, onChange }: { data: CompanyInfo; onChange: (d: Par
     </div>
     <Field label="Station Address for Delivery"><input className={inputClass} placeholder="124, Marwa road, depot bus-stop, Ijegun waterside, Lagos." value={data.stationAddress} onChange={(e) => onChange({ stationAddress: e.target.value })} /></Field>
   </div>
-);
+  );
+};
 
 const OwnerStage = ({ data, onChange }: { data: OwnerInfo; onChange: (d: Partial<OwnerInfo>) => void }) => (
   <div className="space-y-4">
@@ -375,7 +383,7 @@ const PAYMENT_METHODS = [
   { value: "paystack", label: "Paystack", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" strokeLinecap="round" /><path d="M7 15h4M15 15h2" strokeLinecap="round" /><circle cx="6" cy="7.5" r="0.8" fill="currentColor" stroke="none" /></svg>) },
 ];
 
-const PaymentStage = ({ data, onChange }: { data: PaymentInfo; onChange: (d: Partial<PaymentInfo>) => void }) => {
+const PaymentStage = ({ data, onChange, bankSettings, availableMethods = PAYMENT_METHODS }: { data: PaymentInfo; onChange: (d: Partial<PaymentInfo>) => void; bankSettings: { bankName: string; bankAccountName: string; bankAccountNumber: string; opayNumber: string }; availableMethods?: typeof PAYMENT_METHODS }) => {
   const isPaystack = data.paymentMethod === "paystack";
   const isManual = data.paymentMethod && data.paymentMethod !== "paystack";
   return (
@@ -387,7 +395,7 @@ const PaymentStage = ({ data, onChange }: { data: PaymentInfo; onChange: (d: Par
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold tracking-widest text-gray-500 uppercase">Payment Method</label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
-          {PAYMENT_METHODS.map((method) => {
+          {availableMethods.map((method) => {
             const selected = data.paymentMethod === method.value;
             return (
               <button key={method.value} type="button" onClick={() => onChange({ paymentMethod: method.value })}
@@ -420,9 +428,9 @@ const PaymentStage = ({ data, onChange }: { data: PaymentInfo; onChange: (d: Par
           {data.paymentMethod === "bank-transfer" && (
             <div className="rounded-lg bg-orange-50 border border-orange-200 p-4 space-y-1">
               <p className="text-xs font-semibold text-orange-700 uppercase tracking-widest mb-2">Transfer to this account</p>
-              <p className="text-sm text-gray-700"><span className="font-semibold">Bank:</span> First Bank Nigeria</p>
-              <p className="text-sm text-gray-700"><span className="font-semibold">Account Name:</span> Pipes &amp; Barrels Ltd</p>
-              <p className="text-sm text-gray-700"><span className="font-semibold">Account Number:</span> 3012345678</p>
+              <p className="text-sm text-gray-700"><span className="font-semibold">Bank:</span> {bankSettings.bankName}</p>
+              <p className="text-sm text-gray-700"><span className="font-semibold">Account Name:</span> {bankSettings.bankAccountName}</p>
+              {bankSettings.bankAccountNumber && <p className="text-sm text-gray-700"><span className="font-semibold">Account Number:</span> {bankSettings.bankAccountNumber}</p>}
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -466,8 +474,6 @@ function generateOrderId(): string {
   return `ENR-${year}-${seq}${letter}`;
 }
 
-const PAYSTACK_PUBLIC_KEY = "pk_test_REPLACE_WITH_YOUR_KEY";
-
 const mapPaymentMethod = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m;
 
 export default function BuyNow() {
@@ -478,6 +484,20 @@ export default function BuyNow() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isCustomer, setIsCustomer] = useState(false);
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "", opayNumber: "" });
+  const [platformInfo, setPlatformInfo] = useState({ platformName: "Pipes & Barrels Oil & Gas Purchasing Portal", supportEmail: "info@pipesandbarrels.com", supportPhone: "(+234) 08087550875" });
+  const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
+  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "PNB Energy Ltd", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
+      setPlatformInfo({ platformName: s.platformName || "Pipes & Barrels Oil & Gas Purchasing Portal", supportEmail: s.supportEmail || "info@pipesandbarrels.com", supportPhone: s.supportPhone || "(+234) 08087550875" });
+      if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
+      setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
+    }).catch(() => null);
+  }, []);
 
   useEffect(() => {
     if (document.getElementById("paystack-script")) return;
@@ -601,7 +621,7 @@ export default function BuyNow() {
     const id = generateOrderId();
     // @ts-ignore
     const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY, email: formData.owner.email || formData.company.email, amount: 0, currency: "NGN",
+      key: paystackKey, email: formData.owner.email || formData.company.email, amount: 0, currency: "NGN",
       ref: `PB-${Date.now()}`,
       metadata: { companyName: formData.company.name, productType: formData.purchase.productType, productQuantity: formData.purchase.productQuantity, haulageTruck: formData.purchase.haulageTruck },
       onClose: () => {},
@@ -718,11 +738,11 @@ export default function BuyNow() {
               </div>
             )}
             <div className="hidden md:flex flex-col justify-center px-8 py-8 min-w-[240px] max-w-[260px] pt-0">
-              <h1 className="text-gray-900 text-xl font-extrabold uppercase leading-snug mb-4">Welcome to<br />Pipes &amp; Barrels<br />Oil &amp; Gas<br />Purchasing Portal</h1>
+              <h1 className="text-gray-900 text-xl font-extrabold uppercase leading-snug mb-4">Welcome to<br />{platformInfo.platformName}</h1>
               <p className="text-gray-500 text-xs italic mb-8">Please be informed that purchases within 48 hours of order placement require prior authorization.</p>
               <div className="space-y-3">
-                <div className="flex items-center gap-2"><span className="text-orange-500 text-lg">✉</span><span className="text-gray-600 text-xs">info@pipesandbarrels.com</span></div>
-                <div className="flex items-center gap-2"><span className="text-orange-500 text-lg">📞</span><span className="text-gray-600 text-xs">(+234) 08087550875</span></div>
+                <div className="flex items-center gap-2"><span className="text-orange-500 text-lg">✉</span><span className="text-gray-600 text-xs">{platformInfo.supportEmail}</span></div>
+                <div className="flex items-center gap-2"><span className="text-orange-500 text-lg">📞</span><span className="text-gray-600 text-xs">{platformInfo.supportPhone}</span></div>
               </div>
             </div>
             <div className="hidden md:block w-px bg-gray-200 my-6" />
@@ -731,7 +751,7 @@ export default function BuyNow() {
               {stage === 0 && <CompanyStage data={formData.company} onChange={updateCompany} />}
               {stage === 1 && <OwnerStage data={formData.owner} onChange={updateOwner} />}
               {stage === 2 && <PurchaseStage data={formData.purchase} onChange={updatePurchase} />}
-              {stage === 3 && <PaymentStage data={formData.payment} onChange={updatePayment} />}
+              {stage === 3 && <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : enabledMethods.enablePaystack)} />}
               {submitError && <p className="text-sm text-red-500 text-center mt-4">{submitError}</p>}
               <div className="flex justify-between items-center mt-4 pt-6 border-t border-gray-100">
                 {stage > 0 ? <button onClick={handleBack} className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition">‹ Back</button> : <div />}

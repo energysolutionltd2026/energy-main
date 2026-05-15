@@ -8,6 +8,7 @@
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { StationManager } from "@/lib/models/StationManager";
@@ -26,7 +27,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   await connectDB();
 
-  const tokenFilter = { resetToken: token, resetTokenExp: { $gt: new Date() } };
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const tokenFilter = { resetToken: tokenHash, resetTokenExp: { $gt: new Date() } };
 
   const user = await User.findOne(tokenFilter);
   const sm = !user ? await StationManager.findOne(tokenFilter) : null;

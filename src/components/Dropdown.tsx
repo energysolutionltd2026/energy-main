@@ -4,11 +4,22 @@ interface DropdownProps {
   label: string;
   options: string[];
   placeholder: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
-export default function Dropdown({ label, options, placeholder }: DropdownProps) {
-  const [selected, setSelected] = useState("");
+export default function Dropdown({ label, options, placeholder, value: controlledValue, onChange }: DropdownProps) {
+  const [internalSelected, setInternalSelected] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+
+  const isControlled = controlledValue !== undefined;
+  const selected = isControlled ? controlledValue : internalSelected;
+
+  const handleSelect = (option: string) => {
+    if (!isControlled) setInternalSelected(option);
+    onChange?.(option);
+    setIsOpen(false);
+  };
 
   return (
     <div className="flex flex-col space-y-1 relative">
@@ -37,7 +48,7 @@ export default function Dropdown({ label, options, placeholder }: DropdownProps)
             {options.map((option) => (
               <li
                 key={option}
-                onClick={() => { setSelected(option); setIsOpen(false); }}
+                onClick={() => handleSelect(option)}
                 className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 text-gray-800"
               >
                 {option}

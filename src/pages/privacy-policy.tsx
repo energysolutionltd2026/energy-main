@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import NavBar from "@/components/NavBar";
 import tower from "@/../public/tower.jpg";
 
 // ─── Policy Sections ──────────────────────────────────────────────────────────
 
-const SECTIONS = [
+const makeSections = (platformName: string, supportEmail: string, supportPhone: string) => [
   {
     id: "information",
     title: "Information We Collect",
@@ -72,7 +72,7 @@ const SECTIONS = [
     content: [
       {
         subtitle: "We Do Not Sell Your Data",
-        text: "e-Nergy Solutions Limited does not sell, rent, or trade your personal or business data to any third party for marketing or commercial purposes, under any circumstances.",
+        text: `${platformName} does not sell, rent, or trade your personal or business data to any third party for marketing or commercial purposes, under any circumstances.`,
       },
       {
         subtitle: "Service Providers",
@@ -103,7 +103,7 @@ const SECTIONS = [
       },
       {
         subtitle: "Access Controls",
-        text: "Access to customer data is strictly limited to authorized e-Nergy Solutions Limited personnel on a need-to-know basis. All staff with data access are bound by confidentiality obligations.",
+        text: `Access to customer data is strictly limited to authorized ${platformName} personnel on a need-to-know basis. All staff with data access are bound by confidentiality obligations.`,
       },
       {
         subtitle: "Data Retention",
@@ -122,7 +122,7 @@ const SECTIONS = [
     content: [
       {
         subtitle: "Access & Correction",
-        text: "You have the right to request a copy of the personal data we hold about you, and to request corrections to any inaccurate information. Submit requests to info@energy.ng.",
+        text: `You have the right to request a copy of the personal data we hold about you, and to request corrections to any inaccurate information. Submit requests to ${supportEmail}.`,
       },
       {
         subtitle: "Deletion",
@@ -172,7 +172,7 @@ const SECTIONS = [
       },
       {
         subtitle: "Contact Our Data Team",
-        text: "For any privacy-related queries, data access requests, or concerns, please contact us at info@energy.ng or call (+234) 08087550875 during business hours (Mon–Fri, 8AM–6PM WAT).",
+        text: `For any privacy-related queries, data access requests, or concerns, please contact us at ${supportEmail} or call ${supportPhone} during business hours (Mon–Fri, 8AM–6PM WAT).`,
       },
     ],
   },
@@ -185,7 +185,7 @@ const NavItem = ({
   active,
   onClick,
 }: {
-  section: (typeof SECTIONS)[0];
+  section: { id: string; title: string; icon: React.ReactNode; content: { subtitle: string; text: string }[] };
   active: boolean;
   onClick: () => void;
 }) => (
@@ -205,7 +205,17 @@ const NavItem = ({
 // ─── Main Privacy Policy Page ─────────────────────────────────────────────────
 
 export default function PrivacyPolicy() {
-  const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
+  const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Solutions Limited", supportEmail: "info@energy.ng", supportPhone: "(+234) 08087550875" });
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setPlatformInfo({ platformName: s.platformName || "e-Nergy Solutions Limited", supportEmail: s.supportEmail || "info@energy.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
+    }).catch(() => null);
+  }, []);
+
+  const SECTIONS = makeSections(platformInfo.platformName, platformInfo.supportEmail, platformInfo.supportPhone);
+  const [activeSection, setActiveSection] = useState("information");
 
   const current = SECTIONS.find((s) => s.id === activeSection)!;
 
@@ -245,7 +255,7 @@ export default function PrivacyPolicy() {
             </nav>
 
             <p className="text-orange-300 text-[10px] italic mt-6 leading-relaxed">
-              e-Nergy Solutions Limited is committed to protecting the privacy and
+              {platformInfo.platformName} is committed to protecting the privacy and
               security of your personal and business data.
             </p>
           </div>

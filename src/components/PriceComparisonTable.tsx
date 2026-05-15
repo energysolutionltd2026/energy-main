@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface PriceComparisonTableProps {
   onRowClick?: (rowType: 'energy' | 'africa' | 'global') => void;
@@ -9,13 +9,26 @@ export const PriceComparisonTable: React.FC<PriceComparisonTableProps> = ({
   onRowClick,
   activeRow
 }) => {
+  const [prices, setPrices] = useState({ pms: 1330, atk: 1390, ago: 1780 });
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setPrices({
+        pms: s.pmsPricePerLitre || 1330,
+        atk: s.atkPricePerLitre || 1390,
+        ago: s.agoPricePerLitre || 1780,
+      });
+    }).catch(() => null);
+  }, []);
+
   const rows = [
     {
       id: 'energy',
       label: 'e-Nergy',
-      pms: 1330,
-      atk: 1390,
-      ago: 1780,
+      pms: prices.pms,
+      atk: prices.atk,
+      ago: prices.ago,
       badge: 'Company',
       badgeColor: 'bg-purple-500',
     },
@@ -28,7 +41,7 @@ export const PriceComparisonTable: React.FC<PriceComparisonTableProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-white">Real-Time Price Comparison</h3>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1">Current Month: April 2026</p>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1">Current Month: {new Date().toLocaleString("en-NG", { month: "long", year: "numeric" })}</p>
           </div>
           <div className="text-right">
             <p className="text-xs sm:text-sm font-semibold text-orange-400">All prices in ₦/Liter</p>

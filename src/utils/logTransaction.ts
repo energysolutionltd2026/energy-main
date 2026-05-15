@@ -6,7 +6,8 @@ export type TransactionType =
   | "Truck Rental"
   | "Union Dues"
   | "Purchase Order"
-  | "Supply Fulfillment";
+  | "Supply Fulfillment"
+  | "Daily Sales";
 
 export interface PlatformTransaction {
   id: string;

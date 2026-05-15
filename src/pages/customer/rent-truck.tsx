@@ -18,7 +18,7 @@ const GEO_ZONES: { name: string; states: string[] }[] = [
   { name: "South South",   states: ["Akwa Ibom", "Bayelsa", "Cross River", "Delta", "Edo", "Rivers"] },
 ];
 
-const STATE_PRICES: Record<string, number> = {
+const DEFAULT_statePrices: Record<string, number> = {
   Jigawa: 200_000, Kaduna: 185_000, Kano: 190_000, Katsina: 195_000,
   Kebbi: 210_000, Sokoto: 215_000, Zamfara: 205_000,
   Adamawa: 230_000, Bauchi: 220_000, Borno: 250_000, Gombe: 225_000,
@@ -45,6 +45,9 @@ export default function CustomerRentTruck() {
   const { depots } = useDepot();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "", opayNumber: "" });
+  const [statePrices, setStatePrices] = useState<Record<string, number>>(DEFAULT_statePrices);
+  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableCash: true, enableWallet: true });
   const [rentStep, setRentStep] = useState<1 | 2 | 3 | 4>(1);
   const [rentBook, setRentBook] = useState({
     depot: "", capacity: "", vehicleType: "", productType: "",
@@ -64,6 +67,14 @@ export default function CustomerRentTruck() {
         setRentBook(b => ({ ...b, fullName: u.name || "", email: u.email || "", phone: u.phone || "" }));
       })
       .catch(() => router.push("/auth/login"));
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "PNB Energy Ltd", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
+      if (s.truckRates && Object.keys(s.truckRates).length > 0) {
+        setStatePrices(Object.fromEntries(Object.entries(s.truckRates).map(([k, v]) => [k, Number(v)])));
+      }
+      setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false, enableCash: s.enableCash !== false, enableWallet: s.enableWallet !== false });
+    }).catch(() => null);
   }, [router]);
 
   if (!user) return (
@@ -72,7 +83,7 @@ export default function CustomerRentTruck() {
     </div>
   );
 
-  const price = STATE_PRICES[rentBook.state] || 0;
+  const price = statePrices[rentBook.state] || 0;
 
   const handleConfirmPayment = async () => {
     const txnId = `TRK-${Date.now().toString().slice(-8)}`;
@@ -253,9 +264,9 @@ export default function CustomerRentTruck() {
                           className={`px-3 py-2 rounded-lg border-2 text-xs font-semibold transition-all
                             ${rentBook.state === st ? "border-orange-500 bg-orange-500 text-white" : "border-gray-700 hover:border-orange-500/50 text-gray-300"}`}>
                           {st}
-                          {STATE_PRICES[st] && (
+                          {statePrices[st] && (
                             <span className={`block text-[10px] font-bold mt-0.5 ${rentBook.state === st ? "text-orange-100" : "text-orange-500"}`}>
-                              ₦{(STATE_PRICES[st] / 1000).toFixed(0)}k
+                              ₦{(statePrices[st] / 1000).toFixed(0)}k
                             </span>
                           )}
                         </button>
@@ -276,10 +287,10 @@ export default function CustomerRentTruck() {
                 )}
 
                 {/* Price Banner */}
-                {rentBook.state && STATE_PRICES[rentBook.state] && (
+                {rentBook.state && statePrices[rentBook.state] && (
                   <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4">
                     <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Estimated Trip Price</p>
-                    <p className="text-3xl font-black text-orange-400">₦{STATE_PRICES[rentBook.state].toLocaleString()}</p>
+                    <p className="text-3xl font-black text-orange-400">₦{statePrices[rentBook.state].toLocaleString()}</p>
                     <p className="text-xs text-gray-500 mt-1">Base rate for {rentBook.state} ({rentBook.zone}) · Final price confirmed after booking.</p>
                   </div>
                 )}
@@ -380,12 +391,12 @@ export default function CustomerRentTruck() {
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2">Select Payment Method</p>
                 <div className="space-y-2">
                   {([
-                    { id: "bank_transfer", label: "Bank Transfer",      desc: "Direct bank transfer to our account",   icon: "🏦" },
-                    { id: "card",          label: "Debit / Credit Card", desc: "Visa, Mastercard, Verve",               icon: "💳" },
-                    { id: "wallet",        label: "e-Wallet",            desc: "Pay from your e-Nergy wallet balance",  icon: "👛" },
-                    { id: "opay",          label: "OPay",                desc: "Pay via OPay mobile money",             icon: "📱" },
-                    { id: "cash",          label: "Cash",                desc: "Pay cash on truck collection",          icon: "💵" },
-                  ] as const).map(method => (
+                    { id: "bank_transfer", label: "Bank Transfer",      desc: "Direct bank transfer to our account",   icon: "🏦", enabled: enabledMethods.enableBankTransfer },
+                    { id: "card",          label: "Debit / Credit Card", desc: "Visa, Mastercard, Verve",               icon: "💳", enabled: enabledMethods.enablePaystack },
+                    { id: "wallet",        label: "e-Wallet",            desc: "Pay from your e-Nergy wallet balance",  icon: "👛", enabled: enabledMethods.enableWallet },
+                    { id: "opay",          label: "OPay",                desc: "Pay via OPay mobile money",             icon: "📱", enabled: enabledMethods.enableOpay },
+                    { id: "cash",          label: "Cash",                desc: "Pay cash on truck collection",          icon: "💵", enabled: enabledMethods.enableCash },
+                  ] as const).filter(m => m.enabled).map(method => (
                     <button key={method.id} type="button"
                       onClick={() => setRentBook(p => ({ ...p, paymentMethod: method.id }))}
                       className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl border-2 text-left transition-all
@@ -407,10 +418,10 @@ export default function CustomerRentTruck() {
                 {rentBook.paymentMethod === "bank_transfer" && (
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 space-y-1 text-sm">
                     <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">Bank Transfer Details</p>
-                    <p className="text-gray-300"><span className="text-gray-500">Bank:</span> First Bank Nigeria</p>
-                    <p className="text-gray-300"><span className="text-gray-500">Account Name:</span> PNB Energy Ltd</p>
-                    <p className="text-gray-300"><span className="text-gray-500">Account Number:</span> <span className="font-mono font-bold text-white">3012345678</span></p>
-                    <p className="text-xs text-blue-400 mt-1">Use your name as reference. Send proof to trucks@pipesandbarrels.com</p>
+                    <p className="text-gray-300"><span className="text-gray-500">Bank:</span> {bankSettings.bankName}</p>
+                    <p className="text-gray-300"><span className="text-gray-500">Account Name:</span> {bankSettings.bankAccountName}</p>
+                    {bankSettings.bankAccountNumber && <p className="text-gray-300"><span className="text-gray-500">Account Number:</span> <span className="font-mono font-bold text-white">{bankSettings.bankAccountNumber}</span></p>}
+                    <p className="text-xs text-blue-400 mt-1">Use your name as reference. Send proof to {bankSettings.bankAccountName}.</p>
                   </div>
                 )}
 
@@ -418,8 +429,8 @@ export default function CustomerRentTruck() {
                 {rentBook.paymentMethod === "opay" && (
                   <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 space-y-1 text-sm">
                     <p className="text-xs font-bold text-green-400 uppercase tracking-widest mb-2">OPay Details</p>
-                    <p className="text-gray-300"><span className="text-gray-500">OPay Number:</span> <span className="font-mono font-bold text-white">08087550875</span></p>
-                    <p className="text-gray-300"><span className="text-gray-500">Account Name:</span> PNB Energy Ltd</p>
+                    {bankSettings.opayNumber && <p className="text-gray-300"><span className="text-gray-500">OPay Number:</span> <span className="font-mono font-bold text-white">{bankSettings.opayNumber}</span></p>}
+                    <p className="text-gray-300"><span className="text-gray-500">Account Name:</span> {bankSettings.bankAccountName}</p>
                     <p className="text-xs text-green-400 mt-1">Send payment via OPay app then contact us with your receipt.</p>
                   </div>
                 )}

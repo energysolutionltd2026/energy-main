@@ -15,7 +15,7 @@ export interface PaginatedResponse<T> {
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-export type UserRole       = "customer" | "bulk_dealer" | "truck_owner" | "admin";
+export type UserRole       = "customer" | "bulk_dealer" | "truck_owner" | "admin" | "station_manager";
 export type UserStatus     = "active" | "suspended" | "pending";
 export type Product        = "PMS" | "AGO" | "ATK";
 export type SupplyPriority = "normal" | "urgent" | "emergency";
@@ -38,7 +38,8 @@ export type TransactionType    =
   | "Union Dues"
   | "Purchase Order"
   | "Supply Fulfillment"
-  | "Loading";
+  | "Loading"
+  | "Daily Sales";
 
 // ─── User ─────────────────────────────────────────────────────────────────────
 
@@ -455,6 +456,10 @@ export interface PlatformSettings {
   bulkDealerYearlyFee: number;
   bankName?: string;
   bankAccountName?: string;
+  bankAccountNumber?: string;
+  opayNumber?: string;
+  truckRates?: Record<string, number>;
+  paystackPublicKey?: string;
   enablePaystack: boolean;
   enableBankTransfer: boolean;
   enableCash: boolean;

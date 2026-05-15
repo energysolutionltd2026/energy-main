@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 
-const PRICE_HISTORY = [
+const FALLBACK_PRICE_HISTORY = [
   { month: 'January 2026', monthShort: 'Jan', pms: 1280, atk: 1350, ago: 1720 },
   { month: 'February 2026', monthShort: 'Feb', pms: 1295, atk: 1360, ago: 1745 },
   { month: 'March 2026', monthShort: 'Mar', pms: 1310, atk: 1375, ago: 1760 },
@@ -41,9 +41,26 @@ const formatNumber = (num: number): string => {
 };
 
 export const PriceGraph: React.FC<PriceGraphProps> = ({ isOpen, onClose, activeRow }) => {
-  const priceHistory = PRICE_HISTORY;
+  const [priceHistory, setPriceHistory] = useState(FALLBACK_PRICE_HISTORY);
   const eNergySalesHistory = E_NERGY_SALES_HISTORY;
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    import("@/lib/db-client").then(({ api }) => {
+      api.priceHistory.list({ limit: 12 }).then((r: any) => {
+        if (r?.data?.length >= 2) {
+          setPriceHistory(r.data.map((e: any) => ({
+            month:      e.month      ?? "",
+            monthShort: e.monthShort ?? "",
+            pms: e.pms ?? 0,
+            atk: e.atk ?? 0,
+            ago: e.ago ?? 0,
+          })));
+        }
+      }).catch(() => null);
+    }).catch(() => null);
+  }, [isOpen]);
 
   // Calculate e-Nergy prices
   const eNergyHistory = priceHistory.map(entry => ({

@@ -41,48 +41,30 @@ const Field = ({
   </div>
 );
 
-// ─── Contact Info Items ───────────────────────────────────────────────────────
+// ─── Contact Info Icon components ────────────────────────────────────────────
 
-const contactDetails = [
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-        <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21L8.5 10.5s1 2 5 5l1.113-1.724a1 1 0 011.21-.502l4.493 1.498A1 1 0 0121 15.72V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: "Phone",
-    value: "(+234) 08087550875",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-        <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: "Email",
-    value: "info@pipesandbarrels.com",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-        <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: "Head Office",
-    value: "124, Marwa Road, Depot Bus-Stop, Ijegun Waterside, Lagos.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: "Business Hours",
-    value: "Mon – Fri: 8:00 AM – 6:00 PM (WAT)",
-  },
-];
+const PhoneIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
+    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21L8.5 10.5s1 2 5 5l1.113-1.724a1 1 0 011.21-.502l4.493 1.498A1 1 0 0121 15.72V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const EmailIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
+    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const AddressIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
+    <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const ClockIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 // ─── Subject Options ──────────────────────────────────────────────────────────
 
@@ -110,6 +92,11 @@ export default function Contact() {
 
   const [submitted, setSubmitted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    phone: "(+234) 08087550875",
+    email: "info@pipesandbarrels.com",
+    address: "124, Marwa Road, Depot Bus-Stop, Ijegun Waterside, Lagos.",
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -117,13 +104,28 @@ export default function Contact() {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.user) setIsLoggedIn(true); })
       .catch(() => null);
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setContactInfo({
+        phone: s.supportPhone || "(+234) 08087550875",
+        email: s.supportEmail || "info@pipesandbarrels.com",
+        address: s.businessAddress || "124, Marwa Road, Depot Bus-Stop, Ijegun Waterside, Lagos.",
+      });
+    }).catch(() => null);
   }, []);
 
   const update = (d: Partial<ContactForm>) =>
     setFormData((f) => ({ ...f, ...d }));
 
-  const handleSubmit = () => {
-    // Replace with real API call / form handler
+  const handleSubmit = async () => {
+    const { api } = await import("@/lib/db-client");
+    await api.notifications.create({
+      recipientEmail: contactInfo.email,
+      recipientRole: "admin",
+      title: `Contact: ${formData.subject || "General Enquiry"} — ${formData.fullName}`,
+      message: `From: ${formData.fullName}${formData.companyName ? ` (${formData.companyName})` : ""}\nEmail: ${formData.email}\nPhone: ${formData.telephone}\n\n${formData.message}`,
+      reference: formData.email,
+    });
     setSubmitted(true);
   };
 
@@ -183,7 +185,12 @@ export default function Contact() {
 
               {/* Contact Details */}
               <div className="space-y-5 mt-8">
-                {contactDetails.map((item) => (
+                {[
+                  { label: "Phone", icon: <PhoneIcon />, value: contactInfo.phone },
+                  { label: "Email", icon: <EmailIcon />, value: contactInfo.email },
+                  { label: "Head Office", icon: <AddressIcon />, value: contactInfo.address },
+                  { label: "Business Hours", icon: <ClockIcon />, value: "Mon – Fri: 8:00 AM – 6:00 PM (WAT)" },
+                ].map((item) => (
                   <div key={item.label} className="flex items-start gap-3">
                     <span className="text-orange-200 mt-0.5 shrink-0">{item.icon}</span>
                     <div>
@@ -288,7 +295,7 @@ export default function Contact() {
                   <p className="font-semibold text-gray-800 mb-1">Response Time</p>
                   All enquiries are responded to within 24–48 business hours. For urgent matters
                   regarding active orders, please call us directly on{" "}
-                  <span className="font-semibold text-orange-600">(+234) 08087550875</span>.
+                  <span className="font-semibold text-orange-600">{contactInfo.phone}</span>.
                 </div>
               </div>
 

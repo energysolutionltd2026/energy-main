@@ -619,10 +619,11 @@ function SectionReconciliation() {
   const [lastUpdateDate, setLastUpdateDate] = useState<string>("");
   const [reminderDismissed, setReminderDismissed] = useState(false);
 
-  // Check if user has updated stock today (session-only, resets on refresh)
   useEffect(() => {
-    setLastUpdateDate("");
-    setReminderDismissed(false);
+    const stored = localStorage.getItem(DAILY_STOCK_UPDATE_KEY);
+    if (stored) setLastUpdateDate(stored);
+    const dismissed = localStorage.getItem(DAILY_REMINDER_KEY);
+    if (dismissed === "true") setReminderDismissed(true);
   }, []);
 
   const runRecon = () => {
@@ -630,10 +631,11 @@ function SectionReconciliation() {
     setTimeout(() => {
       setRunning(false);
       const today = new Date().toISOString().slice(0, 10);
+      const dealer = _dealerName || "Dealer";
       setHistory([
-        { date: today, product: "PMS", variance: "−200,000 L", by: "John Dealer", status: "Flagged"  },
-        { date: today, product: "ATK", variance: "+20,000 L",  by: "John Dealer", status: "Cleared"  },
-        { date: today, product: "AGO", variance: "0 L",        by: "John Dealer", status: "Cleared"  },
+        { date: today, product: "PMS", variance: "−200,000 L", by: dealer, status: "Flagged"  },
+        { date: today, product: "ATK", variance: "+20,000 L",  by: dealer, status: "Cleared"  },
+        { date: today, product: "AGO", variance: "0 L",        by: dealer, status: "Cleared"  },
         ...history,
       ]);
       setToast("Reconciliation complete — results updated");
@@ -646,13 +648,32 @@ function SectionReconciliation() {
     const ago = parseFloat(soldForm.ago) || 0;
     const atk = parseFloat(soldForm.atk) || 0;
 
-    // Update dealer stock: subtract sold volumes (convert from L to ML for tank state)
     updateDealerStock("PMS", -pms);
     updateDealerStock("AGO", -ago);
     updateDealerStock("ATK", -atk);
 
-    setLastUpdateDate(new Date().toISOString().slice(0, 10));
+    const today = new Date().toISOString().slice(0, 10);
+    setLastUpdateDate(today);
     setReminderDismissed(true);
+    localStorage.setItem(DAILY_STOCK_UPDATE_KEY, today);
+    localStorage.setItem(DAILY_REMINDER_KEY, "true");
+
+    // Persist each non-zero sale as a transaction record
+    [{ key: "PMS", amount: pms }, { key: "AGO", amount: ago }, { key: "ATK", amount: atk }]
+      .filter(p => p.amount > 0)
+      .forEach(p => {
+        logTransaction({
+          type: "Daily Sales",
+          user: _dealerName || "Bulk Dealer",
+          userRole: "Bulk Dealer",
+          product: p.key,
+          quantity: `${p.amount.toLocaleString()} L`,
+          totalAmount: `₦${(p.amount * (_platformPrices[p.key] ?? 0)).toLocaleString()}`,
+          status: "Completed",
+          depot: "",
+          reference: `DAILY-${today}-${p.key}-${Date.now()}`,
+        });
+      });
 
     setSoldForm({ pms: "", ago: "", atk: "" });
     setShowUpdateForm(false);

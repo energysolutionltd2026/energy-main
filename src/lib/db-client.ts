@@ -177,6 +177,9 @@ const loadingRecords = {
 
   update: (id: string, data: Partial<LoadingRecord>) =>
     safe(() => apiFetch<LoadingRecord>(`/api/db/loading-records/${id}`, { method: "PUT", body: JSON.stringify(data) })),
+
+  delete: (id: string) =>
+    safe(() => apiFetch<{ deleted: boolean }>(`/api/db/loading-records/${id}`, { method: "DELETE" })),
 };
 
 // ─── Transactions ─────────────────────────────────────────────────────────────
@@ -292,6 +295,19 @@ const dailySales = {
 
   update: (id: string, data: Partial<DailySales>) =>
     safe(() => apiFetch<DailySales>(`/api/db/daily-sales/${id}`, { method: "PUT", body: JSON.stringify(data) })),
+
+  delete: (id: string) =>
+    safe(() => apiFetch<{ deleted: boolean }>(`/api/db/daily-sales/${id}`, { method: "DELETE" })),
+};
+
+// ─── Price History ────────────────────────────────────────────────────────────
+
+const priceHistory = {
+  list: (params: { limit?: number } = {}) =>
+    safe(() => apiFetch<{ data: any[]; total: number }>(`/api/db/price-history${qs(params)}`)),
+
+  delete: (id: string) =>
+    safe(() => apiFetch<{ deleted: boolean }>(`/api/db/price-history/${id}`, { method: "DELETE" })),
 };
 
 // ─── Union Dues ───────────────────────────────────────────────────────────────
@@ -454,6 +470,7 @@ export const api = {
   unionDues,
   customLevies,
   platformSettings,
+  priceHistory,
   notifications,
   sessions: sessionsMod,
   aiFeedback,

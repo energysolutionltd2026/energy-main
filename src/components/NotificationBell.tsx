@@ -107,23 +107,30 @@ export default function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    import("@/lib/db-client").then(({ api }) => {
-      (api.notifications as any)?.list?.({ limit: 20 }).then((result: any) => {
-        if (result?.data?.length) {
-          setNotifs(result.data.map((n: any) => ({
-            id: n._id || n.id,
-            type: n.type || "info",
-            title: n.title || "Notification",
-            message: n.message || "",
-            href: n.href || "#",
-            timestamp: n.createdAt || n.timestamp || new Date().toISOString(),
-            read: n.read ?? false,
-          })));
-        } else {
-          setNotifs(generateBaseNotifications());
-        }
-      }).catch(() => setNotifs(generateBaseNotifications()));
-    }).catch(() => setNotifs(generateBaseNotifications()));
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const email = data?.user?.email;
+        if (!email) { setNotifs(generateBaseNotifications()); return; }
+        import("@/lib/db-client").then(({ api }) => {
+          (api.notifications as any)?.list?.({ recipientEmail: email, limit: 20 }).then((result: any) => {
+            if (result?.data?.length) {
+              setNotifs(result.data.map((n: any) => ({
+                id: n._id || n.id,
+                type: n.type || "info",
+                title: n.title || "Notification",
+                message: n.message || "",
+                href: n.href || "#",
+                timestamp: n.createdAt || n.timestamp || new Date().toISOString(),
+                read: n.read ?? false,
+              })));
+            } else {
+              setNotifs(generateBaseNotifications());
+            }
+          }).catch(() => setNotifs(generateBaseNotifications()));
+        }).catch(() => setNotifs(generateBaseNotifications()));
+      })
+      .catch(() => setNotifs(generateBaseNotifications()));
   }, []);
 
   // Close on outside click

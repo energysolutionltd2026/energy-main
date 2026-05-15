@@ -510,9 +510,13 @@ const PAYMENT_METHODS = [
 const PaymentStage = ({
   data,
   onChange,
+  bankSettings,
+  availableMethods = PAYMENT_METHODS,
 }: {
   data: PaymentInfo;
   onChange: (d: Partial<PaymentInfo>) => void;
+  bankSettings: { bankName: string; bankAccountName: string; bankAccountNumber: string };
+  availableMethods?: typeof PAYMENT_METHODS;
 }) => {
   const isPaystack = data.paymentMethod === "paystack";
   const isManual   = data.paymentMethod && data.paymentMethod !== "paystack";
@@ -531,7 +535,7 @@ const PaymentStage = ({
           Payment Method
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
-          {PAYMENT_METHODS.map((method) => {
+          {availableMethods.map((method) => {
             const selected = data.paymentMethod === method.value;
             return (
               <button
@@ -590,14 +594,16 @@ const PaymentStage = ({
                 Transfer booking deposit to this account
               </p>
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">Bank:</span> First Bank Nigeria
+                <span className="font-semibold">Bank:</span> {bankSettings.bankName}
               </p>
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">Account Name:</span> Pipes &amp; Barrels Ltd
+                <span className="font-semibold">Account Name:</span> {bankSettings.bankAccountName}
               </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Account Number:</span> 3012345678
-              </p>
+              {bankSettings.bankAccountNumber && (
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">Account Number:</span> {bankSettings.bankAccountNumber}
+                </p>
+              )}
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -680,10 +686,6 @@ const StepIndicator = ({ current }: { current: number }) => (
   </div>
 );
 
-// ─── Paystack public key ───────────────────────────────────────────────────────
-
-const PAYSTACK_PUBLIC_KEY = "pk_test_REPLACE_WITH_YOUR_KEY";
-
 // ─── Main BookNow Page ─────────────────────────────────────────────────────────
 
 export default function BookNow() {
@@ -693,6 +695,10 @@ export default function BookNow() {
   const [showFlowModal, setShowFlowModal] = useState(false);
   const [detectedProduct, setDetected]  = useState<ProductKey>("");
   const [submitError, setSubmitError]   = useState("");
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "" });
+  const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@pipesandbarrels.com", supportPhone: "(+234) 08087550875" });
+  const [paystackKey, setPaystackKey]   = useState("pk_test_REPLACE_WITH_YOUR_KEY");
+  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
   const rateLimit = useRateLimit({ maxAttempts: 5, windowMs: 60_000 });
 
   // ── Detect product from query param: /booknow?product=pms ──────────────────
@@ -712,6 +718,16 @@ export default function BookNow() {
       }));
     }
   }, [router.isReady, router.query.product]);
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "PNB Energy Ltd", bankAccountNumber: s.bankAccountNumber || "" });
+      setPlatformInfo({ supportEmail: s.supportEmail || "info@pipesandbarrels.com", supportPhone: s.supportPhone || "(+234) 08087550875" });
+      if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
+      setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
+    }).catch(() => null);
+  }, []);
 
   // ── Load Paystack script ────────────────────────────────────────────────────
   useEffect(() => {
@@ -761,7 +777,7 @@ export default function BookNow() {
   const handlePaystack = () => {
     // @ts-ignore
     const handler = window.PaystackPop.setup({
-      key:      PAYSTACK_PUBLIC_KEY,
+      key:      paystackKey,
       email:    sanitizeString(formData.owner.email || formData.company.email),
       amount:   0, // replace with actual kobo deposit amount
       currency: "NGN",
@@ -817,6 +833,36 @@ export default function BookNow() {
     return "";
   };
 
+  const handleManualSubmit = async () => {
+    const { api } = await import("@/lib/db-client");
+    const orderId = `ENR-${Date.now()}`;
+    await api.purchaseOrders.create({
+      orderId,
+      companyName: sanitizeString(formData.company.name),
+      dprRegNo: sanitizeString(formData.company.dprRegNo),
+      cacRegNo: sanitizeString(formData.company.cacRegNo),
+      companyAddress: sanitizeString(formData.company.headOfficeAddress),
+      companyTelephone: sanitizeString(formData.company.telephone),
+      companyEmail: sanitizeString(formData.company.email),
+      stationAddress: sanitizeString(formData.company.deliveryAddress),
+      ownerName: sanitizeString(formData.owner.name),
+      ownerTelephone: sanitizeString(formData.owner.telephone),
+      ownerAddress: sanitizeString(formData.owner.address),
+      ownerEmail: sanitizeString(formData.owner.email),
+      ownerIdType: sanitizeString(formData.owner.officialIdType),
+      ownerIdNumber: sanitizeString(formData.owner.idNumber),
+      productType: formData.booking.productType.toUpperCase(),
+      productQuantity: parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
+      haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "Rent Truck" : "Owned Truck") as "Owned Truck" | "Rent Truck",
+      paymentMethod: formData.payment.paymentMethod as import("@/lib/db-types").PaymentMethod,
+      bankName: sanitizeString(formData.payment.bankName),
+      bankAccountName: sanitizeString(formData.payment.accountName),
+      transactionRef: sanitizeString(formData.payment.transactionRef),
+    });
+    setSubmitted(true);
+    setShowFlowModal(true);
+  };
+
   const handleNext = () => {
     setSubmitError("");
     const err = validateStage(stage);
@@ -826,8 +872,8 @@ export default function BookNow() {
       setSubmitError(`Too many submissions. Please wait ${Math.ceil(rateLimit.remainingMs / 1000)}s.`);
       return;
     }
-    if (formData.payment.paymentMethod === "paystack") handlePaystack();
-    else { setSubmitted(true); setShowFlowModal(true); }
+    if (formData.payment.paymentMethod === "paystack") { handlePaystack(); return; }
+    handleManualSubmit();
   };
 
   const handleBack = () => {
@@ -915,11 +961,11 @@ export default function BookNow() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-orange-500 text-lg">✉</span>
-                  <span className="text-gray-600 text-xs">info@pipesandbarrels.com</span>
+                  <span className="text-gray-600 text-xs">{platformInfo.supportEmail}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-orange-500 text-lg">📞</span>
-                  <span className="text-gray-600 text-xs">(+234) 08087550875</span>
+                  <span className="text-gray-600 text-xs">{platformInfo.supportPhone}</span>
                 </div>
               </div>
             </div>
@@ -945,7 +991,7 @@ export default function BookNow() {
                 />
               )}
               {stage === 3 && (
-                <PaymentStage data={formData.payment} onChange={updatePayment} />
+                <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : enabledMethods.enablePaystack)} />
               )}
 
               {/* Navigation */}

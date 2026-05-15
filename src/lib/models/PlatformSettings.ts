@@ -50,6 +50,7 @@ const PlatformSettingsSchema = new Schema(
     bankName:           { type: String, default: "First Bank of Nigeria" },
     bankAccountName:    { type: String, default: "PNB Energy Ltd" },
     bankAccountNumber:  { type: String },
+    opayNumber:         { type: String },
     enablePaystack:     { type: Boolean, default: true },
     enableBankTransfer: { type: Boolean, default: true },
     enableCash:         { type: Boolean, default: true },

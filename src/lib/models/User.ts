@@ -15,10 +15,11 @@ const UserSchema = new Schema(
     // ── Auth ──────────────────────────────────────────────────────────────────
     passwordHash:    { type: String },                   // bcrypt hash — never returned to client
     emailVerified:   { type: Boolean, default: false },
-    emailVerifyCode: { type: String },                   // 6-digit OTP (hashed in prod)
-    emailVerifyExp:  { type: Date },                     // OTP expiry
-    resetToken:      { type: String },                   // password reset token (hashed)
-    resetTokenExp:   { type: Date },
+    emailVerifyCode:     { type: String },               // SHA-256 hash of 6-digit OTP
+    emailVerifyExp:      { type: Date },                 // OTP expiry
+    emailVerifyAttempts: { type: Number, default: 0 },  // failed attempts counter
+    resetToken:          { type: String },               // SHA-256 hash of reset token
+    resetTokenExp:       { type: Date },
 
     // ── Business details ──────────────────────────────────────────────────────
     companyName:       { type: String, trim: true },

@@ -65,15 +65,28 @@ const sectionHd = "text-base font-bold text-white mb-4 pb-2 border-b border-gray
 function SecurityTab({ setToast }: { setToast: (msg: string) => void }) {
   const [fields, setFields] = useState({ current: "", next: "", confirm: "" });
   const [error, setError]   = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     setError("");
     if (!fields.current) { setError("Please enter your current password."); return; }
     if (fields.next.length < 6) { setError("New password must be at least 6 characters."); return; }
     if (fields.next !== fields.confirm) { setError("New passwords do not match."); return; }
-    // In a real app this would call an API. For demo, just show success.
-    setFields({ current: "", next: "", confirm: "" });
-    setToast("Password updated successfully!");
+    setSaving(true);
+    try {
+      const r = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: fields.current, password: fields.next }),
+      });
+      if (!r.ok) { setError("Current password is incorrect."); return; }
+      setFields({ current: "", next: "", confirm: "" });
+      setToast("Password updated successfully!");
+    } catch {
+      setError("Failed to update password. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -98,8 +111,8 @@ function SecurityTab({ setToast }: { setToast: (msg: string) => void }) {
           />
         </div>
       ))}
-      <button onClick={handleUpdate} className="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
-        Update Password
+      <button onClick={handleUpdate} disabled={saving} className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+        {saving ? "Updating…" : "Update Password"}
       </button>
     </div>
   );

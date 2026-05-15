@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import NavBar from "@/components/NavBar";
 import tower from "@/../public/tower.jpg";
@@ -126,6 +126,28 @@ const TABS: { id: Tab; label: string }[] = [
 
 export default function AboutUs() {
   const [activeTab, setActiveTab] = useState<Tab>("story");
+  const [platformInfo, setPlatformInfo] = useState({
+    platformName: "e-Nergy Solutions Limited",
+    tagline: "Nigeria's trusted downstream petroleum distribution partner since 2011.",
+    businessAddress: "Ijegun Waterside, Lagos",
+    rcNumber: "RC 123456",
+    supportEmail: "info@energy.ng",
+    supportPhone: "(+234) 08087550875",
+  });
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setPlatformInfo({
+        platformName: s.platformName || "e-Nergy Solutions Limited",
+        tagline: s.tagline || "Nigeria's trusted downstream petroleum distribution partner since 2011.",
+        businessAddress: s.businessAddress || "Ijegun Waterside, Lagos",
+        rcNumber: s.rcNumber || "RC 123456",
+        supportEmail: s.supportEmail || "info@energy.ng",
+        supportPhone: s.supportPhone || "(+234) 08087550875",
+      });
+    }).catch(() => null);
+  }, []);
 
   return (
     <div
@@ -143,11 +165,11 @@ export default function AboutUs() {
           <div className="hidden md:flex flex-col px-6 py-8 min-w-[240px] max-w-[260px] bg-gradient-to-b from-orange-800 to-orange-500">
             <div className="mb-8">
               <h1 className="text-white text-xl font-extrabold uppercase leading-snug">
-                About<br />e-Nergy Solutions Limited
+                About<br />{platformInfo.platformName}
               </h1>
               <div className="mt-3 h-0.5 bg-orange-400 w-12 rounded" />
               <p className="text-orange-200 text-xs mt-3 leading-relaxed italic">
-                Nigeria&apos;s trusted downstream petroleum distribution partner since 2011.
+                {platformInfo.tagline}
               </p>
             </div>
 
@@ -165,15 +187,15 @@ export default function AboutUs() {
             <div className="mt-auto space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-orange-300 text-base">✉</span>
-                <span className="text-orange-100 text-xs">info@energy.ng</span>
+                <span className="text-orange-100 text-xs">{platformInfo.supportEmail}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-orange-300 text-base">📞</span>
-                <span className="text-orange-100 text-xs">(+234) 08087550875</span>
+                <span className="text-orange-100 text-xs">{platformInfo.supportPhone}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-orange-300 text-base">📍</span>
-                <span className="text-orange-100 text-xs">Ijegun Waterside, Lagos</span>
+                <span className="text-orange-100 text-xs">{platformInfo.businessAddress}</span>
               </div>
             </div>
           </div>
@@ -356,7 +378,7 @@ export default function AboutUs() {
             {/* Bottom CTA */}
             <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between">
               <p className="text-xs text-gray-400 italic">
-                e-Nergy Solutions Limited · RC 123456 · DPR Licensed
+                {platformInfo.platformName} · {platformInfo.rcNumber} · DPR Licensed
               </p>
               <a
                 href="/contact"

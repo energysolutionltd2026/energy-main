@@ -5,4 +5,5 @@ export default collectionHandler(DailySales, {
   filterFields: ["stationId", "recordedBy", "isVerified"],
   defaultSort: { saleDate: -1 },
   pageSize: 60,
+  allowedRoles: ["admin", "station_manager"],
 });

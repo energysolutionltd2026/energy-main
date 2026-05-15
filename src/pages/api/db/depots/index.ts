@@ -18,9 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  // All write operations still require auth
+  // All write operations require admin
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Unauthorized — please log in" });
+  if (user.role !== "admin") return res.status(403).json({ error: "Forbidden — admin only" });
 
   if (req.method === "POST") {
     try {

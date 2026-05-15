@@ -8,6 +8,7 @@ import { logTransaction } from "@/utils/logTransaction";
 import FlowCompleteModal from "@/components/FlowCompleteModal";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { sanitizeString } from "@/lib/security/sanitize";
+import { useDepot } from "@/context/DepotContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -127,7 +128,9 @@ const MemberStage = ({
 }: {
   data: MemberInfo;
   onChange: (d: Partial<MemberInfo>) => void;
-}) => (
+}) => {
+  const { depots } = useDepot();
+  return (
   <div className="space-y-4">
     <div>
       <h2 className="text-2xl font-bold text-gray-800">Member Information</h2>
@@ -139,10 +142,14 @@ const MemberStage = ({
       <Field label="select payment depot">
             <select className={selectClass} value={data.paymentDepot} onChange={(e) => onChange({ paymentDepot: e.target.value })}>
               <option value="">select a payment depot</option>
-              <option value="Lagos Main Depot">Lagos Main Depot</option>
-              <option value="Port Harcourt Terminal">Port Harcourt Terminal</option>
-              <option value="Abuja Central Terminal">Abuja Central Terminal</option>
-              <option value="Warri Storage Facility">Warri Storage Facility</option>
+              {depots.length > 0 ? depots.map(d => <option key={d} value={d}>{d}</option>) : (
+                <>
+                  <option value="Lagos Main Depot">Lagos Main Depot</option>
+                  <option value="Port Harcourt Terminal">Port Harcourt Terminal</option>
+                  <option value="Abuja Central Terminal">Abuja Central Terminal</option>
+                  <option value="Warri Storage Facility">Warri Storage Facility</option>
+                </>
+              )}
             </select>
           </Field>
     </div>
@@ -200,7 +207,8 @@ const MemberStage = ({
       />
     </Field>
   </div>
-);
+  );
+};
 
 // ─── Stage 2: Select Dues ─────────────────────────────────────────────────────
 
@@ -281,9 +289,13 @@ const PAYMENT_METHODS = [
 const PaymentStage = ({
   data,
   onChange,
+  bankSettings,
+  availableMethods = PAYMENT_METHODS,
 }: {
   data: PaymentInfo;
   onChange: (d: Partial<PaymentInfo>) => void;
+  bankSettings: { bankName: string; bankAccountName: string; bankAccountNumber: string; opayNumber: string };
+  availableMethods?: typeof PAYMENT_METHODS;
 }) => {
   const isPaystack = data.paymentMethod === "paystack";
   const isManual = data.paymentMethod && data.paymentMethod !== "paystack";
@@ -302,7 +314,7 @@ const PaymentStage = ({
           Payment Method
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
-          {PAYMENT_METHODS.map((method) => {
+          {availableMethods.map((method) => {
             const selected = data.paymentMethod === method.value;
             return (
               <button
@@ -362,14 +374,16 @@ const PaymentStage = ({
                 Transfer to this account
               </p>
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">Bank:</span> First Bank Nigeria
+                <span className="font-semibold">Bank:</span> {bankSettings.bankName}
               </p>
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">Account Name:</span> e-Nergy Oil &amp; Gas Platform
+                <span className="font-semibold">Account Name:</span> {bankSettings.bankAccountName}
               </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Account Number:</span> 3012345678
-              </p>
+              {bankSettings.bankAccountNumber && (
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">Account Number:</span> {bankSettings.bankAccountNumber}
+                </p>
+              )}
             </div>
           )}
           {data.paymentMethod === "opay" && (
@@ -377,11 +391,13 @@ const PaymentStage = ({
               <p className="text-xs font-semibold text-green-700 uppercase tracking-widest mb-2">
                 Pay via OPay
               </p>
+              {bankSettings.opayNumber && (
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">OPay Number:</span> {bankSettings.opayNumber}
+                </p>
+              )}
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">OPay Number:</span> 08012345678
-              </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Account Name:</span> e-Nergy Oil &amp; Gas Platform
+                <span className="font-semibold">Account Name:</span> {bankSettings.bankAccountName}
               </p>
               <p className="text-sm text-gray-700 mt-1 text-green-700">
                 Send the exact amount to the OPay number above, then enter your transaction reference below.
@@ -431,10 +447,12 @@ const InvoiceModal = ({
   formData,
   total,
   onClose,
+  platformInfo,
 }: {
   formData: FormData;
   total: number;
   onClose: () => void;
+  platformInfo: { supportEmail: string; supportPhone: string };
 }) => {
   const { member, payment } = formData;
 
@@ -550,7 +568,7 @@ const InvoiceModal = ({
 
           <p className="text-xs text-gray-400 text-center">
             This invoice was generated by the e-Nergy platform. For queries, contact{" "}
-            <span className="text-orange-500">info@energy.ng</span> or call (+234) 08087550875.
+            <span className="text-orange-500">{platformInfo.supportEmail}</span> or call {platformInfo.supportPhone}.
           </p>
         </div>
 
@@ -576,8 +594,6 @@ const InvoiceModal = ({
 
 // ─── Main PayDues Page ────────────────────────────────────────────────────────
 
-const PAYSTACK_PUBLIC_KEY = "pk_test_REPLACE_WITH_YOUR_KEY";
-
 export default function PayDues() {
   const router = useRouter();
   const [stage, setStage] = useState(0);
@@ -586,6 +602,10 @@ export default function PayDues() {
   const [isCustomer, setIsCustomer] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [duesAmount, setDuesAmount] = useState(DEFAULT_DUES_AMOUNT);
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "PNB Energy Ltd", bankAccountNumber: "", opayNumber: "" });
+  const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@energy.ng", supportPhone: "(+234) 08087550875" });
+  const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
+  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
   const rateLimit = useRateLimit({ maxAttempts: 5, windowMs: 60_000 });
 
   useEffect(() => {
@@ -624,6 +644,12 @@ export default function PayDues() {
       .then(({ api }) => api.platformSettings.get())
       .then((settings) => {
         if (settings?.annualMembershipFee) setDuesAmount(settings.annualMembershipFee);
+        if (settings) {
+          setBankSettings({ bankName: settings.bankName || "First Bank of Nigeria", bankAccountName: settings.bankAccountName || "PNB Energy Ltd", bankAccountNumber: settings.bankAccountNumber || "", opayNumber: settings.opayNumber || "" });
+          setPlatformInfo({ supportEmail: settings.supportEmail || "info@energy.ng", supportPhone: settings.supportPhone || "(+234) 08087550875" });
+          if (settings.paystackPublicKey) setPaystackKey(settings.paystackPublicKey);
+          setEnabledMethods({ enableBankTransfer: settings.enableBankTransfer !== false, enablePaystack: settings.enablePaystack !== false, enableOpay: settings.enableOpay !== false });
+        }
       })
       .catch(() => null);
   }, []);
@@ -719,7 +745,7 @@ export default function PayDues() {
   const handlePaystack = () => {
     // @ts-ignore
     const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
+      key: paystackKey,
       email: formData.member.email,
       amount: computeTotal() * 100, // kobo
       currency: "NGN",
@@ -827,7 +853,7 @@ export default function PayDues() {
                 </button>
               </div>
             </div>
-            <InvoiceModal formData={formData} total={duesAmount} onClose={() => setShowInvoice(false)} />
+            <InvoiceModal formData={formData} total={duesAmount} onClose={() => setShowInvoice(false)} platformInfo={platformInfo} />
           </>
         ) : (
           <div className="flex w-full max-w-4xl bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border-4 border-orange-500 overflow-hidden my-10">
@@ -862,11 +888,11 @@ export default function PayDues() {
               <div className="mt-6 space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-orange-500 text-lg">✉</span>
-                  <span className="text-gray-600 text-xs">info@energy.ng</span>
+                  <span className="text-gray-600 text-xs">{platformInfo.supportEmail}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-orange-500 text-lg">📞</span>
-                  <span className="text-gray-600 text-xs">(+234) 08087550875</span>
+                  <span className="text-gray-600 text-xs">{platformInfo.supportPhone}</span>
                 </div>
               </div>
             </div>
@@ -880,7 +906,7 @@ export default function PayDues() {
 
               {stage === 0 && <MemberStage data={formData.member} onChange={updateMember} />}
                {stage === 1 && <DuesStage amount={duesAmount} />}
-              {stage === 2 && <PaymentStage data={formData.payment} onChange={updatePayment} />}
+              {stage === 2 && <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : enabledMethods.enablePaystack)} />}
 
               {/* Navigation */}
               {submitError && <p className="text-sm text-red-500 text-center mt-2">{submitError}</p>}

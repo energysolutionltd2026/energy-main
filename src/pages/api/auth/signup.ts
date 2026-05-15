@@ -10,6 +10,7 @@
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { Session } from "@/lib/models/Session";
@@ -55,6 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const passwordHash = await bcrypt.hash(password, 12);
 
   const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+  const otpHash = crypto.createHash("sha256").update(otpCode).digest("hex");
   const otpExp = new Date(Date.now() + 30 * 60 * 1000);
 
   const user = await User.create({
@@ -64,8 +66,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     role,
     passwordHash,
     emailVerified: false,
-    emailVerifyCode: otpCode,
+    emailVerifyCode: otpHash,
     emailVerifyExp: otpExp,
+    emailVerifyAttempts: 0,
     status: "active",
   });
 

@@ -11,7 +11,29 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { connectDB } from "@/lib/db";
 import { PlatformSettings } from "@/lib/models/PlatformSettings";
+import { PriceHistory } from "@/lib/models/PriceHistory";
 import { getSessionUser } from "@/lib/auth";
+
+const PRICE_FIELDS = ["pmsPricePerLitre", "atkPricePerLitre", "agoPricePerLitre", "lgpPricePerLitre"] as const;
+
+async function savePriceSnapshot(settings: any) {
+  const now = new Date();
+  const month = now.toLocaleString("en-NG", { month: "long", year: "numeric" });
+  const monthShort = now.toLocaleString("en-NG", { month: "short" });
+  await PriceHistory.findOneAndUpdate(
+    { month },
+    {
+      month,
+      monthShort,
+      pms: settings.pmsPricePerLitre ?? 0,
+      atk: settings.atkPricePerLitre ?? 0,
+      ago: settings.agoPricePerLitre ?? 0,
+      lgp: settings.lgpPricePerLitre ?? 0,
+      recordedAt: now,
+    },
+    { upsert: true }
+  );
+}
 
 const IMMUTABLE = ["_id", "__v", "settingsKey", "createdAt", "apiKey", "depotCodeSecret"];
 
@@ -19,12 +41,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await connectDB();
 
   if (req.method === "GET") {
-    const settings = await PlatformSettings.findOne({ settingsKey: "global" }).lean();
+    const settings = await PlatformSettings.findOne({ settingsKey: "global" }).lean() as any;
     if (!settings) {
-      // Auto-create with defaults on first access
       const created = await PlatformSettings.create({ settingsKey: "global" });
-      return res.status(200).json(created);
+      const safe = created.toObject();
+      delete safe.apiKey;
+      delete safe.depotCodeSecret;
+      delete safe.paystackSecretKey;
+      return res.status(200).json(safe);
     }
+    delete settings.apiKey;
+    delete settings.depotCodeSecret;
+    delete settings.paystackSecretKey;
     return res.status(200).json(settings);
   }
 
@@ -40,7 +68,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { $set: updates },
       { upsert: true, new: true, runValidators: true }
     );
-    return res.status(200).json(settings);
+    const safe = settings?.toObject() as any;
+    if (safe) {
+      delete safe.apiKey;
+      delete safe.depotCodeSecret;
+      delete safe.paystackSecretKey;
+    }
+
+    const hasPriceUpdate = PRICE_FIELDS.some(f => updates[f] !== undefined);
+    if (hasPriceUpdate && safe) {
+      savePriceSnapshot(safe).catch(() => null);
+    }
+
+    return res.status(200).json(safe ?? {});
   }
 
   return res.status(405).json({ error: "Method not allowed" });

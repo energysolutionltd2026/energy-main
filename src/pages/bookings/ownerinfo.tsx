@@ -1,10 +1,48 @@
-import Link from "next/link";
+import { useRouter } from "next/router";
 import Head from "next/head";
+import { useState, useEffect } from "react";
 import Input from "../../components/Input";
 import BookingLayout from "@/components/BookingLayout";
 import Dropdown from "@/components/Dropdown";
 
-export default function companyinfo() {
+const STORAGE_KEY = "booking_owner_info";
+
+export default function ownerinfo() {
+  const router = useRouter();
+  const [contactInfo, setContactInfo] = useState({ email: "info@pipesandbarrels.com", phone: "(+234) 08087550875" });
+  const [form, setForm] = useState({
+    ownerName: "",
+    telephone: "",
+    address: "",
+    email: "",
+    idType: "",
+    idNumber: "",
+  });
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
+      if (!s) return;
+      setContactInfo({ email: s.supportEmail || "info@pipesandbarrels.com", phone: s.supportPhone || "(+234) 08087550875" });
+    }).catch(() => null);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) { try { setForm(JSON.parse(saved)); } catch {} }
+  }, []);
+
+  const update = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const handleNext = () => {
+    if (!form.ownerName.trim()) { setError("Owner name is required."); return; }
+    if (!form.telephone.trim()) { setError("Telephone is required."); return; }
+    if (!form.address.trim()) { setError("Address is required."); return; }
+    if (!form.email.trim()) { setError("Email is required."); return; }
+    if (!form.idType) { setError("Please select an ID type."); return; }
+    if (!form.idNumber.trim()) { setError("ID Number is required."); return; }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+    router.push("/bookings/productbooking");
+  };
+
   return (
     <>
       <Head><title>Owner Info | e-Nergy</title></Head>
@@ -26,41 +64,45 @@ export default function companyinfo() {
             </p>
 
             <div className="mt-6 md:mt-10 space-y-4 md:space-y-10 text-sm sm:text-base">
-              <p>📧 info@pipesandbarrels.com</p>
-              <p>📞 (+234) 08087550875</p>
+              <p>📧 {contactInfo.email}</p>
+              <p>📞 {contactInfo.phone}</p>
             </div>
           </div>
 
           {/* RIGHT SIDE - FORM */}
           <div className="space-y-3 md:space-y-5 order-2 lg:order-2">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold">
-              Owner’s Information
+              Owner&apos;s Information
             </h2>
             <p className="text-sm md:text-base text-gray-700">
-              Carefully fill in your company owner’s details into the columns
-              provided.
+              Carefully fill in your company owner&apos;s details into the columns provided.
             </p>
 
+            {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{error}</p>}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <Input label="NAME" placeholder="enter your name" />
-              <Input label="TELEPHONE" placeholder="(+234)" />
+              <Input label="NAME" placeholder="enter your name" value={form.ownerName} onChange={update("ownerName")} />
+              <Input label="TELEPHONE" placeholder="(+234)" value={form.telephone} onChange={update("telephone")} />
             </div>
 
-            <Input label="ADDRESS" placeholder="enter your address" />
+            <Input label="ADDRESS" placeholder="enter your address" value={form.address} onChange={update("address")} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <Input label="EMAIL" placeholder="enter your email" />
+              <Input label="EMAIL" placeholder="enter your email" value={form.email} onChange={update("email")} />
               <Dropdown
-              label="DRIVER’S ID "
+                label="DRIVER'S ID"
                 options={["International passport", "Driver's license", "National ID"]}
                 placeholder="Select type"
+                value={form.idType}
+                onChange={(v) => setForm((f) => ({ ...f, idType: v }))}
               />
             </div>
 
-            <Input label="ID NUMBER" placeholder="enter selected ID number" />
+            <Input label="ID NUMBER" placeholder="enter selected ID number" value={form.idNumber} onChange={update("idNumber")} />
+
             <div className="flex justify-between">
-              <Link href="/bookings/companyinfo">← Back</Link>
-              <Link href="/bookings/productbooking">Next →</Link>
+              <button onClick={() => router.push("/bookings/companyinfo")} className="text-blue-600 font-semibold hover:text-blue-800 transition text-sm md:text-base">← Back</button>
+              <button onClick={handleNext} className="text-blue-600 font-semibold hover:text-blue-800 transition text-sm md:text-base">Next →</button>
             </div>
           </div>
         </div>
