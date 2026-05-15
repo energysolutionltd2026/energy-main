@@ -488,6 +488,7 @@ export default function BuyNow() {
   const [platformInfo, setPlatformInfo] = useState({ platformName: "Pipes & Barrels Oil & Gas Purchasing Portal", supportEmail: "info@pipesandbarrels.com", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
+  const [prices, setPrices] = useState({ pms: 0, ago: 0, atk: 0 });
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
@@ -496,8 +497,16 @@ export default function BuyNow() {
       setPlatformInfo({ platformName: s.platformName || "Pipes & Barrels Oil & Gas Purchasing Portal", supportEmail: s.supportEmail || "info@pipesandbarrels.com", supportPhone: s.supportPhone || "(+234) 08087550875" });
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
       setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
+      setPrices({ pms: s.pmsPricePerLitre || 0, ago: s.agoPricePerLitre || 0, atk: s.atkPricePerLitre || 0 });
     }).catch(() => null);
   }, []);
+
+  const computeOrderTotal = () => {
+    const qty   = Number(formData.purchase.productQuantity) || 0;
+    const type  = formData.purchase.productType.toLowerCase();
+    const price = type === "pms" ? prices.pms : type === "ago" ? prices.ago : type === "atk" ? prices.atk : 0;
+    return qty * price;
+  };
 
   useEffect(() => {
     if (document.getElementById("paystack-script")) return;
@@ -621,7 +630,7 @@ export default function BuyNow() {
     const id = generateOrderId();
     // @ts-ignore
     const handler = window.PaystackPop.setup({
-      key: paystackKey, email: formData.owner.email || formData.company.email, amount: 0, currency: "NGN",
+      key: paystackKey, email: formData.owner.email || formData.company.email, amount: computeOrderTotal() * 100, currency: "NGN",
       ref: `PB-${Date.now()}`,
       metadata: { companyName: formData.company.name, productType: formData.purchase.productType, productQuantity: formData.purchase.productQuantity, haulageTruck: formData.purchase.haulageTruck },
       onClose: () => {},

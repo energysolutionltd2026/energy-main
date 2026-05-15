@@ -699,6 +699,7 @@ export default function BookNow() {
   const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@pipesandbarrels.com", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey]   = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
+  const [prices, setPrices] = useState({ pms: 0, ago: 0, atk: 0 });
   const rateLimit = useRateLimit({ maxAttempts: 5, windowMs: 60_000 });
 
   // ── Detect product from query param: /booknow?product=pms ──────────────────
@@ -726,8 +727,16 @@ export default function BookNow() {
       setPlatformInfo({ supportEmail: s.supportEmail || "info@pipesandbarrels.com", supportPhone: s.supportPhone || "(+234) 08087550875" });
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
       setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
+      setPrices({ pms: s.pmsPricePerLitre || 0, ago: s.agoPricePerLitre || 0, atk: s.atkPricePerLitre || 0 });
     }).catch(() => null);
   }, []);
+
+  const computeBookingTotal = () => {
+    const qty   = Number(formData.booking.productQuantity) || 0;
+    const type  = formData.booking.productType.toLowerCase();
+    const price = type === "pms" ? prices.pms : type === "ago" ? prices.ago : type === "atk" ? prices.atk : 0;
+    return qty * price;
+  };
 
   // ── Load Paystack script ────────────────────────────────────────────────────
   useEffect(() => {
@@ -779,7 +788,7 @@ export default function BookNow() {
     const handler = window.PaystackPop.setup({
       key:      paystackKey,
       email:    sanitizeString(formData.owner.email || formData.company.email),
-      amount:   0, // replace with actual kobo deposit amount
+      amount:   computeBookingTotal() * 100,
       currency: "NGN",
       ref:      `BK-${Date.now()}`,
       metadata: {
