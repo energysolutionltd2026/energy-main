@@ -624,18 +624,15 @@ export default function RentTruck() {
         pickupDepot:     rentBook.depot,
         deliveryState:   rentBook.state,
         deliveryAddress: rentBook.destinationAddress || undefined,
-        productType:     rentBook.productType || undefined,
-        capacityLitres:  rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, ""), 10) : undefined,
+        product:         (({ PMS: "PMS", AGO: "AGO", ATK: "ATK" } as Record<string, "PMS"|"AGO"|"ATK">)[rentBook.productType?.toUpperCase() ?? ""] ?? "PMS"),
+        quantityLitres:  rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, ""), 10) : 33000,
         totalDays:       days,
         dailyRateLocked: price,
         totalAmount:     total,
         startDate,
         endDate,
         status:          "Requested",
-        paymentMethod:   rentBook.paymentMethod || undefined,
-        company:         rentBook.company || undefined,
-        notes:           rentBook.notes || undefined,
-        geoZone:         rentBook.zone || undefined,
+        paymentStatus:   "Unpaid",
       } as any).catch(() => null);
     }).catch(() => null);
   };

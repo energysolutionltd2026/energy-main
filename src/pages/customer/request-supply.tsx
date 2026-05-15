@@ -138,6 +138,7 @@ export default function RequestSupply() {
       const { api } = await import("@/lib/db-client");
       await api.supplyRequests.create({
         requestId:    id,
+        stationId:    form.stationId || undefined,
         stationName:  entry.stationName,
         product:      form.product as "PMS" | "AGO" | "ATK",
         depot:        form.depot,

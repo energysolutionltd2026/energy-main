@@ -219,6 +219,7 @@ export default function UpdateSales() {
       const { api } = await import("@/lib/db-client");
       await api.dailySales.create({
         saleDate:     form.date,
+        stationId:    form.stationId,
         stationName:  form.stationName,
         recordedBy:   user.email,
         sales: mappedProducts.map((p) => ({

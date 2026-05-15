@@ -33,7 +33,7 @@ const PurchaseOrderSchema = new Schema(
     ownerIdNumber:      { type: String, required: true, trim: true },
 
     // ── Stage 3: Product & truck details ──────────────────────────────────────
-    productType:        { type: String, enum: ["pms", "ago", "atk"], required: true },
+    productType:        { type: String, enum: ["PMS", "AGO", "ATK"], required: true },
     productQuantity:    { type: Number, required: true, min: 1 },      // litres
     haulageTruck:       { type: String, enum: ["Owned Truck", "Rent Truck"], required: true },
 

@@ -580,7 +580,7 @@ export default function BuyNow() {
         ownerEmail: formData.owner.email,
         ownerIdType: formData.owner.officialIdType,
         ownerIdNumber: formData.owner.idNumber,
-        productType: p.productType,
+        productType: p.productType.toUpperCase(),
         productQuantity: Number(p.productQuantity),
         haulageTruck: p.haulageTruck as "Owned Truck" | "Rent Truck",
         ...(p.haulageTruck === "Owned Truck" && {

@@ -729,7 +729,7 @@ export default function PayDues() {
         paymentDepot:   member.paymentDepot,
         amountDue:      total,
         amountPaid:     isPaid ? total : 0,
-        paymentMethod:  isPaystack ? "card" : (payment.paymentMethod as any) || "bank_transfer",
+        paymentMethod:  isPaystack ? "card" : payment.paymentMethod === "bank-transfer" ? "bank_transfer" : (payment.paymentMethod as any) || "bank_transfer",
         bankName:       payment.bankName || undefined,
         bankAccountName: payment.accountName || undefined,
         transactionRef: txnId,

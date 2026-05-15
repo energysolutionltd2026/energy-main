@@ -5,7 +5,7 @@ const DEPOT_CODE_WINDOW = 6 * 60 * 60 * 1000;
 const DEPOT_CODE_TTL    = 3 * 60 * 60 * 1000;
 
 function generateDepotCode(windowIndex: number): string {
-  const secret = process.env.DEPOT_CODE_SECRET ?? "PNB-DEPOT-CONTROL-SA-2024";
+  const secret = process.env.DEPOT_CODE_SECRET ?? "ENRG-DEPOT-CONTROL-2026";
   const seed = `${secret}-${windowIndex}`;
   let h = 5381;
   for (let i = 0; i < seed.length; i++) {

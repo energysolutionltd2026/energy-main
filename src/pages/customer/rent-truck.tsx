@@ -90,22 +90,27 @@ export default function CustomerRentTruck() {
     const txnDate = new Date().toISOString().slice(0, 10);
     const { api } = await import("@/lib/db-client");
 
+    const productEnum = ({ PMS: "PMS", AGO: "AGO", ATK: "ATK" } as Record<string, "PMS" | "AGO" | "ATK">)[rentBook.productType?.toUpperCase() ?? ""] ?? "PMS";
+    const quantityLitres = rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, "")) : 33000;
+    const today = new Date();
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+
     const results = await Promise.allSettled([
       api.truckRentals.create({
-        rentedBy: user.email,
-        pickupDepot: rentBook.depot,
-        destinationState: rentBook.state,
-        destinationLga: rentBook.lga || undefined,
-        geoZone: rentBook.zone,
-        productType: rentBook.productType as any || undefined,
-        vehicleType: rentBook.vehicleType || undefined,
-        capacityLitres: rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, "")) : undefined,
-        tripPrice: price,
-        paymentMethod: rentBook.paymentMethod as any,
-        status: "pending",
-        notes: rentBook.notes || undefined,
-        company: rentBook.company || undefined,
-        reference: txnId,
+        rentalId:        txnId,
+        rentedBy:        user.email,
+        pickupDepot:     rentBook.depot,
+        deliveryState:   rentBook.state,
+        deliveryAddress: rentBook.lga ? `${rentBook.lga}, ${rentBook.state}` : rentBook.state,
+        product:         productEnum,
+        quantityLitres:  quantityLitres,
+        startDate:       today.toISOString(),
+        endDate:         tomorrow.toISOString(),
+        dailyRateLocked: price,
+        totalDays:       1,
+        totalAmount:     price,
+        status:          "Requested",
+        paymentStatus:   "Unpaid",
       } as any),
       api.transactions.create({
         type: "Truck Rental",
@@ -118,7 +123,6 @@ export default function CustomerRentTruck() {
         paymentMethod: rentBook.paymentMethod,
         depot: rentBook.depot,
         reference: txnId,
-        date: txnDate,
       } as any),
     ]);
 

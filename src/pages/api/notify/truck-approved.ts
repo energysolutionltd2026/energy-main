@@ -61,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const smsMessage = isNewAccount
       ? `e-Nergy: Your truck ${truckRegNumber} is approved! Login: ${ownerEmail} | Password: ${password} | Visit e-nergy.com.ng`
       : `e-Nergy: Your truck ${truckRegNumber} has been approved and is now live on the platform. Log in at e-nergy.com.ng`;
-    await sendSms(ownerPhone, smsMessage);
+    sendSms(ownerPhone, smsMessage).catch(() => null);
   }
 
   res.status(200).json({ ok: true, isNewAccount });

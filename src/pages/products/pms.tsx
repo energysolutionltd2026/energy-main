@@ -4,16 +4,16 @@ import PmsTankSimulation from "@/components/PmsTankSimulation";
 import Link from "next/link";
 
 function Pms() {
-  const [level, setLevel] = useState(65);
+  const [level, setLevel] = useState<number | null>(null);
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
       api.depots.list().then((r: any) => {
-        if (!r?.data?.length) return;
+        if (!r?.data?.length) { setLevel(65); return; }
         const levels = r.data.map((d: any) => d.PMS?.level ?? 0).filter((l: number) => l > 0);
-        if (levels.length) setLevel(Math.round(levels.reduce((a: number, b: number) => a + b, 0) / levels.length));
-      }).catch(() => null);
-    }).catch(() => null);
+        setLevel(levels.length ? Math.round(levels.reduce((a: number, b: number) => a + b, 0) / levels.length) : 65);
+      }).catch(() => setLevel(65));
+    }).catch(() => setLevel(65));
   }, []);
   return (
     <div className="relative min-h-screen w-screen overflow-hidden">
@@ -34,7 +34,9 @@ function Pms() {
                         sm:w-[380px] sm:h-[430px]
                         lg:w-[550px] lg:h-[calc(100vh-80px)]">
           <div className="relative w-full h-full rounded-lg overflow-hidden shadow-lg">
-            <PmsTankSimulation level={level} />
+            {level === null
+              ? <div className="w-full h-full bg-gray-800/60 animate-pulse rounded-lg" />
+              : <PmsTankSimulation level={level} />}
           </div>
         </div>
 

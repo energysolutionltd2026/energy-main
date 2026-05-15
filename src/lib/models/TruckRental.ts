@@ -4,9 +4,9 @@ const TruckRentalSchema = new Schema(
   {
     rentalId:        { type: String, required: true, unique: true }, // RENTAL-xxx
 
-    truckId:         { type: Schema.Types.ObjectId, required: true }, // FK → trucks._id
-    truckRegNumber:  { type: String, required: true },                // denormalised
-    truckOwnerEmail: { type: String, required: true },                // FK → users.email
+    truckId:         { type: Schema.Types.ObjectId }, // FK → trucks._id — assigned by admin on confirm
+    truckRegNumber:  { type: String },               // denormalised — assigned by admin on confirm
+    truckOwnerEmail: { type: String },               // FK → users.email — assigned by admin on confirm
 
     rentedBy:        { type: String, required: true },               // FK → users.email
     linkedRequestId: { type: Schema.Types.ObjectId },                // FK → supply_requests._id

@@ -5,7 +5,7 @@ const TransactionSchema = new Schema(
     txnId:         { type: String, required: true, unique: true }, // TXN-xxx
     type:          {
       type: String,
-      enum: ["Supply Request", "Truck Rental", "Union Dues", "Purchase Order", "Supply Fulfillment"],
+      enum: ["Supply Request", "Truck Rental", "Union Dues", "Purchase Order", "Supply Fulfillment", "Daily Sales"],
       required: true,
     },
     user:          { type: String, required: true },   // display name
