@@ -1221,7 +1221,22 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
 
   const handleLogoFile = (file: File, setter: (v: string) => void) => {
     const reader = new FileReader();
-    reader.onload = (e) => setter((e.target?.result as string) || "");
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string;
+      if (!base64) return;
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: base64, folder: "depots" }),
+        });
+        const json = await res.json() as { url?: string; error?: string };
+        if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+        setter(json.url);
+      } catch {
+        setToast("Logo upload failed — please try again");
+      }
+    };
     reader.readAsDataURL(file);
   };
 
