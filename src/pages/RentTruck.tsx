@@ -6,7 +6,6 @@ import NavBar from "@/components/NavBar";
 import FlowCompleteModal from "@/components/FlowCompleteModal";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { sanitizeString } from "@/lib/security/sanitize";
-import { logTransaction } from "@/utils/logTransaction";
 import Link from "next/link";
 import tower from "@/../public/tower.jpg";
 import { useDepot } from "@/context/DepotContext";
@@ -604,36 +603,51 @@ export default function RentTruck() {
     const startDate = rentBook.pickupDate || new Date().toISOString().slice(0, 10);
     const endDate = new Date(new Date(startDate).getTime() + days * 86400000).toISOString().slice(0, 10);
 
-    logTransaction({
-      type: "Truck Rental",
-      user: rentBook.fullName || "Customer",
-      userRole: "Customer",
-      product: `Truck to ${rentBook.state}`,
-      quantity: `${days} day(s)`,
-      totalAmount: `₦${total.toLocaleString()}`,
-      status: "Pending",
-      paymentMethod: rentBook.paymentMethod,
-      depot: rentBook.depot,
-      reference,
-    });
+    import("@/lib/db-client").then(async ({ api }) => {
+      try {
+        // 1. Create TruckRental first
+        const rentalDoc = await api.truckRentals.create({
+          rentalId:        reference,
+          rentedBy:        rentBook.email || "guest@energy.ng",
+          pickupDepot:     rentBook.depot,
+          deliveryState:   rentBook.state,
+          deliveryAddress: rentBook.destinationAddress || undefined,
+          product:         (({ PMS: "PMS", AGO: "AGO", ATK: "ATK" } as Record<string, "PMS"|"AGO"|"ATK">)[rentBook.productType?.toUpperCase() ?? ""] ?? "PMS"),
+          quantityLitres:  rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, ""), 10) : 33000,
+          totalDays:       days,
+          dailyRateLocked: price,
+          totalAmount:     total,
+          startDate,
+          endDate,
+          status:          "Requested",
+          paymentStatus:   "Unpaid",
+        } as any);
 
-    import("@/lib/db-client").then(({ api }) => {
-      api.truckRentals.create({
-        rentalId:        reference,
-        rentedBy:        rentBook.email || "guest@energy.ng",
-        pickupDepot:     rentBook.depot,
-        deliveryState:   rentBook.state,
-        deliveryAddress: rentBook.destinationAddress || undefined,
-        product:         (({ PMS: "PMS", AGO: "AGO", ATK: "ATK" } as Record<string, "PMS"|"AGO"|"ATK">)[rentBook.productType?.toUpperCase() ?? ""] ?? "PMS"),
-        quantityLitres:  rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, ""), 10) : 33000,
-        totalDays:       days,
-        dailyRateLocked: price,
-        totalAmount:     total,
-        startDate,
-        endDate,
-        status:          "Requested",
-        paymentStatus:   "Unpaid",
-      } as any).catch(() => null);
+        // 2. Create Transaction linked to TruckRental
+        const txnDoc = await api.transactions.create({
+          txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+          type:          "Truck Rental",
+          user:          rentBook.fullName || "Customer",
+          userEmail:     rentBook.email || undefined,
+          userRole:      "Customer",
+          product:       `Truck to ${rentBook.state}`,
+          quantity:      `${days} day(s)`,
+          totalAmount:   total,
+          status:        "Pending",
+          paymentMethod: rentBook.paymentMethod,
+          depot:         rentBook.depot,
+          reference,
+          referenceType: "truck_rental",
+          referenceId:   rentalDoc?._id,
+        } as any).catch(() => null);
+
+        // 3. Back-link transactionId on TruckRental
+        if (txnDoc?._id && rentalDoc?._id) {
+          api.truckRentals.update(String(rentalDoc._id), { transactionId: txnDoc._id } as any).catch(() => null);
+        }
+      } catch {
+        // fire-and-forget — UI already confirmed
+      }
     }).catch(() => null);
   };
 

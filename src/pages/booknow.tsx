@@ -813,11 +813,7 @@ export default function BookNow() {
       },
       onClose:  () => {},
       callback: (response: { reference: string }) => {
-        router.push(
-          `/order-confirmed?ref=${response.reference}&company=${encodeURIComponent(
-            sanitizeString(formData.company.name)
-          )}&type=booking`
-        );
+        handleManualSubmit(response.reference);
       },
     });
     handler.openIframe();
@@ -856,12 +852,15 @@ export default function BookNow() {
     return "";
   };
 
-  const handleManualSubmit = async () => {
+  const handleManualSubmit = async (paystackRef?: string) => {
     try {
       const { api } = await import("@/lib/db-client");
       const orderId = `ENR-${Date.now()}`;
       const mapPM = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m;
-      await api.purchaseOrders.create({
+      const pmMethod = paystackRef ? "card" : mapPM(formData.payment.paymentMethod);
+      const txnRef = paystackRef || sanitizeString(formData.payment.transactionRef);
+
+      const poDoc = await api.purchaseOrders.create({
         orderId,
         loadingDepot: sanitizeString(formData.company.loadingDepot),
         companyName: sanitizeString(formData.company.name),
@@ -880,11 +879,34 @@ export default function BookNow() {
         productType: formData.booking.productType.toUpperCase(),
         productQuantity: parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
         haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "Rent Truck" : "Owned Truck") as "Owned Truck" | "Rent Truck",
-        paymentMethod: mapPM(formData.payment.paymentMethod) as import("@/lib/db-types").PaymentMethod,
+        paymentMethod: pmMethod as import("@/lib/db-types").PaymentMethod,
         bankName: sanitizeString(formData.payment.bankName),
         bankAccountName: sanitizeString(formData.payment.accountName),
-        transactionRef: sanitizeString(formData.payment.transactionRef),
+        transactionRef: txnRef,
       });
+
+      // Create Transaction and cross-link with PurchaseOrder
+      const txnDoc = await api.transactions.create({
+        txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+        type:          "Purchase Order",
+        user:          sanitizeString(formData.owner.name || formData.company.name),
+        userEmail:     sanitizeString(formData.owner.email || formData.company.email),
+        userRole:      "Bulk Dealer",
+        product:       formData.booking.productType.toUpperCase(),
+        quantity:      sanitizeString(formData.booking.productQuantity),
+        totalAmount:   computeBookingTotal(),
+        status:        paystackRef ? "Completed" : "Pending",
+        paymentMethod: pmMethod,
+        depot:         sanitizeString(formData.company.loadingDepot),
+        reference:     orderId,
+        referenceType: "purchase_order",
+        ...(poDoc?._id ? { referenceId: poDoc._id } : {}),
+      } as any).catch(() => null);
+
+      if (txnDoc?._id && poDoc?._id) {
+        api.purchaseOrders.update(String(poDoc._id), { transactionId: txnDoc._id } as any).catch(() => null);
+      }
+
       setSubmitted(true);
       setShowFlowModal(true);
     } catch (err) {

@@ -904,8 +904,10 @@ function SectionAllocations() {
     setSubmitting(true);
     const { api } = await import("@/lib/db-client");
     const price = _platformPrices[orderModal.product] ?? 0;
+    const orderId = `ALLOC-${orderModal.allocationId}-${Date.now()}`;
     try {
-      await api.purchaseOrders.create({
+      const poDoc = await api.purchaseOrders.create({
+        orderId,
         dealer: _dealerEmail,
         companyName: _dealerName,
         loadingDepot: orderModal.depot,
@@ -914,7 +916,7 @@ function SectionAllocations() {
         pricePerLitre: price,
         totalAmount: qty * price,
         paymentMethod: "bank_transfer",
-        transactionRef: `ALLOC-${orderModal.allocationId}-${Date.now()}`,
+        transactionRef: orderId,
         haulageTruck: "Owned Truck",
         ownerName: _dealerName,
         ownerEmail: _dealerEmail,
@@ -929,6 +931,29 @@ function SectionAllocations() {
         cacRegNo: "",
         stationAddress: "",
       } as any);
+
+      // Create Transaction and cross-link with PurchaseOrder
+      const txnDoc = await api.transactions.create({
+        txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+        type:          "Purchase Order",
+        user:          _dealerName || "Bulk Dealer",
+        userEmail:     _dealerEmail,
+        userRole:      "Bulk Dealer",
+        product:       orderModal.product,
+        quantity:      String(qty),
+        totalAmount:   qty * price,
+        status:        "Pending",
+        paymentMethod: "bank_transfer",
+        depot:         orderModal.depot,
+        reference:     orderId,
+        referenceType: "purchase_order",
+        ...(poDoc?._id ? { referenceId: poDoc._id } : {}),
+      } as any).catch(() => null);
+
+      if (txnDoc?._id && poDoc?._id) {
+        api.purchaseOrders.update(String(poDoc._id), { transactionId: txnDoc._id } as any).catch(() => null);
+      }
+
       showToast("Order submitted successfully!");
       setOrderModal(null);
     } catch {
