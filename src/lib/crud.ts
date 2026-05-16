@@ -153,8 +153,11 @@ export function documentHandler<T extends AnyDoc>(
       }
     }
 
-    // ── DELETE ──
+    // ── DELETE (admin only) ──
     if (req.method === "DELETE") {
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Forbidden — only admins can delete records" });
+      }
       try {
         const doc = await Model.findByIdAndDelete(id);
         if (!doc) return res.status(404).json({ error: "Not found" });

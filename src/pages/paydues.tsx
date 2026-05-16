@@ -4,7 +4,6 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import NavBar from "@/components/NavBar";
-import { logTransaction } from "@/utils/logTransaction";
 import FlowCompleteModal from "@/components/FlowCompleteModal";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { sanitizeString } from "@/lib/security/sanitize";
@@ -702,42 +701,60 @@ export default function PayDues() {
     const txnId = opts.paystackRef ?? (payment.transactionRef?.trim() || `DUE-${Date.now().toString().slice(-8)}`);
     const txnDate = new Date().toISOString().slice(0, 10);
     const isPaid = isPaystack;
+    const pmMethod = isPaystack ? "card" : payment.paymentMethod === "bank-transfer" ? "bank_transfer" : (payment.paymentMethod as any) || "bank_transfer";
 
-    logTransaction({
-      type: "Union Dues",
-      user: member.fullName || "Member",
-      userRole: "Customer",
-      product: "Union Dues (All Applicable Fees)",
-      totalAmount: `₦${total.toLocaleString()}`,
-      status: isPaid ? "Completed" : "Pending",
-      paymentMethod: isPaystack ? "card" : (payment.paymentMethod === "bank-transfer" ? "bank_transfer" : (payment.paymentMethod as any)) || "bank_transfer",
-      depot: member.paymentDepot || undefined,
-      reference: txnId,
-    });
+    // Create Transaction + UnionDues and cross-link them
+    import("@/lib/db-client").then(async ({ api }) => {
+      try {
+        // 1. Create Transaction record first to get its _id
+        const txnDoc = await api.transactions.create({
+          txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+          type:          "Union Dues",
+          user:          member.fullName || "Member",
+          userEmail:     member.email,
+          userRole:      "Customer",
+          product:       "Union Dues (All Applicable Fees)",
+          totalAmount:   total,
+          status:        isPaid ? "Completed" : "Pending",
+          paymentMethod: pmMethod,
+          depot:         member.paymentDepot || undefined,
+          reference:     txnId,
+          referenceType: "union_dues",
+        } as any).catch(() => null);
 
-    // Persist to DB
-    import("@/lib/db-client").then(({ api }) => {
-      api.unionDues.create({
-        paymentId:      txnId,
-        userEmail:      member.email,
-        userRole:       "customer",
-        fullName:       member.fullName,
-        companyName:    member.companyName,
-        membershipId:   member.membershipId,
-        telephone:      member.telephone,
-        address:        member.address,
-        paymentDepot:   member.paymentDepot,
-        amountDue:      total,
-        amountPaid:     isPaid ? total : 0,
-        paymentMethod:  isPaystack ? "card" : payment.paymentMethod === "bank-transfer" ? "bank_transfer" : (payment.paymentMethod as any) || "bank_transfer",
-        bankName:       payment.bankName || undefined,
-        bankAccountName: payment.accountName || undefined,
-        transactionRef: txnId,
-        status:         isPaid ? "Paid" : "Pending",
-        paidAt:         isPaid ? new Date().toISOString() : undefined,
-        duesPeriod:     txnDate.slice(0, 7),
-      } as any).catch(() => null);
-    });
+        // 2. Create UnionDues with transactionId linked
+        const duesDoc = await api.unionDues.create({
+          paymentId:       txnId,
+          userEmail:       member.email,
+          userRole:        "customer",
+          fullName:        member.fullName,
+          companyName:     member.companyName,
+          membershipId:    member.membershipId,
+          telephone:       member.telephone,
+          address:         member.address,
+          paymentDepot:    member.paymentDepot,
+          amountDue:       total,
+          amountPaid:      isPaid ? total : 0,
+          paymentMethod:   pmMethod,
+          bankName:        payment.bankName || undefined,
+          bankAccountName: payment.accountName || undefined,
+          transactionRef:  txnId,
+          status:          isPaid ? "Paid" : "Pending",
+          paidAt:          isPaid ? new Date().toISOString() : undefined,
+          duesPeriod:      txnDate.slice(0, 7),
+          ...(txnDoc?._id ? { transactionId: txnDoc._id } : {}),
+        } as any).catch(() => null);
+
+        // 3. Back-link Transaction to UnionDues record
+        if (txnDoc?._id && duesDoc?._id) {
+          api.transactions.update(String(txnDoc._id), {
+            referenceId: duesDoc._id,
+          } as any).catch(() => null);
+        }
+      } catch {
+        // fire-and-forget — UI already shown success
+      }
+    }).catch(() => null);
   };
 
   const handlePaystack = () => {

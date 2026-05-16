@@ -185,6 +185,8 @@ export default function StationManager() {
   // Edit station modal
   const [editOpen, setEditOpen]   = useState(false);
   const [editDraft, setEditDraft] = useState<Station | null>(null);
+  const [editError, setEditError] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   // Daily report modal
   const [reportOpen, setReportOpen] = useState(false);
@@ -291,13 +293,14 @@ export default function StationManager() {
     setEditOpen(true);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editDraft) return;
-    setStations((prev) => prev.map((s, i) => (i === activeIdx ? editDraft : s)));
-    setEditOpen(false);
+    setEditError("");
     if (editDraft._dbId) {
-      import("@/lib/db-client").then(({ api }) => {
-        api.fuelStations.update(editDraft._dbId!, {
+      setEditSaving(true);
+      try {
+        const { api } = await import("@/lib/db-client");
+        await api.fuelStations.update(editDraft._dbId!, {
           stationName:  editDraft.name,
           address:      editDraft.address,
           state:        editDraft.state,
@@ -305,8 +308,17 @@ export default function StationManager() {
           managerPhone: editDraft.managerPhone,
           dprLicenseNo: editDraft.licenseNo,
           status:       editDraft.status.toLowerCase() as any,
-        }).catch(() => null);
-      });
+        });
+        setStations((prev) => prev.map((s, i) => (i === activeIdx ? editDraft : s)));
+        setEditOpen(false);
+      } catch {
+        setEditError("Failed to save changes. Please check your connection and try again.");
+      } finally {
+        setEditSaving(false);
+      }
+    } else {
+      setStations((prev) => prev.map((s, i) => (i === activeIdx ? editDraft : s)));
+      setEditOpen(false);
     }
   };
 
@@ -372,15 +384,18 @@ export default function StationManager() {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-800 flex justify-end gap-3">
-              <button onClick={() => setEditOpen(false)}
-                className="px-4 py-2 border border-gray-700 text-gray-400 hover:text-white text-sm font-semibold rounded-lg transition">
-                Cancel
-              </button>
-              <button onClick={saveEdit}
-                className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition shadow-lg shadow-orange-500/20">
-                Save Changes
-              </button>
+            <div className="px-6 py-4 border-t border-gray-800 space-y-3">
+              {editError && <p className="text-red-400 text-xs text-center">{editError}</p>}
+              <div className="flex justify-end gap-3">
+                <button onClick={() => { setEditOpen(false); setEditError(""); }}
+                  className="px-4 py-2 border border-gray-700 text-gray-400 hover:text-white text-sm font-semibold rounded-lg transition">
+                  Cancel
+                </button>
+                <button onClick={saveEdit} disabled={editSaving}
+                  className="px-5 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition shadow-lg shadow-orange-500/20">
+                  {editSaving ? "Saving…" : "Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
