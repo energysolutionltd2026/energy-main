@@ -95,8 +95,10 @@ export default function CustomerRentTruck() {
     const today = new Date();
     const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const results = await Promise.allSettled([
-      api.truckRentals.create({
+    // 1. Create TruckRental first — abort if it fails
+    let rentalDoc: any;
+    try {
+      rentalDoc = await api.truckRentals.create({
         rentalId:        txnId,
         rentedBy:        user.email,
         pickupDepot:     rentBook.depot,
@@ -111,26 +113,34 @@ export default function CustomerRentTruck() {
         totalAmount:     price,
         status:          "Requested",
         paymentStatus:   "Unpaid",
-      } as any),
-      api.transactions.create({
-        type: "Truck Rental",
-        user: user.name,
-        userRole: "Customer",
-        product: `Truck to ${rentBook.state}`,
-        quantity: "1 trip",
-        totalAmount: `₦${price.toLocaleString()}`,
-        status: "Pending",
-        paymentMethod: rentBook.paymentMethod,
-        depot: rentBook.depot,
-        reference: txnId,
-      } as any),
-    ]);
-
-    const rentalFailed = results[0].status === "rejected";
-    if (rentalFailed) {
-      console.error("[rent-truck] rental create failed:", (results[0] as PromiseRejectedResult).reason);
+      } as any);
+    } catch (err) {
+      console.error("[rent-truck] rental create failed:", err);
       alert("Failed to save rental booking. Please check your connection and try again.");
       return;
+    }
+
+    // 2. Create Transaction linked to TruckRental
+    const txnDoc = await api.transactions.create({
+      txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+      type:          "Truck Rental",
+      user:          user.name,
+      userEmail:     user.email,
+      userRole:      "Customer",
+      product:       `Truck to ${rentBook.state}`,
+      quantity:      "1 trip",
+      totalAmount:   price,
+      status:        "Pending",
+      paymentMethod: rentBook.paymentMethod,
+      depot:         rentBook.depot,
+      reference:     txnId,
+      referenceType: "truck_rental",
+      referenceId:   rentalDoc._id,
+    } as any).catch(() => null);
+
+    // 3. Back-link transactionId on TruckRental
+    if (txnDoc?._id) {
+      api.truckRentals.update(String(rentalDoc._id), { transactionId: txnDoc._id } as any).catch(() => null);
     }
 
     setConfirmedTxn({

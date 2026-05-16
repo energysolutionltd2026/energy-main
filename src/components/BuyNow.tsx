@@ -563,7 +563,7 @@ export default function BuyNow() {
       const p = formData.purchase;
       const ullages = [p.ownedTruck.ullage1, p.ownedTruck.ullage2, p.ownedTruck.ullage3, p.ownedTruck.ullage4, p.ownedTruck.ullage5]
         .filter(Boolean).map(Number);
-      await api.purchaseOrders.create({
+      const poDoc = await api.purchaseOrders.create({
         orderId: id,
         status: "Pending",
         loadingDepot: formData.company.loadingDepot,
@@ -600,6 +600,28 @@ export default function BuyNow() {
         bankAccountName: formData.payment.accountName || undefined,
         transactionRef: paystackRef || formData.payment.transactionRef || `MANUAL-${Date.now()}`,
       } as any);
+
+      // Create Transaction and cross-link with PurchaseOrder
+      const txnDoc = await api.transactions.create({
+        txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+        type:          "Purchase Order",
+        user:          formData.owner.name || formData.company.name,
+        userEmail:     formData.owner.email || formData.company.email,
+        userRole:      "Customer",
+        product:       p.productType.toUpperCase(),
+        quantity:      String(p.productQuantity),
+        totalAmount:   computeOrderTotal(),
+        status:        paystackRef ? "Completed" : "Pending",
+        paymentMethod: mapPaymentMethod(formData.payment.paymentMethod) as any,
+        depot:         formData.company.loadingDepot,
+        reference:     id,
+        referenceType: "purchase_order",
+        ...(poDoc?._id ? { referenceId: poDoc._id } : {}),
+      } as any).catch(() => null);
+
+      if (txnDoc?._id && poDoc?._id) {
+        api.purchaseOrders.update(String(poDoc._id), { transactionId: txnDoc._id } as any).catch(() => null);
+      }
       // Send confirmation email (fire-and-forget — don't block the success screen)
       const email = formData.owner.email || formData.company.email;
       if (email) {
