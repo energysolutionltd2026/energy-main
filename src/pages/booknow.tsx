@@ -886,6 +886,8 @@ export default function BookNow() {
       });
 
       // Create Transaction and cross-link with PurchaseOrder
+      // Use paystackRef as reference when available so the webhook finds
+      // this record and updates it instead of creating a duplicate
       const txnDoc = await api.transactions.create({
         txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
         type:          "Purchase Order",
@@ -898,7 +900,7 @@ export default function BookNow() {
         status:        paystackRef ? "Completed" : "Pending",
         paymentMethod: pmMethod,
         depot:         sanitizeString(formData.company.loadingDepot),
-        reference:     orderId,
+        reference:     paystackRef || orderId,
         referenceType: "purchase_order",
         ...(poDoc?._id ? { referenceId: poDoc._id } : {}),
       } as any).catch(() => null);
