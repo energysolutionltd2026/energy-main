@@ -1536,7 +1536,7 @@ function SectionCustomerRequests() {
     setRequests(next);
     if (/^[a-f\d]{24}$/i.test(id)) {
       import("@/lib/db-client").then(({ api }) => {
-        api.supplyRequests.update(id, { status: status.toLowerCase() } as any).catch(() => null);
+        api.supplyRequests.update(id, { status } as any).catch(() => null);
       });
     }
     // Notify customer if they are a platform user (non-external)

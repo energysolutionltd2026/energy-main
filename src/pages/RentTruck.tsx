@@ -634,7 +634,7 @@ export default function RentTruck() {
           quantity:      `${days} day(s)`,
           totalAmount:   total,
           status:        "Pending",
-          paymentMethod: rentBook.paymentMethod,
+          paymentMethod: rentBook.paymentMethod === "paystack" ? "card" : rentBook.paymentMethod,
           depot:         rentBook.depot,
           reference,
           referenceType: "truck_rental",

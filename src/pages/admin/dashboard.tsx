@@ -1693,7 +1693,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
     if (/^[a-f\d]{24}$/i.test(truck.id)) {
       import("@/lib/db-client").then(({ api }) => {
         api.trucks.update(truck.id, {
-          status: status.toLowerCase() as any,
+          status: status as any,
           reviewNote: note,
           ...(approvedZoneRates ? { approvedZoneRates } : {}),
         }).catch(() => null);
@@ -1726,7 +1726,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
     setTrucks(next);
     if (/^[a-f\d]{24}$/i.test(truck.id)) {
       import("@/lib/db-client").then(({ api }) => {
-        api.trucks.update(truck.id, { status: "pending" as any, reviewNote: "" } as any).catch(() => null);
+        api.trucks.update(truck.id, { status: "Pending Review" as any, reviewNote: "" } as any).catch(() => null);
       });
     }
     setToast(`${truck.truckRegNumber} reset to Pending Review`);
