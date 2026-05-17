@@ -73,7 +73,7 @@ async function runRouting(
     system: `You are a logistics AI for PNB, a Nigerian petroleum distribution platform.
 You automatically assign supply requests to the best available depot.
 Your decisions are executed immediately — be accurate and conservative.
-Never assign to a depot with "Unavailable" stock for the requested product.`,
+Never assign to a depot with "unavailable" stock for the requested product.`,
     messages: [
       {
         role: "user",
@@ -89,7 +89,7 @@ Depot Coordinates (lat/lng for distance reasoning):
 ${JSON.stringify(DEPOT_COORDINATES, null, 2)}
 
 Assignment rules:
-1. Only assign to depots with "Available" or "Limited" stock for the requested product
+1. Only assign to depots with "available" or "limited" stock for the requested product
 2. Primary sort: highest stock level for the requested product
 3. Tiebreaker: when two depots are within 15% stock of each other, prefer the closer one
 4. For "emergency": choose best-stocked depot regardless of distance

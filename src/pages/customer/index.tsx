@@ -6,6 +6,7 @@ import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
 import { startTracking } from "@/utils/onlineTracker";
+import { toLabel } from "@/utils/toLabel";
 
 
 const QUICK_ACTIONS = [
@@ -250,7 +251,7 @@ export default function CustomerDashboard() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-orange-400">{txn.amount || txn.total || "—"}</p>
-                        <span className={statusBadge(txn.status || "pending")}>{txn.status || "pending"}</span>
+                        <span className={statusBadge(txn.status || "pending")}>{toLabel(txn.status || "pending")}</span>
                       </div>
                     </div>
                   ))}
@@ -365,7 +366,7 @@ export default function CustomerDashboard() {
                         <p className="text-xs text-gray-600 font-mono mt-0.5">{req.id}</p>
                       </div>
                       <div className="shrink-0 flex flex-col items-end gap-1">
-                        <span className={statusBadge(req.status)}>{req.status}</span>
+                        <span className={statusBadge(req.status)}>{toLabel(req.status)}</span>
                         <span className={`text-xs font-semibold ${
                           req.priority === "emergency" ? "text-red-400" :
                           req.priority === "urgent"    ? "text-yellow-400" : "text-gray-500"
