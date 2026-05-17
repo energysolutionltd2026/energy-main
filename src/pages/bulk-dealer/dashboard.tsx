@@ -922,7 +922,7 @@ function SectionAllocations() {
         ownerEmail: _dealerEmail,
         ownerTelephone: "",
         ownerAddress: "",
-        ownerIdType: "",
+        ownerIdType: "nin",
         ownerIdNumber: "",
         companyAddress: "",
         companyTelephone: "",

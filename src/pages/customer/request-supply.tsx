@@ -6,7 +6,6 @@ import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
 import { useDepot, ProductKey } from "../../context/DepotContext";
-import { logTransaction } from "@/utils/logTransaction";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -134,9 +133,10 @@ export default function RequestSupply() {
     };
 
     // Persist to DB via API
+    let supplyDoc: any = null;
     try {
       const { api } = await import("@/lib/db-client");
-      await api.supplyRequests.create({
+      supplyDoc = await api.supplyRequests.create({
         requestId:    id,
         stationId:    form.stationId || undefined,
         stationName:  entry.stationName,
@@ -175,16 +175,22 @@ export default function RequestSupply() {
       });
     }
 
-    logTransaction({
-      type: "Supply Request",
-      user: user.name,
-      userRole: "Customer",
-      product: form.product,
-      quantity: `${Number(form.quantity).toLocaleString()} L`,
-      totalAmount: "—",
-      status: "Pending",
-      depot: form.depot,
-      reference: id,
+    import("@/lib/db-client").then(({ api }) => {
+      api.transactions.create({
+        txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+        type:          "Supply Request",
+        user:          user.name,
+        userEmail:     user.email || user.name,
+        userRole:      "Customer",
+        product:       form.product,
+        quantity:      `${Number(form.quantity).toLocaleString()} L`,
+        totalAmount:   0,
+        status:        "Pending",
+        depot:         form.depot,
+        reference:     id,
+        referenceType: "supply_request",
+        ...(supplyDoc?._id ? { referenceId: supplyDoc._id } : {}),
+      } as any).catch(() => null);
     });
 
     setReqId(id);
