@@ -129,7 +129,7 @@ export default function RequestSupply() {
       urgentFee:    urgentFee > 0 ? `₦${urgentFee.toLocaleString()}` : null,
       requestedBy:  user.email || user.name,
       requestedAt:  new Date().toISOString(),
-      status:       "Pending",
+      status:       "pending",
     };
 
     // Persist to DB via API
@@ -147,7 +147,7 @@ export default function RequestSupply() {
         deliveryDate: form.deliveryDate || undefined,
         notes:        form.notes || undefined,
         requestedBy:  user.email || user.name,
-        status:       "Pending",
+        status:       "pending",
       });
     } catch (err) {
       console.error("[request-supply] create failed:", err);
@@ -166,8 +166,8 @@ export default function RequestSupply() {
       const newLevel     = depotData.level > 0
         ? Math.round((newRemaining / (sold + remaining)) * 100)
         : 0;
-      const newStatus: "Available" | "Limited" | "Unavailable" =
-        newLevel > 30 ? "Available" : newLevel > 10 ? "Limited" : "Unavailable";
+      const newStatus: "available" | "limited" | "unavailable" =
+        newLevel > 30 ? "available" : newLevel > 10 ? "limited" : "unavailable";
       updateProductData(form.depot, prodKey, {
         quantity: `${sold.toLocaleString()} L/${newRemaining.toLocaleString()} L`,
         level:    newLevel,
@@ -178,14 +178,14 @@ export default function RequestSupply() {
     import("@/lib/db-client").then(({ api }) => {
       api.transactions.create({
         txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-        type:          "Supply Request",
+        type:          "supply_request",
         user:          user.name,
         userEmail:     user.email || user.name,
-        userRole:      "Customer",
+        userRole:      "customer",
         product:       form.product,
         quantity:      `${Number(form.quantity).toLocaleString()} L`,
         totalAmount:   0,
-        status:        "Pending",
+        status:        "pending",
         depot:         form.depot,
         reference:     id,
         referenceType: "supply_request",
@@ -377,8 +377,8 @@ export default function RequestSupply() {
                         const d = depotProducts[form.depot]?.[pk];
                         if (!d) return null;
                         const statusColor =
-                          d.status === "Available"   ? "text-green-400 border-green-500/40 bg-green-500/10" :
-                          d.status === "Limited"     ? "text-yellow-400 border-yellow-500/40 bg-yellow-500/10" :
+                          d.status === "available"   ? "text-green-400 border-green-500/40 bg-green-500/10" :
+                          d.status === "limited"     ? "text-yellow-400 border-yellow-500/40 bg-yellow-500/10" :
                                                        "text-red-400 border-red-500/40 bg-red-500/10";
                         const barColor =
                           d.level > 50 ? "bg-green-500" : d.level > 20 ? "bg-yellow-500" : "bg-red-500";
@@ -405,7 +405,7 @@ export default function RequestSupply() {
                         );
                       })}
                     </div>
-                    {form.product && depotProducts[form.depot]?.[form.product as ProductKey]?.status === "Unavailable" && (
+                    {form.product && depotProducts[form.depot]?.[form.product as ProductKey]?.status === "unavailable" && (
                       <div className="px-4 py-2.5 bg-red-500/10 border-t border-red-500/20 flex items-center gap-2">
                         <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />

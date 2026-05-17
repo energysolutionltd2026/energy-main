@@ -17,8 +17,8 @@ const AllocationSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["Active", "Exhausted", "Expired", "Revoked"],
-      default: "Active",
+      enum: ["active", "exhausted", "expired", "revoked"],
+      default: "active",
     },
 
     notes:        { type: String, trim: true },

@@ -21,8 +21,8 @@ interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: "Customer" | "Bulk Dealer" | "Truck Owner";
-  status: "Active" | "Suspended";
+  role: "customer" | "bulk_dealer" | "truck_owner";
+  status: "active" | "suspended";
   joinedAt: string;
   lastLogin: string;
   companyName?: string;
@@ -44,7 +44,7 @@ interface SupplyRequest {
   notes: string;
   requestedBy: string;
   requestedAt: string;
-  status: "Pending" | "Processing" | "Delivered" | "Cancelled";
+  status: "pending" | "processing" | "delivered" | "cancelled";
 }
 
 interface PurchaseOrder {
@@ -54,7 +54,7 @@ interface PurchaseOrder {
   qty: string;
   depot: string;
   amount: string;
-  status: "Delivered" | "In Transit" | "Processing" | "Pending";
+  status: "delivered" | "in_transit" | "processing" | "pending";
   dealer?: string;
 }
 
@@ -88,7 +88,7 @@ interface TruckRecord {
   motorBoyPhone?: string;
   motorBoyIdType?: string;
   motorBoyIdNumber?: string;
-  status: "Pending Review" | "Approved" | "Rejected";
+  status: "pending_review" | "approved" | "rejected";
   submittedAt: string;
   reviewNote: string;
   zoneRates?: Record<string, number>;
@@ -108,14 +108,14 @@ interface Transaction {
   product?: string;
   quantity?: string;
   totalAmount: string;
-  status: "Completed" | "Pending" | "Failed";
+  status: "completed" | "pending" | "failed";
   paymentMethod?: string;
 }
 
 interface DepotProduct {
   level: number;
   price: string;
-  status: "Available" | "Limited" | "Unavailable";
+  status: "available" | "limited" | "unavailable";
   capacityLitres: number;
   currentLitres: number;
 }
@@ -205,7 +205,7 @@ function Modal({ onClose, title, subtitle, children, wide }: { onClose: () => vo
 // ─── Section: Overview ────────────────────────────────────────────────────────
 
 function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: (s: string) => void }) {
-  const suspended = users.filter(u => u.status === "Suspended").length;
+  const suspended = users.filter(u => u.status === "suspended").length;
 
   const [supplyCounts, setSupplyCounts] = useState({ total: 0, pending: 0 });
   const [poCounts, setPoCounts]         = useState({ total: 0, pending: 0 });
@@ -215,15 +215,15 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
     import("@/lib/db-client").then(({ api }) => {
       api.supplyRequests.list({ limit: 200 } as any).then((r: any) => {
         if (!r?.data) return;
-        setSupplyCounts({ total: r.total ?? r.data.length, pending: r.data.filter((x: any) => x.status === "Pending").length });
+        setSupplyCounts({ total: r.total ?? r.data.length, pending: r.data.filter((x: any) => x.status === "pending").length });
       }).catch(() => null);
       api.purchaseOrders.list({ limit: 200 } as any).then((r: any) => {
         if (!r?.data) return;
-        setPoCounts({ total: r.total ?? r.data.length, pending: r.data.filter((x: any) => x.status === "Pending").length });
+        setPoCounts({ total: r.total ?? r.data.length, pending: r.data.filter((x: any) => x.status === "pending").length });
       }).catch(() => null);
       api.trucks.list({ limit: 200 } as any).then((r: any) => {
         if (!r?.data) return;
-        setTruckCounts({ pending: r.data.filter((x: any) => x.status === "pending" || x.status === "Pending Review").length });
+        setTruckCounts({ pending: r.data.filter((x: any) => x.status === "pending_review").length });
       }).catch(() => null);
     }).catch(() => null);
   }, []);
@@ -239,9 +239,9 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
         if (!result?.data?.length) return;
         setOverviewDepots(result.data.map((d: any) => ({
           name: d.name, location: d.location || "",
-          PMS: { level: d.PMS?.level ?? 60, price: String(d.PMS?.price ?? 1300), status: "Available" },
-          AGO: { level: d.AGO?.level ?? 60, price: String(d.AGO?.price ?? 1900), status: "Available" },
-          ATK: { level: d.ATK?.level ?? 60, price: String(d.ATK?.price ?? 1300), status: "Available" },
+          PMS: { level: d.PMS?.level ?? 60, price: String(d.PMS?.price ?? 1300), status: "available" },
+          AGO: { level: d.AGO?.level ?? 60, price: String(d.AGO?.price ?? 1900), status: "available" },
+          ATK: { level: d.ATK?.level ?? 60, price: String(d.ATK?.price ?? 1300), status: "available" },
         })));
       });
     });
@@ -270,7 +270,7 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
           product:     t.product,
           quantity:    t.quantity ? `${Number(t.quantity).toLocaleString()} L` : undefined,
           totalAmount: `₦${Number(t.totalAmount || 0).toLocaleString()}`,
-          status:      t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
+          status:      t.status === "completed" ? "completed" : t.status === "failed" ? "failed" : "pending",
           paymentMethod: t.paymentMethod,
           user:        t.userEmail || "—",
         }));
@@ -283,11 +283,11 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
   }, []);
 
   const txnDotColor = (type: string, status: string) => {
-    if (status === "Failed") return "bg-red-500";
-    if (status === "Pending") return "bg-yellow-500";
+    if (status === "failed") return "bg-red-500";
+    if (status === "pending") return "bg-yellow-500";
     if (type === "Fuel Purchase") return "bg-orange-500";
-    if (type === "Truck Rental") return "bg-blue-500";
-    if (type === "Union Dues") return "bg-purple-500";
+    if (type === "truck_rental") return "bg-blue-500";
+    if (type === "union_dues") return "bg-purple-500";
     return "bg-green-500";
   };
 
@@ -305,7 +305,7 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
     <div className="space-y-5">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button onClick={() => setActive("Users")} className="text-left">
-          <StatCard label="Total Users" value={users.length} sub={`${users.filter(u => u.status === "Active").length} active — click to manage`} color="text-purple-400" />
+          <StatCard label="Total Users" value={users.length} sub={`${users.filter(u => u.status === "active").length} active — click to manage`} color="text-purple-400" />
         </button>
         <button onClick={() => setActive("Supply Requests")} className="text-left">
           <StatCard label="Pending Actions" value={pendingSupply + pendingTrucks + pendingPOs} sub="Click to view supply requests" color="text-yellow-400" />
@@ -326,7 +326,7 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
           <StatCard label="Purchase Orders" value={poCounts.total} sub={`${pendingPOs} pending — click to view`} />
         </button>
         <button onClick={() => setActive("Transactions")} className="text-left">
-          <StatCard label="Transactions" value={allTransactions.length} sub={`${allTransactions.filter(t => t.status === "Completed").length} completed — click to view`} />
+          <StatCard label="Transactions" value={allTransactions.length} sub={`${allTransactions.filter(t => t.status === "completed").length} completed — click to view`} />
         </button>
       </div>
 
@@ -344,8 +344,8 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
         ) : (
           <div className="flex flex-wrap gap-2">
             {onlineUsers.map(u => {
-              const roleColor = u.role === "Customer" ? "bg-orange-500/10 border-orange-500/30 text-orange-300"
-                : u.role === "Bulk Dealer" ? "bg-green-500/10 border-green-500/30 text-green-300"
+              const roleColor = u.role === "customer" ? "bg-orange-500/10 border-orange-500/30 text-orange-300"
+                : u.role === "bulk_dealer" ? "bg-green-500/10 border-green-500/30 text-green-300"
                 : u.role === "Station Manager" ? "bg-blue-500/10 border-blue-500/30 text-blue-300"
                 : "bg-purple-500/10 border-purple-500/30 text-purple-300";
               return (
@@ -380,7 +380,7 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-green-400 text-xs font-medium">{t.totalAmount}</p>
-                  <p className={`text-xs ${t.status === "Completed" ? "text-green-500" : t.status === "Failed" ? "text-red-400" : "text-yellow-400"}`}>{t.status}</p>
+                  <p className={`text-xs ${t.status === "completed" ? "text-green-500" : t.status === "failed" ? "text-red-400" : "text-yellow-400"}`}>{t.status}</p>
                 </div>
               </button>
             ))}
@@ -389,10 +389,10 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
 
         <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
           <h3 className="text-white font-semibold mb-4">Users by Role</h3>
-          {(["Customer", "Bulk Dealer", "Truck Owner"] as const).map(role => {
+          {(["customer", "bulk_dealer", "truck_owner"] as const).map(role => {
             const count = users.filter(u => u.role === role).length;
             const pct = Math.round((count / users.length) * 100);
-            const bar = role === "Customer" ? "bg-orange-500" : role === "Bulk Dealer" ? "bg-green-500" : "bg-blue-500";
+            const bar = role === "customer" ? "bg-orange-500" : role === "bulk_dealer" ? "bg-green-500" : "bg-blue-500";
             return (
               <div key={role} className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
@@ -464,30 +464,30 @@ function SectionUsers({ users, setUsers, setToast }: {
   });
 
   const toggleSuspend = (user: AdminUser) => {
-    const next = user.status === "Active" ? "Suspended" : "Active";
-    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: next } : u));
+    const next = user.status === "active" ? "suspended" : "active";
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: next as AdminUser["status"] } : u));
 
     // Persist to DB if we have a real _id
     if (user._id) {
       import("@/lib/db-client").then(({ api }) => {
-        api.users.update(user._id!, { status: next === "Suspended" ? "suspended" : "active" });
+        api.users.update(user._id!, { status: next });
       });
     }
 
-    const notifKey = user.role === "Bulk Dealer" ? "bulk_dealer_notifications" : "customer_notifications";
-    if (next === "Suspended") {
+    const notifKey = user.role === "bulk_dealer" ? "bulk_dealer_notifications" : "customer_notifications";
+    if (next === "suspended") {
       pushNotification(notifKey, { type: "system", title: "Account Suspended", message: "Your account has been suspended by the platform administrator. Please contact support for assistance.", href: "/auth/login" });
     } else {
       pushNotification(notifKey, { type: "system", title: "Account Reactivated", message: "Your account has been reactivated. You can now log in and access all platform features.", href: "/auth/login" });
     }
-    setToast(`${user.name} ${next === "Suspended" ? "suspended" : "reactivated"} successfully`);
+    setToast(`${user.name} ${next === "suspended" ? "suspended" : "reactivated"} successfully`);
     setConfirm(null);
     setSelected(null);
   };
 
   const openUser = (user: AdminUser) => {
     setSelected(user);
-    if (user.role === "Bulk Dealer") {
+    if (user.role === "bulk_dealer") {
       setTankEdit({
         PMS: String(user.pmsTankMaxML ?? 5),
         AGO: String(user.agoTankMaxML ?? 5),
@@ -516,8 +516,8 @@ function SectionUsers({ users, setUsers, setToast }: {
     setTankSaving(false);
   };
 
-  const rc = (role: string) => role === "Customer" ? "orange" : role === "Bulk Dealer" ? "green" : "blue";
-  const sc = (s: string) => s === "Active" ? "green" : "red";
+  const rc = (role: string) => role === "customer" ? "orange" : role === "bulk_dealer" ? "green" : "blue";
+  const sc = (s: string) => s === "active" ? "green" : "red";
 
   return (
     <div className="space-y-4">
@@ -526,11 +526,11 @@ function SectionUsers({ users, setUsers, setToast }: {
           className="flex-1 min-w-48 bg-black/40 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />
         <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
           className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-          {["All", "Customer", "Bulk Dealer", "Truck Owner"].map(r => <option key={r} value={r}>{r}</option>)}
+          {["All", "customer", "bulk_dealer", "truck_owner"].map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
           className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-          {["All", "Active", "Suspended"].map(s => <option key={s} value={s}>{s}</option>)}
+          {["All", "active", "suspended"].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
@@ -578,8 +578,8 @@ function SectionUsers({ users, setUsers, setToast }: {
               <div className="col-span-2 flex justify-end gap-2">
                 <button onClick={() => openUser(user)} className="text-xs text-purple-400 border border-purple-500/40 px-2 py-1 rounded hover:text-purple-300">View</button>
                 <button onClick={() => setConfirm(user)}
-                  className={`text-xs px-2 py-1 rounded border ${user.status === "Active" ? "text-red-400 border-red-500/40 hover:text-red-300" : "text-green-400 border-green-500/40 hover:text-green-300"}`}>
-                  {user.status === "Active" ? "Suspend" : "Activate"}
+                  className={`text-xs px-2 py-1 rounded border ${user.status === "active" ? "text-red-400 border-red-500/40 hover:text-red-300" : "text-green-400 border-green-500/40 hover:text-green-300"}`}>
+                  {user.status === "active" ? "Suspend" : "Activate"}
                 </button>
               </div>
             </div>
@@ -625,7 +625,7 @@ function SectionUsers({ users, setUsers, setToast }: {
           </div>
 
           {/* ── Tank Storage Volumes — Bulk Dealer only ────────────────────── */}
-          {selected.role === "Bulk Dealer" && tankEdit && (
+          {selected.role === "bulk_dealer" && tankEdit && (
             <div className="mt-5 border-t border-gray-700 pt-4">
               <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-3">
                 Tank Storage Volumes
@@ -661,24 +661,24 @@ function SectionUsers({ users, setUsers, setToast }: {
 
           <div className="flex justify-end mt-4">
             <button onClick={() => toggleSuspend(selected)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium text-white ${selected.status === "Active" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}>
-              {selected.status === "Active" ? "Suspend Account" : "Reactivate Account"}
+              className={`px-4 py-2 rounded-lg text-sm font-medium text-white ${selected.status === "active" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}>
+              {selected.status === "active" ? "Suspend Account" : "Reactivate Account"}
             </button>
           </div>
         </Modal>
       )}
 
       {confirm && (
-        <Modal onClose={() => setConfirm(null)} title={confirm.status === "Active" ? "Suspend Account?" : "Reactivate Account?"}>
+        <Modal onClose={() => setConfirm(null)} title={confirm.status === "active" ? "Suspend Account?" : "Reactivate Account?"}>
           <p className="text-gray-400 text-sm mb-6">
-            {confirm.status === "Active"
+            {confirm.status === "active"
               ? `Suspending ${confirm.name} will immediately block their access to the platform.`
               : `Reactivating ${confirm.name} will restore their full access to the platform.`}
           </p>
           <div className="flex justify-end gap-3">
             <button onClick={() => setConfirm(null)} className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 text-sm hover:bg-gray-800">Cancel</button>
             <button onClick={() => toggleSuspend(confirm)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium text-white ${confirm.status === "Active" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}>
+              className={`px-4 py-2 rounded-lg text-sm font-medium text-white ${confirm.status === "active" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}>
               Confirm
             </button>
           </div>
@@ -739,16 +739,16 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
   };
 
   const counts: Record<string, number> = { All: requests.length };
-  ["Pending", "Processing", "Delivered", "Cancelled"].forEach(s => { counts[s] = requests.filter(r => r.status === s).length; });
+  ["pending", "processing", "delivered", "cancelled"].forEach(s => { counts[s] = requests.filter(r => r.status === s).length; });
   const filtered = filter === "All" ? requests : requests.filter(r => r.status === filter);
 
   const pc = (p: string) => p === "emergency" ? "red" : p === "urgent" ? "yellow" : "gray";
-  const sc = (s: string) => s === "Delivered" ? "green" : s === "Processing" ? "blue" : s === "Pending" ? "yellow" : "red";
+  const sc = (s: string) => s === "delivered" ? "green" : s === "processing" ? "blue" : s === "pending" ? "yellow" : "red";
   const prc = (p: string) => p === "PMS" ? "red" : p === "AGO" ? "blue" : "orange";
 
   return (
     <div className="space-y-4">
-      <FilterBar options={["All", "Pending", "Processing", "Delivered", "Cancelled"]} active={filter} counts={counts} onChange={setFilter} />
+      <FilterBar options={["All", "pending", "processing", "delivered", "cancelled"]} active={filter} counts={counts} onChange={setFilter} />
 
       <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
         <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
@@ -776,9 +776,9 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
             <span className="col-span-1"><Badge label={req.priority} color={pc(req.priority)} /></span>
             <div className="col-span-2 flex justify-end gap-1 flex-wrap">
               <button onClick={() => setSelected(req)} className="text-xs text-purple-400 border border-purple-500/40 px-2 py-1 rounded hover:text-purple-300">View</button>
-              {req.status === "Pending" && <button onClick={() => update(req.id, "Processing")} className="text-xs text-blue-400 border border-blue-500/40 px-2 py-1 rounded hover:text-blue-300">Process</button>}
-              {req.status === "Processing" && <button onClick={() => update(req.id, "Delivered")} className="text-xs text-green-400 border border-green-500/40 px-2 py-1 rounded hover:text-green-300">Deliver</button>}
-              {(req.status === "Pending" || req.status === "Processing") && <button onClick={() => update(req.id, "Cancelled")} className="text-xs text-red-400 border border-red-500/40 px-2 py-1 rounded hover:text-red-300">Cancel</button>}
+              {req.status === "pending" && <button onClick={() => update(req.id, "processing")} className="text-xs text-blue-400 border border-blue-500/40 px-2 py-1 rounded hover:text-blue-300">Process</button>}
+              {req.status === "processing" && <button onClick={() => update(req.id, "delivered")} className="text-xs text-green-400 border border-green-500/40 px-2 py-1 rounded hover:text-green-300">Deliver</button>}
+              {(req.status === "pending" || req.status === "processing") && <button onClick={() => update(req.id, "cancelled")} className="text-xs text-red-400 border border-red-500/40 px-2 py-1 rounded hover:text-red-300">Cancel</button>}
             </div>
           </div>
         ))}
@@ -801,11 +801,11 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
             <div className="flex justify-between"><span className="text-gray-400">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
             {selected.notes && <div><span className="text-gray-400 block mb-1">Notes</span><p className="text-white bg-black/30 rounded p-2 text-xs">{selected.notes}</p></div>}
           </div>
-          {selected.status !== "Delivered" && selected.status !== "Cancelled" && (
+          {selected.status !== "delivered" && selected.status !== "cancelled" && (
             <div className="flex justify-end gap-2">
-              {selected.status === "Pending" && <button onClick={() => update(selected.id, "Processing")} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">Mark Processing</button>}
-              {selected.status === "Processing" && <button onClick={() => update(selected.id, "Delivered")} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg">Mark Delivered</button>}
-              <button onClick={() => update(selected.id, "Cancelled")} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg">Cancel Request</button>
+              {selected.status === "pending" && <button onClick={() => update(selected.id, "processing")} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">Mark Processing</button>}
+              {selected.status === "processing" && <button onClick={() => update(selected.id, "delivered")} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg">Mark Delivered</button>}
+              <button onClick={() => update(selected.id, "cancelled")} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg">Cancel Request</button>
             </div>
           )}
         </Modal>
@@ -894,7 +894,7 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
   };
 
   const pColor = (p: string) => p === "PMS" ? "text-red-400" : p === "AGO" ? "text-blue-400" : p === "ATK" ? "text-orange-400" : "text-green-400";
-  const statusColor = (s: string) => s === "Available" ? "bg-green-500/10 text-green-400 border-green-500/30" : s === "Limited" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" : "bg-red-500/10 text-red-400 border-red-500/30";
+  const statusColor = (s: string) => s === "available" ? "bg-green-500/10 text-green-400 border-green-500/30" : s === "limited" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" : "bg-red-500/10 text-red-400 border-red-500/30";
   const levelBar = (n: number) => n < 20 ? "bg-red-500" : n < 40 ? "bg-yellow-500" : "bg-green-500";
 
   return (
@@ -1043,7 +1043,7 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
           qty: o.productQuantity ? `${Number(o.productQuantity).toLocaleString()} L` : "—",
           amount: o.totalAmount ? `₦${Number(o.totalAmount).toLocaleString()}` : "—",
           date: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-NG") : "—",
-          status: (o.status as PurchaseOrder["status"]) || "Pending",
+          status: (o.status as PurchaseOrder["status"]) || "pending",
         }));
         setOrders(mapped);
       }).catch(() => null);
@@ -1061,9 +1061,9 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
     }
     if (po) {
       const msgs: Record<string, { title: string; message: string }> = {
-        Processing: { title: "Purchase Order Processing", message: `Your purchase order ${id} for ${po.qty} of ${po.product} is now being processed at ${po.depot}.` },
-        "In Transit": { title: "Order In Transit", message: `Your purchase order ${id} for ${po.qty} of ${po.product} is now in transit from ${po.depot}.` },
-        Delivered: { title: "Order Delivered", message: `Your purchase order ${id} for ${po.qty} of ${po.product} (${po.amount}) has been delivered.` },
+        processing: { title: "Purchase Order Processing", message: `Your purchase order ${id} for ${po.qty} of ${po.product} is now being processed at ${po.depot}.` },
+        in_transit: { title: "Order In Transit", message: `Your purchase order ${id} for ${po.qty} of ${po.product} is now in transit from ${po.depot}.` },
+        delivered: { title: "Order Delivered", message: `Your purchase order ${id} for ${po.qty} of ${po.product} (${po.amount}) has been delivered.` },
       };
       if (msgs[status]) pushNotification("bulk_dealer_notifications", { type: "order", href: "/bulk-dealer/dashboard", ...msgs[status] });
     }
@@ -1071,15 +1071,15 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
   };
 
   const counts: Record<string, number> = { All: orders.length };
-  ["Pending", "Processing", "In Transit", "Delivered"].forEach(s => { counts[s] = orders.filter(o => o.status === s).length; });
+  ["pending", "processing", "in_transit", "delivered"].forEach(s => { counts[s] = orders.filter(o => o.status === s).length; });
   const filtered = filter === "All" ? orders : orders.filter(o => o.status === filter);
 
-  const sc = (s: string) => s === "Delivered" ? "green" : s === "In Transit" ? "blue" : s === "Processing" ? "yellow" : "gray";
+  const sc = (s: string) => s === "delivered" ? "green" : s === "in_transit" ? "blue" : s === "processing" ? "yellow" : "gray";
   const prc = (p: string) => p === "PMS" ? "red" : p === "AGO" ? "blue" : "orange";
 
   return (
     <div className="space-y-4">
-      <FilterBar options={["All", "Pending", "Processing", "In Transit", "Delivered"]} active={filter} counts={counts} onChange={setFilter} />
+      <FilterBar options={["All", "pending", "processing", "in_transit", "delivered"]} active={filter} counts={counts} onChange={setFilter} />
 
       <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
         <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
@@ -1120,9 +1120,9 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
             <div className="flex justify-between"><span className="text-gray-400">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
           </div>
           <div className="flex justify-end gap-2">
-            {selected.status === "Pending" && <button onClick={() => update(selected.id, "Processing")} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg">Mark Processing</button>}
-            {selected.status === "Processing" && <button onClick={() => update(selected.id, "In Transit")} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">Mark In Transit</button>}
-            {selected.status === "In Transit" && <button onClick={() => update(selected.id, "Delivered")} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg">Mark Delivered</button>}
+            {selected.status === "pending" && <button onClick={() => update(selected.id, "processing")} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg">Mark Processing</button>}
+            {selected.status === "processing" && <button onClick={() => update(selected.id, "in_transit")} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">Mark In Transit</button>}
+            {selected.status === "in_transit" && <button onClick={() => update(selected.id, "delivered")} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg">Mark Delivered</button>}
           </div>
         </Modal>
       )}
@@ -1132,7 +1132,7 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
 
 // ─── Section: Depots ──────────────────────────────────────────────────────────
 
-const EMPTY_DEPOT_PRODUCTS = { level: 0, price: "₦0/L", status: "Available" as DepotProduct["status"], capacityLitres: 0, currentLitres: 0 };
+const EMPTY_DEPOT_PRODUCTS = { level: 0, price: "₦0/L", status: "available" as DepotProduct["status"], capacityLitres: 0, currentLitres: 0 };
 const DEPOT_CODE_TTL = 3 * 60 * 60 * 1000;
 const DEPOT_CODE_WINDOW = 6 * 60 * 60 * 1000;
 
@@ -1647,7 +1647,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
           driverLicenseExpiry: t.driverLicenseExpiry || "",
           motorBoyName:    t.motorBoyName || "",
           motorBoyPhone:   t.motorBoyPhone || "",
-          status:          t.status === "approved" ? "Approved" : t.status === "rejected" ? "Rejected" : "Pending Review",
+          status:          t.status === "approved" ? "approved" : t.status === "rejected" ? "rejected" : "pending_review",
           reviewNote:      t.reviewNote || "",
           submittedAt:     t.createdAt ? t.createdAt.slice(0, 10) : "",
           destinationState: t.destinationState || "",
@@ -1675,7 +1675,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
   const [requester, setRequester] = useState({ fullName: "", phone: "", email: "", company: "", rentalDays: "1", pickupDate: "", notes: "" });
   const [showRentConfirmation, setShowRentConfirmation] = useState(false);
 
-  const approvedTrucks = trucks.filter(t => t.status === "Approved");
+  const approvedTrucks = trucks.filter(t => t.status === "approved");
   const filteredRentTrucks = approvedTrucks.filter(t => {
     if (rentFilter.vehicleType && t.vehicleType !== rentFilter.vehicleType) return false;
     if (rentFilter.capacity && t.tankCapacity !== rentFilter.capacity) return false;
@@ -1685,8 +1685,8 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
 
   const parsedDailyRate = (rate: string) => Number(rate.replace(/[₦,]/g, "")) || 0;
 
-  const decide = (truck: TruckRecord, status: "Approved" | "Rejected") => {
-    const approvedZoneRates = status === "Approved" ? { ...truck.zoneRates, ...rateEdits } : undefined;
+  const decide = (truck: TruckRecord, status: "approved" | "rejected") => {
+    const approvedZoneRates = status === "approved" ? { ...truck.zoneRates, ...rateEdits } : undefined;
     const next = trucks.map(t => t.id === truck.id ? { ...t, status, reviewNote: note, approvedZoneRates } : t);
     setTrucks(next);
     // Persist to DB for real IDs
@@ -1699,7 +1699,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
         }).catch(() => null);
       });
     }
-    if (status === "Approved") {
+    if (status === "approved") {
       pushNotification("truck_owner_notifications", { type: "system", title: "Truck Approved", message: `Your truck ${truck.truckRegNumber} has been approved and is now listed on the platform.${note ? ` Note: ${note}` : ""}`, href: "/truck-owner/dashboard" });
       // Create account + send credentials via email & SMS
       fetch("/api/notify/truck-approved", {
@@ -1722,11 +1722,11 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
   };
 
   const resetToPending = (truck: TruckRecord) => {
-    const next = trucks.map(t => t.id === truck.id ? { ...t, status: "Pending Review" as const, reviewNote: "" } : t);
+    const next = trucks.map(t => t.id === truck.id ? { ...t, status: "pending_review" as const, reviewNote: "" } : t);
     setTrucks(next);
     if (/^[a-f\d]{24}$/i.test(truck.id)) {
       import("@/lib/db-client").then(({ api }) => {
-        api.trucks.update(truck.id, { status: "Pending Review" as any, reviewNote: "" } as any).catch(() => null);
+        api.trucks.update(truck.id, { status: "pending_review" as any, reviewNote: "" } as any).catch(() => null);
       });
     }
     setToast(`${truck.truckRegNumber} reset to Pending Review`);
@@ -1734,9 +1734,9 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
     setNote("");
   };
 
-  const counts: Record<string, number> = { All: trucks.length, "Pending Review": trucks.filter(t => t.status === "Pending Review").length, Approved: trucks.filter(t => t.status === "Approved").length, Rejected: trucks.filter(t => t.status === "Rejected").length };
+  const counts: Record<string, number> = { All: trucks.length, "pending_review": trucks.filter(t => t.status === "pending_review").length, "approved": trucks.filter(t => t.status === "approved").length, "rejected": trucks.filter(t => t.status === "rejected").length };
   const filtered = filter === "All" ? trucks : trucks.filter(t => t.status === filter);
-  const sc = (s: string) => s === "Approved" ? "green" : s === "Rejected" ? "red" : "yellow";
+  const sc = (s: string) => s === "approved" ? "green" : s === "rejected" ? "red" : "yellow";
 
   const inputCls = "w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500";
   const selectCls = inputCls;
@@ -1758,12 +1758,12 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
         <>
           <div className="grid grid-cols-4 gap-4">
             <StatCard label="Total Trucks" value={trucks.length} />
-            <StatCard label="Approved" value={counts.Approved} color="text-green-400" />
-            <StatCard label="Pending Review" value={counts["Pending Review"]} color="text-yellow-400" />
-            <StatCard label="Rejected" value={counts.Rejected} color="text-red-400" />
+            <StatCard label="Approved" value={counts["approved"]} color="text-green-400" />
+            <StatCard label="Pending Review" value={counts["pending_review"]} color="text-yellow-400" />
+            <StatCard label="Rejected" value={counts["rejected"]} color="text-red-400" />
           </div>
 
-          <FilterBar options={["All", "Pending Review", "Approved", "Rejected"]} active={filter} counts={counts} onChange={setFilter} />
+          <FilterBar options={["All", "pending_review", "approved", "rejected"]} active={filter} counts={counts} onChange={setFilter} />
 
           <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
             <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
@@ -1792,7 +1792,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                   ))}
                 </div>
                 <span className="col-span-1 text-gray-300 text-xs">{truck.dailyRate}</span>
-                <span className="col-span-1"><Badge label={truck.status === "Pending Review" ? "Pending" : truck.status} color={sc(truck.status)} /></span>
+                <span className="col-span-1"><Badge label={truck.status === "pending_review" ? "Pending" : truck.status} color={sc(truck.status)} /></span>
                 <div className="col-span-1 flex justify-end">
                   <button onClick={() => { setSelected(truck); setNote(truck.reviewNote || ""); setRateEdits(truck.approvedZoneRates ?? truck.zoneRates ?? {}); }}
                     className="text-xs text-purple-400 border border-purple-500/40 px-2 py-1 rounded hover:text-purple-300">Review</button>
@@ -1916,20 +1916,20 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                   </div>
                 )}
                 <div>
-                  <label className="text-gray-400 text-xs block mb-1">Review Note {selected.status === "Pending Review" ? "(sent to truck owner)" : ""}</label>
+                  <label className="text-gray-400 text-xs block mb-1">Review Note {selected.status === "pending_review" ? "(sent to truck owner)" : ""}</label>
                   <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Describe your decision..."
                     className="w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 resize-none" />
                 </div>
                 <div className="flex justify-between items-center">
-                  <Badge label={selected.status === "Pending Review" ? "Awaiting Review" : selected.status} color={sc(selected.status)} />
+                  <Badge label={selected.status === "pending_review" ? "Awaiting Review" : selected.status} color={sc(selected.status)} />
                   <div className="flex gap-2">
-                    {selected.status === "Pending Review" && (
+                    {selected.status === "pending_review" && (
                       <>
-                        <button onClick={() => decide(selected, "Rejected")} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg">Reject</button>
-                        <button onClick={() => decide(selected, "Approved")} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg">Approve</button>
+                        <button onClick={() => decide(selected, "rejected")} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg">Reject</button>
+                        <button onClick={() => decide(selected, "approved")} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg">Approve</button>
                       </>
                     )}
-                    {selected.status !== "Pending Review" && (
+                    {selected.status !== "pending_review" && (
                       <button onClick={() => resetToPending(selected)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg">Reset to Pending Review</button>
                     )}
                   </div>
@@ -2157,12 +2157,12 @@ function SectionTransactions() {
         const apiTxns: Transaction[] = result.data.map((t: any) => ({
           id:            t.reference || t._id,
           date:          t.createdAt ? t.createdAt.slice(0, 10) : "",
-          type:          t.type === "union_dues" ? "Union Dues" : t.type === "truck_rental" ? "Truck Rental" : t.type === "supply_request" ? "Supply Request" : t.type === "purchase_order" ? "Purchase Order" : "Fuel Purchase",
+          type:          t.type,
           depot:         t.depot,
           product:       t.product,
           quantity:      t.quantity ? `${Number(t.quantity).toLocaleString()} L` : undefined,
           totalAmount:   `₦${Number(t.totalAmount || 0).toLocaleString()}`,
-          status:        t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
+          status:        t.status === "completed" ? "completed" : t.status === "failed" ? "failed" : "pending",
           paymentMethod: t.paymentMethod,
           user:          t.userEmail || "—",
         }));
@@ -2183,22 +2183,22 @@ function SectionTransactions() {
     );
   });
 
-  const sc = (s: string) => s === "Completed" ? "green" : s === "Pending" ? "yellow" : "red";
-  const tc = (t: string) => t === "Fuel Purchase" ? "blue" : t === "Truck Rental" ? "orange" : "purple";
+  const sc = (s: string) => s === "completed" ? "green" : s === "pending" ? "yellow" : "red";
+  const tc = (t: string) => t === "Fuel Purchase" ? "blue" : t === "truck_rental" ? "orange" : "purple";
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="Total Transactions" value={transactions.length} />
-        <StatCard label="Completed" value={transactions.filter(t => t.status === "Completed").length} color="text-green-400" />
-        <StatCard label="Failed / Pending" value={transactions.filter(t => t.status !== "Completed").length} color="text-red-400" />
+        <StatCard label="Completed" value={transactions.filter(t => t.status === "completed").length} color="text-green-400" />
+        <StatCard label="Failed / Pending" value={transactions.filter(t => t.status !== "completed").length} color="text-red-400" />
       </div>
 
       <div className="flex flex-wrap gap-3">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by user or transaction ID..."
           className="flex-1 min-w-48 bg-black/40 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />
         <FilterBar
-          options={["All", "Supply Request", "Purchase Order", "Supply Fulfillment", "Truck Rental", "Union Dues", "Fuel Purchase", "Completed", "Pending", "Failed"]}
+          options={["All", "supply_request", "purchase_order", "supply_fulfillment", "truck_rental", "union_dues", "Fuel Purchase", "completed", "pending", "failed"]}
           active={filter} onChange={setFilter} />
       </div>
 
@@ -2260,10 +2260,10 @@ function SectionTransactions() {
 // ─── Section: Reports ─────────────────────────────────────────────────────────
 
 function SectionReports({ users }: { users: AdminUser[] }) {
-  const roleRows = ["Customer", "Bulk Dealer", "Truck Owner"].map(role => ({
+  const roleRows = ["customer", "bulk_dealer", "truck_owner"].map(role => ({
     role, total: users.filter(u => u.role === role).length,
-    active: users.filter(u => u.role === role && u.status === "Active").length,
-    suspended: users.filter(u => u.role === role && u.status === "Suspended").length,
+    active: users.filter(u => u.role === role && u.status === "active").length,
+    suspended: users.filter(u => u.role === role && u.status === "suspended").length,
   }));
 
   const [reportDepots, setReportDepots] = useState<Depot[]>([]);
@@ -2273,9 +2273,9 @@ function SectionReports({ users }: { users: AdminUser[] }) {
         if (!result?.data?.length) return;
         setReportDepots(result.data.map((d: any) => ({
           name: d.name, location: d.location || "",
-          PMS: { level: d.PMS?.level ?? 60, price: String(d.PMS?.price ?? 1300), status: "Available" },
-          AGO: { level: d.AGO?.level ?? 60, price: String(d.AGO?.price ?? 1900), status: "Available" },
-          ATK: { level: d.ATK?.level ?? 60, price: String(d.ATK?.price ?? 1300), status: "Available" },
+          PMS: { level: d.PMS?.level ?? 60, price: String(d.PMS?.price ?? 1300), status: "available" },
+          AGO: { level: d.AGO?.level ?? 60, price: String(d.AGO?.price ?? 1900), status: "available" },
+          ATK: { level: d.ATK?.level ?? 60, price: String(d.ATK?.price ?? 1300), status: "available" },
         })));
       });
     });
@@ -2289,10 +2289,10 @@ function SectionReports({ users }: { users: AdminUser[] }) {
         if (!result || result.data.length === 0) return;
         const apiTxns: Transaction[] = result.data.map((t: any) => ({
           id: t.reference || t._id, date: t.createdAt?.slice(0, 10) || "",
-          type: t.type === "union_dues" ? "Union Dues" : t.type === "truck_rental" ? "Truck Rental" : "Fuel Purchase",
+          type: t.type,
           depot: t.depot, product: t.product,
           totalAmount: `₦${Number(t.totalAmount || 0).toLocaleString()}`,
-          status: t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
+          status: t.status === "completed" ? "completed" : t.status === "failed" ? "failed" : "pending",
           user: t.userEmail || "—",
         }));
         setAllTxns((prev) => {
@@ -2302,11 +2302,11 @@ function SectionReports({ users }: { users: AdminUser[] }) {
       });
     });
   }, []);
-  const txnTypes = ["Supply Request", "Purchase Order", "Supply Fulfillment", "Truck Rental", "Union Dues", "Fuel Purchase"];
+  const txnTypes = ["supply_request", "purchase_order", "supply_fulfillment", "truck_rental", "union_dues", "Fuel Purchase"];
   const txnRows = txnTypes.filter(type => allTxns.some(t => t.type === type)).map(type => ({
     type, total: allTxns.filter(t => t.type === type).length,
-    completed: allTxns.filter(t => t.type === type && t.status === "Completed").length,
-    failed: allTxns.filter(t => t.type === type && t.status === "Failed").length,
+    completed: allTxns.filter(t => t.type === type && t.status === "completed").length,
+    failed: allTxns.filter(t => t.type === type && t.status === "failed").length,
   }));
 
   const depotAlerts = reportDepots.flatMap(d => {
@@ -2321,15 +2321,15 @@ function SectionReports({ users }: { users: AdminUser[] }) {
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => {
       api.supplyRequests.list({ limit: 500 } as any).then((r: any) => {
-        if (r?.data) setSupplyList(r.data.map((x: any) => ({ status: x.status || "Pending" })));
+        if (r?.data) setSupplyList(r.data.map((x: any) => ({ status: x.status || "pending" })));
       }).catch(() => null);
     }).catch(() => null);
   }, []);
   const supplyStats = {
     total: supplyList.length,
-    pending: supplyList.filter(s => s.status === "Pending").length,
-    delivered: supplyList.filter(s => s.status === "Delivered").length,
-    cancelled: supplyList.filter(s => s.status === "Cancelled").length,
+    pending: supplyList.filter(s => s.status === "pending").length,
+    delivered: supplyList.filter(s => s.status === "delivered").length,
+    cancelled: supplyList.filter(s => s.status === "cancelled").length,
   };
 
   return (
@@ -2352,8 +2352,8 @@ function SectionReports({ users }: { users: AdminUser[] }) {
             <div className="grid grid-cols-4 px-4 py-3 text-sm font-bold border-t border-gray-700">
               <span className="text-white">Total</span>
               <span className="text-white text-center">{users.length}</span>
-              <span className="text-green-400 text-center">{users.filter(u => u.status === "Active").length}</span>
-              <span className="text-red-400 text-center">{users.filter(u => u.status === "Suspended").length}</span>
+              <span className="text-green-400 text-center">{users.filter(u => u.status === "active").length}</span>
+              <span className="text-red-400 text-center">{users.filter(u => u.status === "suspended").length}</span>
             </div>
           </div>
         </div>
@@ -2405,9 +2405,9 @@ function SectionReports({ users }: { users: AdminUser[] }) {
         <h3 className="text-white font-semibold mb-4">Truck Fleet Summary</h3>
         <div className="grid grid-cols-4 gap-4">
           <StatCard label="Total Trucks" value={BASE_TRUCKS.length} />
-          <StatCard label="Approved" value={BASE_TRUCKS.filter(t => t.status === "Approved").length} color="text-green-400" />
-          <StatCard label="Pending Review" value={BASE_TRUCKS.filter(t => t.status === "Pending Review").length} color="text-yellow-400" />
-          <StatCard label="Rejected" value={BASE_TRUCKS.filter(t => t.status === "Rejected").length} color="text-red-400" />
+          <StatCard label="Approved" value={BASE_TRUCKS.filter(t => t.status === "approved").length} color="text-green-400" />
+          <StatCard label="Pending Review" value={BASE_TRUCKS.filter(t => t.status === "pending_review").length} color="text-yellow-400" />
+          <StatCard label="Rejected" value={BASE_TRUCKS.filter(t => t.status === "rejected").length} color="text-red-400" />
         </div>
       </div>
     </div>
@@ -2422,7 +2422,7 @@ interface StationManager {
   email: string;
   password: string;
   depot: string;
-  status: "Active" | "Blocked";
+  status: "active" | "blocked";
   createdAt: string;
 }
 
@@ -2455,7 +2455,7 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
             email: m.email,
             password: "",
             depot: m.depot,
-            status: m.status === "blocked" ? "Blocked" : "Active",
+            status: m.status === "blocked" ? "blocked" : "active",
             createdAt: m.createdAt ? new Date(m.createdAt).toISOString().slice(0, 10) : "",
           }));
           setManagers([...BASE_STATION_MANAGERS, ...apiSMs.filter(m => !BASE_STATION_MANAGERS.find((b: any) => b.email === m.email))]);
@@ -2495,7 +2495,7 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
       email: form.email.trim(),
       password: form.password.trim(),
       depot: form.depot,
-      status: "Active",
+      status: "active",
       createdAt: new Date().toISOString().slice(0, 10),
     };
     saveManagers([...managers, sm]);
@@ -2506,15 +2506,15 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
   };
 
   const toggleBlock = async (sm: StationManager) => {
-    const newStatus = sm.status === "Active" ? "Blocked" as const : "Active" as const;
+    const newStatus = sm.status === "active" ? "blocked" as const : "active" as const;
     const next = managers.map(m => m.id === sm.id ? { ...m, status: newStatus } : m);
     saveManagers(next);
     // Persist to DB if real _id
     if (sm.id && !sm.id.startsWith("SM-")) {
       const { api } = await import("@/lib/db-client");
-      api.stationManagers.update(sm.id, { status: newStatus === "Blocked" ? "Blocked" : "Active" } as any);
+      api.stationManagers.update(sm.id, { status: newStatus } as any);
     }
-    setToast(`${sm.name} ${sm.status === "Active" ? "blocked" : "unblocked"}`);
+    setToast(`${sm.name} ${sm.status === "active" ? "blocked" : "unblocked"}`);
   };
 
   const openActivities = (sm: StationManager) => {
@@ -2534,8 +2534,8 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
       <div className="flex items-center justify-between">
         <div className="flex gap-4">
           <StatCard label="Total Managers" value={managers.length} sub="Created" color="text-purple-400" />
-          <StatCard label="Active" value={managers.filter(m => m.status === "Active").length} sub="Currently active" color="text-green-400" />
-          <StatCard label="Blocked" value={managers.filter(m => m.status === "Blocked").length} sub="Restricted" color="text-red-400" />
+          <StatCard label="Active" value={managers.filter(m => m.status === "active").length} sub="Currently active" color="text-green-400" />
+          <StatCard label="Blocked" value={managers.filter(m => m.status === "blocked").length} sub="Restricted" color="text-red-400" />
         </div>
         <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition">
           + Create Station Manager
@@ -2553,7 +2553,7 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
                 <div>
                   <p className="text-white text-sm font-medium">{depot}</p>
                   {sm ? (
-                    <p className={`text-xs mt-0.5 ${sm.status === "Active" ? "text-green-400" : "text-red-400"}`}>
+                    <p className={`text-xs mt-0.5 ${sm.status === "active" ? "text-green-400" : "text-red-400"}`}>
                       {sm.name} · {sm.status}
                     </p>
                   ) : (
@@ -2588,7 +2588,7 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${sm.status === "Active" ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${sm.status === "active" ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"}`}>
                     {sm.status}
                   </span>
                   <button onClick={() => openActivities(sm)} className="text-xs text-purple-400 border border-purple-500/30 px-2 py-1.5 rounded hover:text-purple-300 transition">
@@ -2596,9 +2596,9 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
                   </button>
                   <button
                     onClick={() => toggleBlock(sm)}
-                    className={`text-xs px-2 py-1.5 rounded border transition ${sm.status === "Active" ? "text-red-400 border-red-500/30 hover:bg-red-500/10" : "text-green-400 border-green-500/30 hover:bg-green-500/10"}`}
+                    className={`text-xs px-2 py-1.5 rounded border transition ${sm.status === "active" ? "text-red-400 border-red-500/30 hover:bg-red-500/10" : "text-green-400 border-green-500/30 hover:bg-green-500/10"}`}
                   >
-                    {sm.status === "Active" ? "Block" : "Unblock"}
+                    {sm.status === "active" ? "Block" : "Unblock"}
                   </button>
                 </div>
               </div>
@@ -3988,16 +3988,13 @@ export default function AdminDashboard() {
       import("@/lib/db-client").then(({ api }) => {
         api.users.list({ limit: 500 }).then(result => {
           if (result?.data?.length) {
-            const ROLE_MAP: Record<string, AdminUser["role"]> = {
-              bulk_dealer: "Bulk Dealer", customer: "Customer", truck_owner: "Truck Owner",
-            };
             const apiUsers: AdminUser[] = result.data.map((u: any) => ({
               _id: u._id,
               id: u._id,
               name: u.name,
               email: u.email,
-              role: ROLE_MAP[u.role] ?? "Customer",
-              status: u.status === "suspended" ? "Suspended" : "Active",
+              role: (u.role as AdminUser["role"]) ?? "customer",
+              status: (u.status === "suspended" ? "suspended" : "active") as AdminUser["status"],
               joinedAt: u.joinedAt ? new Date(u.joinedAt).toLocaleDateString("en-NG") : "—",
               lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString("en-NG") : "Never",
               companyName: u.companyName,

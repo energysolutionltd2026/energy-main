@@ -8,7 +8,7 @@ const CustomLevySchema = new Schema(
     amount:    { type: Number, required: true, min: 0 },               // ₦
     frequency: {
       type: String,
-      enum: ["One-time", "Annual", "Monthly", "Quarterly", "Weekly"],
+      enum: ["one_time", "annual", "monthly", "quarterly", "weekly"],
       required: true,
     },
     isActive:  { type: Boolean, default: true },

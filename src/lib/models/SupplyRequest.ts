@@ -14,8 +14,8 @@ const SupplyRequestSchema = new Schema(
     requestedBy:  { type: String, required: true }, // user email
     status:       {
       type: String,
-      enum: ["Pending", "Processing", "In Transit", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: ["pending", "processing", "in_transit", "delivered", "cancelled"],
+      default: "pending",
     },
 
     // AI routing fields — populated by /api/ai/supply-routing or /api/ai/supply-fulfillment

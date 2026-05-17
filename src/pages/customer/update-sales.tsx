@@ -413,8 +413,8 @@ export default function UpdateSales() {
                   if (!d) return <div key={pk} className="p-4 text-xs text-gray-600">—</div>;
                   const barColor = d.level > 50 ? "bg-green-500" : d.level > 20 ? "bg-yellow-500" : "bg-red-500";
                   const statusColor =
-                    d.status === "Available"   ? "text-green-400 border-green-500/40 bg-green-500/10" :
-                    d.status === "Limited"     ? "text-yellow-400 border-yellow-500/40 bg-yellow-500/10" :
+                    d.status === "available"   ? "text-green-400 border-green-500/40 bg-green-500/10" :
+                    d.status === "limited"     ? "text-yellow-400 border-yellow-500/40 bg-yellow-500/10" :
                                                  "text-red-400 border-red-500/40 bg-red-500/10";
                   const prodColor = pk === "PMS" ? "text-red-400" : pk === "AGO" ? "text-blue-400" : "text-green-400";
                   return (

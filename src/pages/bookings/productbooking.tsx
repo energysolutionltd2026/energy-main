@@ -75,7 +75,7 @@ export default function productbooking() {
         ownerIdNumber: owner.idNumber,
         productType: form.productType,
         productQuantity: qtyNum,
-        haulageTruck: (form.haulageTruck === "Rent Truck" ? "Rent Truck" : "Owned Truck") as "Owned Truck" | "Rent Truck",
+        haulageTruck: (form.haulageTruck === "Rent Truck" ? "rent_truck" : "owned_truck") as "owned_truck" | "rent_truck",
         paymentMethod: "bank_transfer",
       });
       localStorage.removeItem("booking_company_info");

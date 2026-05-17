@@ -19,27 +19,27 @@ export type UserRole       = "customer" | "bulk_dealer" | "truck_owner" | "admin
 export type UserStatus     = "active" | "suspended" | "pending";
 export type Product        = "PMS" | "AGO" | "ATK";
 export type SupplyPriority = "normal" | "urgent" | "emergency";
-export type SupplyStatus   = "Pending" | "Processing" | "In Transit" | "Delivered" | "Cancelled";
-export type OrderStatus    = "Pending" | "Processing" | "In Transit" | "Delivered" | "Cancelled";
-export type TxnStatus      = "Completed" | "Pending" | "Failed";
+export type SupplyStatus   = "pending" | "processing" | "in_transit" | "delivered" | "cancelled";
+export type OrderStatus    = "pending" | "processing" | "in_transit" | "delivered" | "cancelled";
+export type TxnStatus      = "completed" | "pending" | "failed";
 export type PaymentMethod  = "bank_transfer" | "card" | "wallet" | "opay" | "cash";
-export type TruckStatus        = "Pending Review" | "Approved" | "Rejected";
-export type TruckRentalStatus  = "Requested" | "Confirmed" | "Active" | "Completed" | "Cancelled";
-export type PaymentStatus      = "Unpaid" | "Paid";
-export type StockStatus        = "Available" | "Limited" | "Unavailable";
+export type TruckStatus        = "pending_review" | "approved" | "rejected";
+export type TruckRentalStatus  = "requested" | "confirmed" | "active" | "completed" | "cancelled";
+export type PaymentStatus      = "unpaid" | "paid";
+export type StockStatus        = "available" | "limited" | "unavailable";
 export type FuelStationStatus  = "active" | "inactive" | "suspended";
-export type UnionDuesStatus    = "Pending" | "Paid" | "Overdue" | "Waived";
-export type SMStatus           = "Active" | "Blocked" | "Inactive";
-export type LoadingStatus      = "Pending" | "In Progress" | "Completed" | "Cancelled";
-export type LevyFrequency      = "One-time" | "Annual" | "Monthly" | "Quarterly" | "Weekly";
+export type UnionDuesStatus    = "pending" | "paid" | "overdue" | "waived";
+export type SMStatus           = "active" | "blocked" | "inactive";
+export type LoadingStatus      = "pending" | "in_progress" | "completed" | "cancelled";
+export type LevyFrequency      = "one_time" | "annual" | "monthly" | "quarterly" | "weekly";
 export type TransactionType    =
-  | "Supply Request"
-  | "Truck Rental"
-  | "Union Dues"
-  | "Purchase Order"
-  | "Supply Fulfillment"
-  | "Loading"
-  | "Daily Sales";
+  | "supply_request"
+  | "truck_rental"
+  | "union_dues"
+  | "purchase_order"
+  | "supply_fulfillment"
+  | "loading"
+  | "daily_sales";
 
 // ─── User ─────────────────────────────────────────────────────────────────────
 
@@ -160,7 +160,7 @@ export interface PurchaseOrder {
   // Stage 3: Product & truck
   productType: string;
   productQuantity: number;
-  haulageTruck: "Owned Truck" | "Rent Truck";
+  haulageTruck: "owned_truck" | "rent_truck";
   vehicleType?: string;
   tankCapacity?: number;
   truckRegNumber?: string;
@@ -550,7 +550,7 @@ export interface AIFeedback {
 
 // ─── Allocation ───────────────────────────────────────────────────────────────
 
-export type AllocationStatus = "Active" | "Exhausted" | "Expired" | "Revoked";
+export type AllocationStatus = "active" | "exhausted" | "expired" | "revoked";
 
 export interface Allocation {
   _id: string;

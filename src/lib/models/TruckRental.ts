@@ -28,13 +28,13 @@ const TruckRentalSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["Requested", "Confirmed", "Active", "Completed", "Cancelled"],
-      default: "Requested",
+      enum: ["requested", "confirmed", "active", "completed", "cancelled"],
+      default: "requested",
     },
     paymentStatus: {
       type: String,
-      enum: ["Unpaid", "Paid"],
-      default: "Unpaid",
+      enum: ["unpaid", "paid"],
+      default: "unpaid",
     },
     transactionId: { type: Schema.Types.ObjectId },                  // FK → transactions._id
   },

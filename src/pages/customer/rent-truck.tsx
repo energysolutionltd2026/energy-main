@@ -111,8 +111,8 @@ export default function CustomerRentTruck() {
         dailyRateLocked: price,
         totalDays:       1,
         totalAmount:     price,
-        status:          "Requested",
-        paymentStatus:   "Unpaid",
+        status:          "requested",
+        paymentStatus:   "unpaid",
       } as any);
     } catch (err) {
       console.error("[rent-truck] rental create failed:", err);
@@ -123,14 +123,14 @@ export default function CustomerRentTruck() {
     // 2. Create Transaction linked to TruckRental
     const txnDoc = await api.transactions.create({
       txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-      type:          "Truck Rental",
+      type:          "truck_rental",
       user:          user.name,
       userEmail:     user.email,
-      userRole:      "Customer",
+      userRole:      "customer",
       product:       `Truck to ${rentBook.state}`,
       quantity:      "1 trip",
       totalAmount:   price,
-      status:        "Pending",
+      status:        "pending",
       paymentMethod: rentBook.paymentMethod,
       depot:         rentBook.depot,
       reference:     txnId,
@@ -144,11 +144,11 @@ export default function CustomerRentTruck() {
     }
 
     setConfirmedTxn({
-      id: txnId, date: txnDate, type: "Truck Rental",
+      id: txnId, date: txnDate, type: "truck_rental",
       depot: rentBook.depot, product: `Truck to ${rentBook.state}`,
       quantity: "1 trip", unitPrice: `₦${price.toLocaleString()}`,
       totalAmount: `₦${price.toLocaleString()}`,
-      status: "Pending", paymentMethod: rentBook.paymentMethod,
+      status: "pending", paymentMethod: rentBook.paymentMethod,
     });
     setRentStep(4);
   };

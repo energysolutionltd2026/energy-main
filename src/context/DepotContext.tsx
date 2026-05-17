@@ -9,7 +9,7 @@ export type ProductData = {
   level: number;
   quantity: string;
   price: string;
-  status: "Available" | "Limited" | "Unavailable";
+  status: "available" | "limited" | "unavailable";
   capacityLitres: number;
   currentLitres: number;
 };
@@ -49,10 +49,10 @@ function fmtPrice(price: number): string {
   return `₦${price.toLocaleString()}/L`;
 }
 
-function depotStatus(level: number): "Available" | "Limited" | "Unavailable" {
-  if (level === 0) return "Unavailable";
-  if (level < 20) return "Limited";
-  return "Available";
+function depotStatus(level: number): "available" | "limited" | "unavailable" {
+  if (level === 0) return "unavailable";
+  if (level < 20) return "limited";
+  return "available";
 }
 
 function apiToDepotData(d: any): DepotData {

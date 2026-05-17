@@ -184,9 +184,9 @@ function HomeContent() {
                             </td>
                             <td
                               className={`px-2 sm:px-4 py-3 sm:py-4 font-bold text-xs sm:text-sm ${
-                                data.status === "Available"
+                                data.status === "available"
                                   ? "text-green-600"
-                                  : data.status === "Limited"
+                                  : data.status === "limited"
                                   ? "text-yellow-500"
                                   : "text-red-500"
                               }`}
