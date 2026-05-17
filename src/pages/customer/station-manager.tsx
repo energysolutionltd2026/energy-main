@@ -5,6 +5,7 @@ import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
 import { useDepot, ProductKey } from "../../context/DepotContext";
+import { toLabel } from "@/utils/toLabel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -262,17 +263,24 @@ export default function StationManager() {
 
   const badge = (s: string) => {
     const map: Record<string, string> = {
+      // DB-sourced (lowercase)
+      active:      "bg-green-500/20 text-green-400 border-green-500/40",
+      inactive:    "bg-gray-500/20 text-gray-400 border-gray-500/40",
+      suspended:   "bg-red-500/20 text-red-400 border-red-500/40",
+      completed:   "bg-green-500/20 text-green-400 border-green-500/40",
+      pending:     "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+      processing:  "bg-orange-500/20 text-orange-400 border-orange-500/40",
+      cancelled:   "bg-red-500/20 text-red-400 border-red-500/40",
+      available:   "bg-green-500/20 text-green-400 border-green-500/40",
+      limited:     "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+      // Local-only values (StaffMember / ProductStock)
       Active:      "bg-green-500/20 text-green-400 border-green-500/40",
-      Inactive:    "bg-gray-500/20 text-gray-400 border-gray-500/40",
-      Suspended:   "bg-red-500/20 text-red-400 border-red-500/40",
-      "Off Duty":  "bg-gray-500/20 text-gray-400 border-gray-500/40",
-      "On Leave":  "bg-blue-500/20 text-blue-400 border-blue-500/40",
-      Completed:   "bg-green-500/20 text-green-400 border-green-500/40",
-      Pending:     "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
-      Processing:  "bg-orange-500/20 text-orange-400 border-orange-500/40",
-      Cancelled:   "bg-red-500/20 text-red-400 border-red-500/40",
       Available:   "bg-green-500/20 text-green-400 border-green-500/40",
       Limited:     "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+      Critical:    "bg-orange-500/20 text-orange-400 border-orange-500/40",
+      Empty:       "bg-red-500/20 text-red-400 border-red-500/40",
+      "Off Duty":  "bg-gray-500/20 text-gray-400 border-gray-500/40",
+      "On Leave":  "bg-blue-500/20 text-blue-400 border-blue-500/40",
     };
     return (map[s] ?? "bg-gray-500/20 text-gray-400 border-gray-500/40") + " px-2 py-0.5 rounded-full text-xs font-bold border";
   };
@@ -578,7 +586,7 @@ export default function StationManager() {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h2 className="text-lg font-bold text-white">{station.name}</h2>
-                <span className={badge(station.status)}>{station.status}</span>
+                <span className={badge(station.status)}>{toLabel(station.status)}</span>
               </div>
               <p className="text-sm text-gray-400 truncate">{station.address}, {station.state} · {station.openingHours}</p>
               <p className="text-xs text-gray-500 mt-0.5">Licence: {station.licenseNo} · DPR: {station.dprNo}</p>
@@ -690,7 +698,7 @@ export default function StationManager() {
                             {new Date(s.date).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}
                           </p>
                         </div>
-                        <span className={badge(s.status)}>{s.status}</span>
+                        <span className={badge(s.status)}>{toLabel(s.status)}</span>
                       </div>
                     ))}
                   </div>
@@ -745,7 +753,7 @@ export default function StationManager() {
                             <td className="px-4 py-3 text-xs text-gray-400">
                               {new Date(s.lastSupplied).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                             </td>
-                            <td className="px-4 py-3"><span className={badge(s.status)}>{s.status}</span></td>
+                            <td className="px-4 py-3"><span className={badge(s.status)}>{toLabel(s.status)}</span></td>
                           </tr>
                         );
                       })}
@@ -791,7 +799,7 @@ export default function StationManager() {
                         <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{s.shift}</td>
                         <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{s.phone}</td>
                         <td className="px-4 py-3 text-xs text-gray-400">{s.email}</td>
-                        <td className="px-4 py-3 whitespace-nowrap"><span className={badge(s.status)}>{s.status}</span></td>
+                        <td className="px-4 py-3 whitespace-nowrap"><span className={badge(s.status)}>{toLabel(s.status)}</span></td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <button className="text-xs text-orange-400 hover:text-orange-300 font-semibold transition">Edit</button>
                         </td>
@@ -842,7 +850,7 @@ export default function StationManager() {
                                 </div>
                                 <span className={`text-xs font-semibold ${statusColor}`}>{d.level}%</span>
                               </div>
-                              <p className={`text-xs mt-0.5 ${statusColor}`}>{d.status}</p>
+                              <p className={`text-xs mt-0.5 ${statusColor}`}>{toLabel(d.status)}</p>
                             </td>
                           );
                         })}
@@ -883,7 +891,7 @@ export default function StationManager() {
                         <td className="px-4 py-3 text-sm text-gray-300">{s.quantity}</td>
                         <td className="px-4 py-3 text-xs text-gray-400">{s.depot}</td>
                         <td className="px-4 py-3 text-xs text-gray-400 font-mono">{s.truckReg}</td>
-                        <td className="px-4 py-3"><span className={badge(s.status)}>{s.status}</span></td>
+                        <td className="px-4 py-3"><span className={badge(s.status)}>{toLabel(s.status)}</span></td>
                       </tr>
                     ))}
                   </tbody>

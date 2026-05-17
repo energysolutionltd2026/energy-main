@@ -6,6 +6,7 @@ import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
 import { useDepot, ProductKey } from "../../context/DepotContext";
+import { toLabel } from "@/utils/toLabel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -421,7 +422,7 @@ export default function UpdateSales() {
                     <div key={pk} className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className={`text-sm font-extrabold ${prodColor}`}>{pk}</span>
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${statusColor}`}>{d.status}</span>
+                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${statusColor}`}>{toLabel(d.status)}</span>
                       </div>
                       <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                         <div className={`h-full ${barColor} rounded-full`} style={{ width: `${d.level}%` }} />
