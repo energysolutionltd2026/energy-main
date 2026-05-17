@@ -90,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const valid = await bcrypt.compare(password, sm.passwordHash);
     if (!valid) return res.status(401).json({ error: "Invalid email or password" });
 
-    if (sm.status === "Blocked") {
+    if (sm.status === "blocked") {
       return res.status(403).json({ error: "Your account has been blocked. Contact your administrator." });
     }
 

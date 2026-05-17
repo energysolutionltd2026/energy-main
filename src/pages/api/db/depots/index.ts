@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return {
           level: lvl,
           price: parsePrice(p?.price ?? defaultPrice),
-          status: (p?.status as string) || (lvl < 20 ? "Unavailable" : lvl < 40 ? "Limited" : "Available"),
+          status: (p?.status as string) || (lvl < 20 ? "unavailable" : lvl < 40 ? "limited" : "available"),
         };
       };
       const doc = await Depot.create({

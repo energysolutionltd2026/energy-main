@@ -5,6 +5,7 @@ import Head from "next/head";
 import Image from "next/image";
 import tower from "@/../public/tower.jpg";
 import { startTracking } from "@/utils/onlineTracker";
+import { toLabel } from "@/utils/toLabel";
 
 export interface StationManager {
   id: string;
@@ -18,13 +19,13 @@ export interface StationManager {
 
 type ProductKey = "PMS" | "AGO" | "ATK" | string;
 
-interface StockEntry { level: number; price: string; status: "Available" | "Limited" | "Unavailable" }
+interface StockEntry { level: number; price: string; status: "available" | "limited" | "unavailable" }
 type DepotStock = Record<string, StockEntry>;
 
 const DEFAULT_STOCK: DepotStock = {
-  PMS: { level: 60, price: "₦1,300/L", status: "Available" },
-  AGO: { level: 60, price: "₦1,900/L", status: "Available" },
-  ATK: { level: 60, price: "₦1,300/L", status: "Available" },
+  PMS: { level: 60, price: "₦1,300/L", status: "available" },
+  AGO: { level: 60, price: "₦1,900/L", status: "available" },
+  ATK: { level: 60, price: "₦1,300/L", status: "available" },
 };
 
 // Dealer code → email lookup
@@ -80,9 +81,9 @@ export default function StationManagerDashboard() {
             const agoLvl = depot.AGO?.level ?? 60;
             const atkLvl = depot.ATK?.level ?? 60;
             setStock({
-              PMS: { level: pmsLvl, price: depot.PMS?.price ? `₦${Number(depot.PMS.price).toLocaleString()}/L` : "₦1,300/L", status: pmsLvl < 20 ? "Unavailable" : pmsLvl < 40 ? "Limited" : "Available" },
-              AGO: { level: agoLvl, price: depot.AGO?.price ? `₦${Number(depot.AGO.price).toLocaleString()}/L` : "₦1,900/L", status: agoLvl < 20 ? "Unavailable" : agoLvl < 40 ? "Limited" : "Available" },
-              ATK: { level: atkLvl, price: depot.ATK?.price ? `₦${Number(depot.ATK.price).toLocaleString()}/L` : "₦1,300/L", status: atkLvl < 20 ? "Unavailable" : atkLvl < 40 ? "Limited" : "Available" },
+              PMS: { level: pmsLvl, price: depot.PMS?.price ? `₦${Number(depot.PMS.price).toLocaleString()}/L` : "₦1,300/L", status: pmsLvl < 20 ? "unavailable" : pmsLvl < 40 ? "limited" : "available" },
+              AGO: { level: agoLvl, price: depot.AGO?.price ? `₦${Number(depot.AGO.price).toLocaleString()}/L` : "₦1,900/L", status: agoLvl < 20 ? "unavailable" : agoLvl < 40 ? "limited" : "available" },
+              ATK: { level: atkLvl, price: depot.ATK?.price ? `₦${Number(depot.ATK.price).toLocaleString()}/L` : "₦1,300/L", status: atkLvl < 20 ? "unavailable" : atkLvl < 40 ? "limited" : "available" },
             });
           });
         });
@@ -249,8 +250,8 @@ export default function StationManagerDashboard() {
                 <div key={p} className="bg-black/30 border border-gray-700 rounded-xl p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className={`text-sm font-bold ${pColor(p)}`}>{p}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${stock[p]?.status === "Available" ? "bg-green-500/10 text-green-400 border-green-500/30" : stock[p]?.status === "Limited" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"}`}>
-                      {stock[p]?.status || "Unavailable"}
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${stock[p]?.status === "available" ? "bg-green-500/10 text-green-400 border-green-500/30" : stock[p]?.status === "limited" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"}`}>
+                      {toLabel(stock[p]?.status || "unavailable")}
                     </span>
                   </div>
                   <p className="text-2xl font-black text-white mb-1">{stock[p]?.level ?? 0}%</p>

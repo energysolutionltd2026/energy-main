@@ -821,10 +821,10 @@ const AVAILABLE_PRODUCTS = ["PMS", "AGO", "ATK"];
 
 function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
   const [customProducts, setCustomProducts] = useState<string[]>([]);
-  const [globalStock, setGlobalStock] = useState<Record<string, { level: number; price: string; status: "Available" | "Limited" | "Unavailable" }>>({
-    PMS: { level: 60, price: "₦1,300/L", status: "Available" },
-    AGO: { level: 60, price: "₦1,900/L", status: "Available" },
-    ATK: { level: 60, price: "₦1,300/L", status: "Available" },
+  const [globalStock, setGlobalStock] = useState<Record<string, { level: number; price: string; status: "available" | "limited" | "unavailable" }>>({
+    PMS: { level: 60, price: "₦1,300/L", status: "available" },
+    AGO: { level: 60, price: "₦1,900/L", status: "available" },
+    ATK: { level: 60, price: "₦1,300/L", status: "available" },
   });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<typeof globalStock>({});
@@ -871,9 +871,9 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
       if (!result?.data?.length) { setToast("No depots found"); return; }
       await Promise.all(result.data.map((d: any) =>
         api.depots.update(d._id, {
-          "PMS.level": draft.PMS?.level ?? 60, "PMS.price": parsePrice(draft.PMS?.price ?? "0"), "PMS.status": draft.PMS?.status ?? "Available",
-          "AGO.level": draft.AGO?.level ?? 60, "AGO.price": parsePrice(draft.AGO?.price ?? "0"), "AGO.status": draft.AGO?.status ?? "Available",
-          "ATK.level": draft.ATK?.level ?? 60, "ATK.price": parsePrice(draft.ATK?.price ?? "0"), "ATK.status": draft.ATK?.status ?? "Available",
+          "PMS.level": draft.PMS?.level ?? 60, "PMS.price": parsePrice(draft.PMS?.price ?? "0"), "PMS.status": draft.PMS?.status ?? "available",
+          "AGO.level": draft.AGO?.level ?? 60, "AGO.price": parsePrice(draft.AGO?.price ?? "0"), "AGO.status": draft.AGO?.status ?? "available",
+          "ATK.level": draft.ATK?.level ?? 60, "ATK.price": parsePrice(draft.ATK?.price ?? "0"), "ATK.status": draft.ATK?.status ?? "available",
         } as any).catch(() => null)
       ));
       setGlobalStock(draft);
@@ -887,7 +887,7 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
     const upperName = newProductName.toUpperCase();
     if (allProducts.includes(upperName)) return;
     setCustomProducts([...customProducts, upperName]);
-    setGlobalStock({ ...globalStock, [upperName]: { level: 0, price: newProductPrice, status: "Available" as const } });
+    setGlobalStock({ ...globalStock, [upperName]: { level: 0, price: newProductPrice, status: "available" as const } });
     setToast(`Product ${upperName} added`);
     setNewProductName("");
     setNewProductPrice("");
@@ -922,8 +922,8 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
           <div key={p} className="bg-black/40 border border-gray-800 rounded-xl p-4">
             <div className="flex justify-between items-center mb-2">
               <span className={`text-sm font-bold ${pColor(p)}`}>{p}</span>
-              <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColor(globalStock[p]?.status || "Unavailable")}`}>
-                {globalStock[p]?.status || "Unavailable"}
+              <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColor(globalStock[p]?.status || "unavailable")}`}>
+                {toLabel(globalStock[p]?.status || "unavailable")}
               </span>
             </div>
             <p className="text-2xl font-black text-white mb-1">{globalStock[p]?.level ?? 0}%</p>
@@ -965,12 +965,12 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
                   </div>
                   <div className="col-span-2">
                     <label className="text-gray-400 text-xs block mb-1">Status</label>
-                    <select value={draft[p]?.status || "Available"}
-                      onChange={e => setDraft(prev => ({ ...prev, [p]: { ...prev[p], status: e.target.value as "Available" | "Limited" | "Unavailable" } }))}
+                    <select value={draft[p]?.status || "available"}
+                      onChange={e => setDraft(prev => ({ ...prev, [p]: { ...prev[p], status: e.target.value as "available" | "limited" | "unavailable" } }))}
                       className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500">
-                      <option value="Available">Available</option>
-                      <option value="Limited">Limited</option>
-                      <option value="Unavailable">Unavailable</option>
+                      <option value="available">Available</option>
+                      <option value="limited">Limited</option>
+                      <option value="unavailable">Unavailable</option>
                     </select>
                   </div>
                 </div>
