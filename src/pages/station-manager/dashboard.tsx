@@ -12,7 +12,7 @@ export interface StationManager {
   email: string;
   password?: string;
   depot: string;
-  status: "Active" | "Blocked";
+  status: "active" | "blocked";
   createdAt?: string;
 }
 
@@ -66,7 +66,7 @@ export default function StationManagerDashboard() {
       .then((data) => {
         const u = data?.user;
         if (!u || u.role !== "station_manager") { router.replace("/auth/login"); return; }
-        const sm: StationManager = { id: u._id || u.id || u.email, name: u.name || "", email: u.email || "", depot: (u as any).depot || "", status: "Active" };
+        const sm: StationManager = { id: u._id || u.id || u.email, name: u.name || "", email: u.email || "", depot: (u as any).depot || "", status: ((u as any).status || "active") as "active" | "blocked" };
         setManager(sm);
         stopTracking = startTracking({ id: sm.email, name: sm.name, email: sm.email, role: "Station Manager", depot: sm.depot, lastSeen: Date.now() });
 
