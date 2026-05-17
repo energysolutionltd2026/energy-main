@@ -35,15 +35,15 @@ export async function buildMetricsSnapshot() {
     User.countDocuments(),
     User.aggregate([{ $group: { _id: "$role", count: { $sum: 1 } } }]),
     User.countDocuments({ status: "suspended" }),
-    Truck.countDocuments({ status: "Pending Review" }),
+    Truck.countDocuments({ status: "pending_review" }),
     SupplyRequest.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
-    SupplyRequest.countDocuments({ priority: { $in: ["urgent", "emergency"] }, status: { $ne: "Delivered" } }),
+    SupplyRequest.countDocuments({ priority: { $in: ["urgent", "emergency"] }, status: { $ne: "delivered" } }),
     Transaction.find({ timestamp: { $gte: weekAgo } }).lean().limit(500),
-    Transaction.countDocuments({ status: "Failed", timestamp: { $gte: weekAgo } }),
+    Transaction.countDocuments({ status: "failed", timestamp: { $gte: weekAgo } }),
     Transaction.countDocuments({ aiFlagged: true }),
     Depot.find().lean(),
     Transaction.aggregate([
-      { $match: { status: "Completed" } },
+      { $match: { status: "completed" } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]),
   ]);
@@ -115,8 +115,8 @@ export async function buildPlatformSnapshot() {
 
     // Things that need admin attention right now
     Promise.all([
-      Truck.find({ status: "Pending Review" }).select("ownerName truckRegNumber submittedAt").lean().limit(10),
-      SupplyRequest.find({ status: "Pending" }).select("stationName product quantity priority createdAt").lean().limit(10),
+      Truck.find({ status: "pending_review" }).select("ownerName truckRegNumber submittedAt").lean().limit(10),
+      SupplyRequest.find({ status: "pending" }).select("stationName product quantity priority createdAt").lean().limit(10),
       User.find({ status: "pending" }).select("name email role joinedAt").lean().limit(10),
     ]),
 
@@ -124,7 +124,7 @@ export async function buildPlatformSnapshot() {
     Promise.all([
       Transaction.countDocuments({ timestamp: { $gte: dayAgo } }),
       SupplyRequest.countDocuments({ createdAt: { $gte: dayAgo } }),
-      Transaction.countDocuments({ status: "Failed", timestamp: { $gte: dayAgo } }),
+      Transaction.countDocuments({ status: "failed", timestamp: { $gte: dayAgo } }),
     ]),
   ]);
 

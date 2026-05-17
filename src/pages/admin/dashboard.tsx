@@ -5,6 +5,7 @@ import Link from "next/link";
 import Head from "next/head";
 import tower from "@/../public/tower.jpg";
 import { getOnlineUsers, type OnlineUser } from "@/utils/onlineTracker";
+import { toLabel } from "@/utils/toLabel";
 
 // ─── Notification Helper ──────────────────────────────────────────────────────
 
@@ -375,12 +376,12 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
                 <span className="text-gray-500 text-xs mt-1 w-24 shrink-0 font-mono">{t.date}</span>
                 <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${txnDotColor(t.type, t.status)}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm group-hover:text-purple-300 transition-colors truncate">{t.type}</p>
+                  <p className="text-white text-sm group-hover:text-purple-300 transition-colors truncate">{toLabel(t.type)}</p>
                   <p className="text-gray-400 text-xs truncate">{txnDetail(t)}</p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-green-400 text-xs font-medium">{t.totalAmount}</p>
-                  <p className={`text-xs ${t.status === "completed" ? "text-green-500" : t.status === "failed" ? "text-red-400" : "text-yellow-400"}`}>{t.status}</p>
+                  <p className={`text-xs ${t.status === "completed" ? "text-green-500" : t.status === "failed" ? "text-red-400" : "text-yellow-400"}`}>{toLabel(t.status)}</p>
                 </div>
               </button>
             ))}
@@ -2366,7 +2367,7 @@ function SectionReports({ users }: { users: AdminUser[] }) {
             </div>
             {txnRows.map(t => (
               <div key={t.type} className="grid grid-cols-4 px-4 py-3 border-b border-gray-800/50 text-sm">
-                <span className="text-gray-300 text-xs col-span-2">{t.type}</span>
+                <span className="text-gray-300 text-xs col-span-2">{toLabel(t.type)}</span>
                 <span className="text-white text-center">{t.total}</span>
                 <span className="text-green-400 text-center">{t.completed}</span>
               </div>

@@ -153,8 +153,8 @@ export function supplyRequestStatusTemplate({ name, requestId, product, status, 
   status: string;
   adminNote?: string;
 }): { subject: string; html: string } {
-  const isApproved = status === "Approved";
-  const isPending  = status === "Pending";
+  const isApproved = status === "approved";
+  const isPending  = status === "pending";
   const statusColor = isApproved ? brand.green : isPending ? brand.yellow : brand.red;
   const statusIcon  = isApproved ? "✅" : isPending ? "⏳" : "❌";
 

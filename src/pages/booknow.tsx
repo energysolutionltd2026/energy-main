@@ -878,7 +878,7 @@ export default function BookNow() {
         ownerIdNumber: sanitizeString(formData.owner.idNumber),
         productType: formData.booking.productType.toUpperCase(),
         productQuantity: parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
-        haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "rent_truck" : "owned_truck") as "owned_truck" | "rent_truck",
+        haulageTruck: (formData.booking.haulageTruck === "rent_truck" ? "rent_truck" : "owned_truck") as "owned_truck" | "rent_truck",
         paymentMethod: pmMethod as import("@/lib/db-types").PaymentMethod,
         bankName: sanitizeString(formData.payment.bankName),
         bankAccountName: sanitizeString(formData.payment.accountName),

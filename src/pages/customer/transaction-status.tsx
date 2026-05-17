@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
+import { toLabel } from "@/utils/toLabel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -335,7 +336,7 @@ export default function TransactionStatus() {
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <span className="font-mono text-xs text-orange-400 font-semibold">{t.id}</span>
-                          <span className={statusBadge(t.status)}>{t.status}</span>
+                          <span className={statusBadge(t.status)}>{toLabel(t.status)}</span>
                         </div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className={typeBadge(t.type)}>{typeShort(t.type)}</span>
@@ -372,8 +373,8 @@ export default function TransactionStatus() {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className="font-mono text-base font-bold text-orange-400">{selected.id}</span>
-                          <span className={statusBadge(selected.status)}>{selected.status}</span>
-                          <span className={typeBadge(selected.type)}>{selected.type}</span>
+                          <span className={statusBadge(selected.status)}>{toLabel(selected.status)}</span>
+                          <span className={typeBadge(selected.type)}>{toLabel(selected.type)}</span>
                         </div>
                         <p className="text-xs text-gray-400">
                           {new Date(selected.date).toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}

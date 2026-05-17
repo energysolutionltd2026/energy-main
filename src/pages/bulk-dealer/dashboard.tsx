@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import tower from "@/../public/tower.jpg";
 import { logTransaction } from "@/utils/logTransaction";
 import { startTracking } from "@/utils/onlineTracker";
+import { toLabel } from "@/utils/toLabel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Tank { id: string; label: string; level: number; max: number; }
@@ -820,7 +821,7 @@ function SectionReconciliation() {
                 <span className="text-gray-500">Variance</span>
                 <span className={`font-bold ${r.variance.startsWith("−") ? "text-red-400" : r.variance === "0 L" ? "text-gray-500" : "text-green-400"}`}>{r.variance}</span>
               </div>
-              <div className="pt-1"><span className={statusBadge(r.status)}>{r.status}</span></div>
+              <div className="pt-1"><span className={statusBadge(r.status)}>{toLabel(r.status)}</span></div>
             </div>
           </div>
         ))}
@@ -851,7 +852,7 @@ function SectionReconciliation() {
                     {r.variance}
                   </td>
                   <td className="px-3 py-2.5 text-gray-300 hidden sm:table-cell">{r.by}</td>
-                  <td className="px-3 py-2.5"><span className={statusBadge(r.status)}>{r.status}</span></td>
+                  <td className="px-3 py-2.5"><span className={statusBadge(r.status)}>{toLabel(r.status)}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -1056,7 +1057,7 @@ function SectionAllocations() {
                     <p className="font-mono text-xs text-green-400">{a.allocationId}</p>
                     <p className={`text-xs font-bold mt-0.5 ${col.text}`}>{a.product} — {a.depot}</p>
                   </div>
-                  <span className={allocationStatusBadge(a.status)}>{a.status}</span>
+                  <span className={allocationStatusBadge(a.status)}>{toLabel(a.status)}</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
@@ -1411,7 +1412,7 @@ function SectionBuyers() {
                   <td className="px-3 py-2.5 text-white font-semibold whitespace-nowrap">{b.total}</td>
                   <td className={`px-3 py-2.5 font-semibold whitespace-nowrap ${b.outstanding === "₦0" ? "text-gray-500" : "text-yellow-400"}`}>{b.outstanding}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${b.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{b.status}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${b.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{toLabel(b.status)}</span>
                   </td>
                   <td className="px-3 py-2.5">
                     <button onClick={() => setSelected(b)} className="text-xs text-green-400 hover:text-green-300 font-semibold transition">View</button>
@@ -1461,7 +1462,7 @@ function SectionBuyers() {
               </div>
               <div className="bg-gray-900/50 rounded-lg px-3 py-2.5">
                 <p className="text-xs text-gray-500 mb-1">Account Status</p>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${selected.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{selected.status}</span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${selected.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{toLabel(selected.status)}</span>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-gray-800 flex gap-3">
@@ -1607,7 +1608,7 @@ function SectionCustomerRequests() {
             <span className={`col-span-1 text-xs font-medium ${prc(req.product)}`}>{req.product}</span>
             <span className="col-span-2 text-gray-300 text-xs truncate">{req.requestedBy}</span>
             <span className="col-span-1 text-gray-300 text-xs">{req.quantity}</span>
-            <span className="col-span-1"><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(req.status)}`}>{req.status}</span></span>
+            <span className="col-span-1"><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(req.status)}`}>{toLabel(req.status)}</span></span>
             <span className="col-span-1"><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${pc(req.priority)}`}>{req.priority}</span></span>
             <div className="col-span-2 flex justify-end gap-1 flex-wrap">
               <button onClick={() => setSelected(req)} className="text-xs text-green-400 border border-green-500/40 px-2 py-1 rounded hover:text-green-300">View</button>
@@ -1635,7 +1636,7 @@ function SectionCustomerRequests() {
               ))}
               <div className="flex justify-between"><span className="text-gray-400">Product</span><span className={`font-medium ${prc(selected.product)}`}>{selected.product}</span></div>
               <div className="flex justify-between"><span className="text-gray-400">Priority</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${pc(selected.priority)}`}>{selected.priority}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Status</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(selected.status)}`}>{selected.status}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Status</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(selected.status)}`}>{toLabel(selected.status)}</span></div>
               {selected.notes && <div><span className="text-gray-400 block mb-1">Notes</span><p className="text-white bg-black/30 rounded p-2 text-xs">{selected.notes}</p></div>}
             </div>
             {(selected.status === "pending" || selected.status === "processing") && (

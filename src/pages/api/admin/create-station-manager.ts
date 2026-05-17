@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       passwordHash,
       depot: depot.trim(),
       assignedBy: user.email,
-      status: "Active",
+      status: "active",
     });
     return res.status(201).json(sm);
   } catch (err: any) {

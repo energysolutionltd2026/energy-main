@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
+import { toLabel } from "@/utils/toLabel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -214,7 +215,7 @@ function TrucksTable({ trucks }: { trucks: TruckRecord[] }) {
                 <td className="px-4 py-3 text-gray-300">{(t.productTypes || []).join(", ") || "—"}</td>
                 <td className="px-4 py-3 text-green-400 font-semibold">₦{Number(t.dailyRate || 0).toLocaleString()}</td>
                 <td className="px-4 py-3 text-gray-300">{t.driverName || "—"}</td>
-                <td className="px-4 py-3"><span className={statusBadge(t.status)}>{t.status}</span></td>
+                <td className="px-4 py-3"><span className={statusBadge(t.status)}>{toLabel(t.status)}</span></td>
               </tr>
             ))}
           </tbody>
@@ -259,7 +260,7 @@ function RentalsTable({ rentals }: { rentals: RentalRecord[] }) {
                 <td className="px-4 py-3 text-gray-300">{r.pickupDepot || "—"}</td>
                 <td className="px-4 py-3 text-gray-300">{r.totalDays ?? "—"}</td>
                 <td className="px-4 py-3 text-green-400 font-semibold">{formatNaira(r.totalAmount)}</td>
-                <td className="px-4 py-3"><span className={statusBadge(r.status)}>{r.status}</span></td>
+                <td className="px-4 py-3"><span className={statusBadge(r.status)}>{toLabel(r.status)}</span></td>
                 <td className="px-4 py-3">
                   <span className={statusBadge(r.paymentStatus === "paid" ? "completed" : r.paymentStatus === "pending" ? "pending_review" : r.paymentStatus)}>
                     {r.paymentStatus || "—"}

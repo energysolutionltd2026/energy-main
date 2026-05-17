@@ -350,7 +350,7 @@ export interface Transaction {
   type: TransactionType;
   user: string;
   userEmail?: string;
-  userRole: "Customer" | "Bulk Dealer";
+  userRole: "customer" | "bulk_dealer";
   product?: string;
   quantity?: string;
   totalAmount: number;
