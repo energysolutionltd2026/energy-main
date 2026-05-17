@@ -2,12 +2,12 @@
 // Fire-and-forget: callers do not need to await this.
 
 export type TransactionType =
-  | "Supply Request"
-  | "Truck Rental"
-  | "Union Dues"
-  | "Purchase Order"
-  | "Supply Fulfillment"
-  | "Daily Sales";
+  | "supply_request"
+  | "truck_rental"
+  | "union_dues"
+  | "purchase_order"
+  | "supply_fulfillment"
+  | "daily_sales";
 
 export interface PlatformTransaction {
   id: string;
@@ -15,11 +15,11 @@ export interface PlatformTransaction {
   date: string;
   type: TransactionType;
   user: string;
-  userRole: "Customer" | "Bulk Dealer";
+  userRole: "customer" | "bulk_dealer";
   product?: string;
   quantity?: string;
   totalAmount: string;
-  status: "Completed" | "Pending" | "Failed";
+  status: "completed" | "pending" | "failed";
   paymentMethod?: string;
   depot?: string;
   reference: string;

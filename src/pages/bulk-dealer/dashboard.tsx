@@ -26,11 +26,11 @@ const NAV_SECTIONS = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function statusBadge(s: string) {
   const map: Record<string, string> = {
-    Delivered:       "bg-green-500/20 text-green-400 border-green-500/40",
-    "In Transit":    "bg-purple-500/20 text-purple-400 border-purple-500/40",
-    Processing:      "bg-orange-500/20 text-orange-400 border-orange-500/40",
-    Pending:         "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
-    Cancelled:       "bg-red-500/20 text-red-400 border-red-500/40",
+    delivered:       "bg-green-500/20 text-green-400 border-green-500/40",
+    in_transit:      "bg-purple-500/20 text-purple-400 border-purple-500/40",
+    processing:      "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    pending:         "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+    cancelled:       "bg-red-500/20 text-red-400 border-red-500/40",
     Balanced:        "bg-green-500/20 text-green-400 border-green-500/40",
     OK:              "bg-green-500/20 text-green-400 border-green-500/40",
     "Minor Variance":"bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
@@ -397,7 +397,7 @@ function SectionStockValue() {
   useEffect(() => {
     if (!_dealerEmail) return;
     import("@/lib/db-client").then(({ api }) => {
-      api.transactions.list({ userRole: "Bulk Dealer", limit: 500 } as any).then((result) => {
+      api.transactions.list({ userRole: "bulk_dealer", limit: 500 } as any).then((result) => {
         if (!result?.data?.length) return;
         const txns = result.data
           .filter((t: any) => t.user === _dealerName || t.userEmail === _dealerEmail)
@@ -524,7 +524,7 @@ function SectionDailyDispense() {
   useEffect(() => {
     if (!_dealerEmail) return;
     import("@/lib/db-client").then(({ api }) => {
-      api.transactions.list({ type: "Supply Fulfillment", userRole: "Bulk Dealer", limit: 200 } as any).then((result) => {
+      api.transactions.list({ type: "supply_fulfillment", userRole: "bulk_dealer", limit: 200 } as any).then((result) => {
         if (!result?.data) return;
         const todayTxns = result.data.filter((t: any) =>
           (t.user === _dealerName || t.userEmail === _dealerEmail) &&
@@ -573,7 +573,7 @@ function SectionDailyDispense() {
                       <td className="px-3 py-2.5"><span className={`text-xs font-bold ${PRODUCT_COLORS[r.product]?.text}`}>{r.product}</span></td>
                       <td className="px-3 py-2.5 text-gray-300">{r.quantity}</td>
                       <td className="px-3 py-2.5 text-white font-semibold">{r.totalAmount}</td>
-                      <td className="px-3 py-2.5"><span className={statusBadge(r.status || "Pending")}>{r.status || "Pending"}</span></td>
+                      <td className="px-3 py-2.5"><span className={statusBadge(r.status || "pending")}>{r.status || "pending"}</span></td>
                     </tr>
                   ))
                 }
@@ -663,13 +663,13 @@ function SectionReconciliation() {
       .filter(p => p.amount > 0)
       .forEach(p => {
         logTransaction({
-          type: "Daily Sales",
+          type: "daily_sales",
           user: _dealerName || "Bulk Dealer",
-          userRole: "Bulk Dealer",
+          userRole: "bulk_dealer",
           product: p.key,
           quantity: `${p.amount.toLocaleString()} L`,
           totalAmount: `₦${(p.amount * (_platformPrices[p.key] ?? 0)).toLocaleString()}`,
-          status: "Completed",
+          status: "completed",
           depot: "",
           reference: `DAILY-${today}-${p.key}-${Date.now()}`,
         });
@@ -873,7 +873,7 @@ function SectionAllocations() {
   const [orderQty, setOrderQty]       = useState("");
   const [submitting, setSubmitting]   = useState(false);
 
-  const statuses = ["All", "Active", "Exhausted", "Expired", "Revoked"];
+  const statuses = ["All", "active", "exhausted", "expired", "revoked"];
   const counts: Record<string, number> = { All: allocations.length };
   statuses.slice(1).forEach((s) => { counts[s] = allocations.filter((a) => a.status === s).length; });
   const filtered = filter === "All" ? allocations : allocations.filter((a) => a.status === filter);
@@ -917,7 +917,7 @@ function SectionAllocations() {
         totalAmount: qty * price,
         paymentMethod: "bank_transfer",
         transactionRef: orderId,
-        haulageTruck: "Owned Truck",
+        haulageTruck: "owned_truck",
         ownerName: _dealerName,
         ownerEmail: _dealerEmail,
         ownerTelephone: "",
@@ -935,14 +935,14 @@ function SectionAllocations() {
       // Create Transaction and cross-link with PurchaseOrder
       const txnDoc = await api.transactions.create({
         txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-        type:          "Purchase Order",
+        type:          "purchase_order",
         user:          _dealerName || "Bulk Dealer",
         userEmail:     _dealerEmail,
-        userRole:      "Bulk Dealer",
+        userRole:      "bulk_dealer",
         product:       orderModal.product,
         quantity:      String(qty),
         totalAmount:   qty * price,
-        status:        "Pending",
+        status:        "pending",
         paymentMethod: "bank_transfer",
         depot:         orderModal.depot,
         reference:     orderId,
@@ -1047,7 +1047,7 @@ function SectionAllocations() {
             const total     = Number(a.volumeLitres ?? 0);
             const remaining = total - used;
             const pct       = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
-            const isActive  = a.status === "Active" && remaining > 0;
+            const isActive  = a.status === "active" && remaining > 0;
             const col       = PRODUCT_COLORS[a.product] ?? PRODUCT_COLORS["PMS"];
             return (
               <div key={a._id} className={`${card} flex flex-col gap-3`}>
@@ -1111,7 +1111,7 @@ function SectionSalesHistory() {
   useEffect(() => {
     if (!_dealerEmail) return;
     import("@/lib/db-client").then(({ api }) => {
-      api.transactions.list({ userRole: "Bulk Dealer", limit: 200 } as any).then((result) => {
+      api.transactions.list({ userRole: "bulk_dealer", limit: 200 } as any).then((result) => {
         if (!result?.data?.length) return;
         const dealerTxns = result.data.filter((t: any) => t.user === _dealerName || t.userEmail === _dealerEmail);
         setSales(dealerTxns.map((t: any) => ({
@@ -1344,7 +1344,7 @@ function SectionBuyers() {
           orders:      0,
           total:       "₦0",
           outstanding: "₦0",
-          status:      u.status === "suspended" ? "Inactive" : "Active",
+          status:      u.status === "suspended" ? "inactive" : "active",
         })));
       }).catch(() => null);
     });
@@ -1367,7 +1367,7 @@ function SectionBuyers() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Total Buyers",      value: buyers.length.toString(),                              color: "text-green-400"  },
-          { label: "Active",            value: buyers.filter((b) => b.status === "Active").length.toString(), color: "text-green-400" },
+          { label: "Active",            value: buyers.filter((b) => b.status === "active").length.toString(), color: "text-green-400" },
           { label: "Total Revenue",     value: "₦" + (totalRevenue / 1e9).toFixed(2) + "B",               color: "text-white"      },
           { label: "Outstanding",       value: "₦" + (totalOutstanding / 1e6).toFixed(1) + "M",           color: "text-yellow-400" },
         ].map((s) => (
@@ -1411,7 +1411,7 @@ function SectionBuyers() {
                   <td className="px-3 py-2.5 text-white font-semibold whitespace-nowrap">{b.total}</td>
                   <td className={`px-3 py-2.5 font-semibold whitespace-nowrap ${b.outstanding === "₦0" ? "text-gray-500" : "text-yellow-400"}`}>{b.outstanding}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${b.status === "Active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{b.status}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${b.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{b.status}</span>
                   </td>
                   <td className="px-3 py-2.5">
                     <button onClick={() => setSelected(b)} className="text-xs text-green-400 hover:text-green-300 font-semibold transition">View</button>
@@ -1461,7 +1461,7 @@ function SectionBuyers() {
               </div>
               <div className="bg-gray-900/50 rounded-lg px-3 py-2.5">
                 <p className="text-xs text-gray-500 mb-1">Account Status</p>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${selected.status === "Active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{selected.status}</span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${selected.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{selected.status}</span>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-gray-800 flex gap-3">
@@ -1496,7 +1496,7 @@ interface SupplyRequest {
   notes: string;
   requestedBy: string;
   requestedAt: string;
-  status: "Pending" | "Processing" | "Delivered" | "Cancelled";
+  status: "pending" | "processing" | "delivered" | "cancelled";
 }
 
 function pushCustomerNotification(notif: { type: string; title: string; message: string; href: string }) {
@@ -1516,13 +1516,13 @@ function SectionCustomerRequests() {
       api.supplyRequests.list({ limit: 200 } as any).then((result) => {
         if (result?.data?.length) { setRequests(result.data as any); return; }
         setRequests([
-        { id: "SUP-REQ-001", stationName: "Sunrise Filling Station - Lagos", product: "PMS", depot: "Lagos Main Depot", quantity: "33,000 L", priority: "urgent", deliveryDate: "2026-03-30", notes: "Running low urgently", requestedBy: "Jane Customer", requestedAt: "2026-03-27T09:00:00Z", status: "Processing" },
-        { id: "SUP-REQ-002", stationName: "Sunrise Filling Station - Lekki", product: "AGO", depot: "Port Harcourt Terminal", quantity: "25,000 L", priority: "normal", deliveryDate: "2026-04-02", notes: "", requestedBy: "Jane Customer", requestedAt: "2026-03-26T14:30:00Z", status: "Pending" },
-        { id: "SUP-REQ-003", stationName: "Okafor Energy - Onitsha", product: "PMS", depot: "Enugu Fuel Depot", quantity: "45,000 L", priority: "emergency", deliveryDate: "2026-03-29", notes: "Critical - station down to 5%", requestedBy: "Emeka Okafor", requestedAt: "2026-03-28T07:00:00Z", status: "Pending" },
-        { id: "SUP-REQ-004", stationName: "Bello Filling Station - Abuja", product: "ATK", depot: "Abuja Central Terminal", quantity: "15,000 L", priority: "normal", deliveryDate: "2026-04-05", notes: "", requestedBy: "Fatima Bello", requestedAt: "2026-03-25T11:00:00Z", status: "Delivered" },
+        { id: "SUP-REQ-001", stationName: "Sunrise Filling Station - Lagos", product: "PMS", depot: "Lagos Main Depot", quantity: "33,000 L", priority: "urgent", deliveryDate: "2026-03-30", notes: "Running low urgently", requestedBy: "Jane Customer", requestedAt: "2026-03-27T09:00:00Z", status: "processing" },
+        { id: "SUP-REQ-002", stationName: "Sunrise Filling Station - Lekki", product: "AGO", depot: "Port Harcourt Terminal", quantity: "25,000 L", priority: "normal", deliveryDate: "2026-04-02", notes: "", requestedBy: "Jane Customer", requestedAt: "2026-03-26T14:30:00Z", status: "pending" },
+        { id: "SUP-REQ-003", stationName: "Okafor Energy - Onitsha", product: "PMS", depot: "Enugu Fuel Depot", quantity: "45,000 L", priority: "emergency", deliveryDate: "2026-03-29", notes: "Critical - station down to 5%", requestedBy: "Emeka Okafor", requestedAt: "2026-03-28T07:00:00Z", status: "pending" },
+        { id: "SUP-REQ-004", stationName: "Bello Filling Station - Abuja", product: "ATK", depot: "Abuja Central Terminal", quantity: "15,000 L", priority: "normal", deliveryDate: "2026-04-05", notes: "", requestedBy: "Fatima Bello", requestedAt: "2026-03-25T11:00:00Z", status: "delivered" },
         // Walk-in / phone orders not on platform
-        { id: "SUP-REQ-EXT-001", stationName: "Ogunleye Filling Station - Ibadan", product: "PMS", depot: "Ibadan Storage Terminal", quantity: "20,000 L", priority: "normal", deliveryDate: "2026-04-06", notes: "Walk-in order, not a platform user", requestedBy: "Tunde Ogunleye (External)", requestedAt: "2026-03-28T10:00:00Z", status: "Pending" },
-        { id: "SUP-REQ-EXT-002", stationName: "Eze Brothers Gas - Enugu", product: "AGO", depot: "Enugu Fuel Depot", quantity: "18,000 L", priority: "urgent", deliveryDate: "2026-03-31", notes: "Phone order — pay on delivery", requestedBy: "Chukwu Eze (External)", requestedAt: "2026-03-27T14:00:00Z", status: "Pending" },
+        { id: "SUP-REQ-EXT-001", stationName: "Ogunleye Filling Station - Ibadan", product: "PMS", depot: "Ibadan Storage Terminal", quantity: "20,000 L", priority: "normal", deliveryDate: "2026-04-06", notes: "Walk-in order, not a platform user", requestedBy: "Tunde Ogunleye (External)", requestedAt: "2026-03-28T10:00:00Z", status: "pending" },
+        { id: "SUP-REQ-EXT-002", stationName: "Eze Brothers Gas - Enugu", product: "AGO", depot: "Enugu Fuel Depot", quantity: "18,000 L", priority: "urgent", deliveryDate: "2026-03-31", notes: "Phone order — pay on delivery", requestedBy: "Chukwu Eze (External)", requestedAt: "2026-03-27T14:00:00Z", status: "pending" },
         ]);
       }).catch(() => null);
     });
@@ -1541,31 +1541,31 @@ function SectionCustomerRequests() {
     }
     // Notify customer if they are a platform user (non-external)
     if (req && !req.requestedBy.includes("External")) {
-      if (status === "Processing") pushCustomerNotification({ type: "supply", title: "Supply Request Processing", message: `Your request (${id}) for ${req.quantity} of ${req.product} is now being processed by your bulk dealer.`, href: "/customer" });
-      if (status === "Delivered") pushCustomerNotification({ type: "supply", title: "Supply Delivered", message: `Your supply of ${req.quantity} ${req.product} to ${req.stationName} has been delivered.`, href: "/customer" });
-      if (status === "Cancelled") pushCustomerNotification({ type: "supply", title: "Supply Request Cancelled", message: `Your supply request (${id}) for ${req.quantity} of ${req.product} has been cancelled.`, href: "/customer" });
+      if (status === "processing") pushCustomerNotification({ type: "supply", title: "Supply Request Processing", message: `Your request (${id}) for ${req.quantity} of ${req.product} is now being processed by your bulk dealer.`, href: "/customer" });
+      if (status === "delivered") pushCustomerNotification({ type: "supply", title: "Supply Delivered", message: `Your supply of ${req.quantity} ${req.product} to ${req.stationName} has been delivered.`, href: "/customer" });
+      if (status === "cancelled") pushCustomerNotification({ type: "supply", title: "Supply Request Cancelled", message: `Your supply request (${id}) for ${req.quantity} of ${req.product} has been cancelled.`, href: "/customer" });
     }
     // Deduct from dealer stock and log fulfillment
-    if (req && status === "Delivered") {
+    if (req && status === "delivered") {
       updateDealerStock(req.product, -parseLiters(req.quantity));
-      logTransaction({ type: "Supply Fulfillment", user: _dealerName || "Bulk Dealer", userRole: "Bulk Dealer", product: req.product, quantity: req.quantity, totalAmount: "0", status: "Completed", depot: req.depot, reference: req.id });
+      logTransaction({ type: "supply_fulfillment", user: _dealerName || "Bulk Dealer", userRole: "bulk_dealer", product: req.product, quantity: req.quantity, totalAmount: "0", status: "completed", depot: req.depot, reference: req.id });
     }
     setToast(`Request ${id} → ${status}`);
     if (selected?.id === id) setSelected(p => p ? { ...p, status } : null);
   };
 
   const pc = (p: string) => p === "emergency" ? "bg-red-500/20 text-red-400 border-red-500/40" : p === "urgent" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40";
-  const sc = (s: string) => s === "Delivered" ? "bg-green-500/20 text-green-400 border-green-500/40" : s === "Processing" ? "bg-blue-500/20 text-blue-400 border-blue-500/40" : s === "Pending" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40" : "bg-red-500/20 text-red-400 border-red-500/40";
+  const sc = (s: string) => s === "delivered" ? "bg-green-500/20 text-green-400 border-green-500/40" : s === "processing" ? "bg-blue-500/20 text-blue-400 border-blue-500/40" : s === "pending" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40" : "bg-red-500/20 text-red-400 border-red-500/40";
   const prc = (p: string) => p === "PMS" ? "text-red-400" : p === "AGO" ? "text-blue-400" : "text-orange-400";
 
   const counts: Record<string, number> = { All: requests.length };
-  ["Pending", "Processing", "Delivered", "Cancelled"].forEach(s => { counts[s] = requests.filter(r => r.status === s).length; });
+  ["pending", "processing", "delivered", "cancelled"].forEach(s => { counts[s] = requests.filter(r => r.status === s).length; });
   const filtered = filter === "All" ? requests : requests.filter(r => r.status === filter);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
-        {[["Total", requests.length, "text-white"], ["Pending", counts.Pending, "text-yellow-400"], ["Processing", counts.Processing, "text-blue-400"], ["Delivered", counts.Delivered, "text-green-400"]].map(([l, v, c]) => (
+        {[["Total", requests.length, "text-white"], ["Pending", counts.pending, "text-yellow-400"], ["Processing", counts.processing, "text-blue-400"], ["Delivered", counts.delivered, "text-green-400"]].map(([l, v, c]) => (
           <div key={String(l)} className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-4">
             <p className="text-gray-400 text-xs mb-1">{l}</p>
             <p className={`text-2xl font-bold ${c}`}>{v}</p>
@@ -1574,7 +1574,7 @@ function SectionCustomerRequests() {
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        {["All", "Pending", "Processing", "Delivered", "Cancelled"].map(f => (
+        {["All", "pending", "processing", "delivered", "cancelled"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${filter === f ? "bg-green-600 border-green-500 text-white" : "bg-black/40 border-gray-700 text-gray-300 hover:border-green-500"}`}>
             {f} ({f === "All" ? requests.length : counts[f] ?? 0})
@@ -1611,9 +1611,9 @@ function SectionCustomerRequests() {
             <span className="col-span-1"><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${pc(req.priority)}`}>{req.priority}</span></span>
             <div className="col-span-2 flex justify-end gap-1 flex-wrap">
               <button onClick={() => setSelected(req)} className="text-xs text-green-400 border border-green-500/40 px-2 py-1 rounded hover:text-green-300">View</button>
-              {req.status === "Pending" && <button onClick={() => update(req.id, "Processing")} className="text-xs text-blue-400 border border-blue-500/40 px-2 py-1 rounded hover:text-blue-300">Accept</button>}
+              {req.status === "pending" && <button onClick={() => update(req.id, "processing")} className="text-xs text-blue-400 border border-blue-500/40 px-2 py-1 rounded hover:text-blue-300">Accept</button>}
               {/* Fulfill button hidden */}
-              {(req.status === "Pending" || req.status === "Processing") && <button onClick={() => update(req.id, "Cancelled")} className="text-xs text-red-400 border border-red-500/40 px-2 py-1 rounded hover:text-red-300">Decline</button>}
+              {(req.status === "pending" || req.status === "processing") && <button onClick={() => update(req.id, "cancelled")} className="text-xs text-red-400 border border-red-500/40 px-2 py-1 rounded hover:text-red-300">Decline</button>}
             </div>
           </div>
         ))}
@@ -1638,11 +1638,11 @@ function SectionCustomerRequests() {
               <div className="flex justify-between"><span className="text-gray-400">Status</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(selected.status)}`}>{selected.status}</span></div>
               {selected.notes && <div><span className="text-gray-400 block mb-1">Notes</span><p className="text-white bg-black/30 rounded p-2 text-xs">{selected.notes}</p></div>}
             </div>
-            {(selected.status === "Pending" || selected.status === "Processing") && (
+            {(selected.status === "pending" || selected.status === "processing") && (
               <div className="flex justify-end gap-2">
-                {selected.status === "Pending" && <button onClick={() => update(selected.id, "Processing")} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">Accept Order</button>}
+                {selected.status === "pending" && <button onClick={() => update(selected.id, "processing")} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">Accept Order</button>}
                 {/* Mark Fulfilled button hidden */}
-                <button onClick={() => update(selected.id, "Cancelled")} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg">Decline</button>
+                <button onClick={() => update(selected.id, "cancelled")} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg">Decline</button>
               </div>
             )}
           </div>

@@ -758,7 +758,7 @@ export default function LoadPage() {
         compartments:      compartmentValues,
         totalLitresLoaded: totalLitres,
         remarks:           sanitizedRemarks || undefined,
-        status:            "Completed",
+        status:            "completed",
       } as any);
     } catch (err) {
       console.error("[load] failed to save loading record:", err);

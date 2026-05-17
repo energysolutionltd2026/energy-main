@@ -20,7 +20,7 @@ interface TruckRecord {
   productTypes: string[];
   dailyRate: number;
   driverName: string;
-  status: "Pending Review" | "Approved" | "Rejected";
+  status: "pending_review" | "approved" | "rejected";
   submittedAt: string;
 }
 
@@ -43,14 +43,14 @@ interface RentalRecord {
 
 function statusBadge(s: string) {
   const map: Record<string, string> = {
-    Approved:      "bg-green-500/20 text-green-400 border-green-500/40",
-    "Pending Review": "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
-    Rejected:      "bg-red-500/20 text-red-400 border-red-500/40",
-    Completed:     "bg-green-500/20 text-green-400 border-green-500/40",
-    Active:        "bg-blue-500/20 text-blue-400 border-blue-500/40",
-    Requested:     "bg-purple-500/20 text-purple-400 border-purple-500/40",
-    Confirmed:     "bg-indigo-500/20 text-indigo-400 border-indigo-500/40",
-    Cancelled:     "bg-red-500/20 text-red-400 border-red-500/40",
+    approved:        "bg-green-500/20 text-green-400 border-green-500/40",
+    pending_review:  "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+    rejected:        "bg-red-500/20 text-red-400 border-red-500/40",
+    completed:       "bg-green-500/20 text-green-400 border-green-500/40",
+    active:          "bg-blue-500/20 text-blue-400 border-blue-500/40",
+    requested:       "bg-purple-500/20 text-purple-400 border-purple-500/40",
+    confirmed:       "bg-indigo-500/20 text-indigo-400 border-indigo-500/40",
+    cancelled:       "bg-red-500/20 text-red-400 border-red-500/40",
   };
   return (map[s] ?? "bg-gray-500/20 text-gray-400 border-gray-500/40") +
     " px-2 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap";
@@ -100,10 +100,10 @@ export default function TruckOwnerDashboard() {
       .catch(() => { router.replace("/auth/login"); });
   }, [router]);
 
-  const approvedTrucks  = trucks.filter(t => t.status === "Approved").length;
-  const activeRentals   = rentals.filter(r => r.status === "Active" || r.status === "Confirmed" || r.status === "Requested").length;
-  const totalEarnings   = rentals.filter(r => r.status === "Completed").reduce((s, r) => s + (r.totalAmount || 0), 0);
-  const pendingRentals  = rentals.filter(r => r.status === "Requested").length;
+  const approvedTrucks  = trucks.filter(t => t.status === "approved").length;
+  const activeRentals   = rentals.filter(r => r.status === "active" || r.status === "confirmed" || r.status === "requested").length;
+  const totalEarnings   = rentals.filter(r => r.status === "completed").reduce((s, r) => s + (r.totalAmount || 0), 0);
+  const pendingRentals  = rentals.filter(r => r.status === "requested").length;
 
   return (
     <div
@@ -261,7 +261,7 @@ function RentalsTable({ rentals }: { rentals: RentalRecord[] }) {
                 <td className="px-4 py-3 text-green-400 font-semibold">{formatNaira(r.totalAmount)}</td>
                 <td className="px-4 py-3"><span className={statusBadge(r.status)}>{r.status}</span></td>
                 <td className="px-4 py-3">
-                  <span className={statusBadge(r.paymentStatus === "Paid" ? "Completed" : r.paymentStatus === "Pending" ? "Pending Review" : r.paymentStatus)}>
+                  <span className={statusBadge(r.paymentStatus === "paid" ? "completed" : r.paymentStatus === "pending" ? "pending_review" : r.paymentStatus)}>
                     {r.paymentStatus || "—"}
                   </span>
                 </td>

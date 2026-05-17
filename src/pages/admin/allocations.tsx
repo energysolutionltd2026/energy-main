@@ -17,7 +17,7 @@ interface Alloc {
   depot: string;
   validFrom: string;
   validTo: string;
-  status: "Active" | "Exhausted" | "Expired" | "Revoked";
+  status: "active" | "exhausted" | "expired" | "revoked";
   notes?: string;
   createdAt: string;
 }
@@ -33,10 +33,10 @@ const PRODUCT_COLOR: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  Active:    "bg-green-500/20 text-green-400 border-green-500/40",
-  Exhausted: "bg-orange-500/20 text-orange-400 border-orange-500/40",
-  Expired:   "bg-gray-500/20 text-gray-400 border-gray-500/40",
-  Revoked:   "bg-red-500/20 text-red-400 border-red-500/40",
+  active:    "bg-green-500/20 text-green-400 border-green-500/40",
+  exhausted: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+  expired:   "bg-gray-500/20 text-gray-400 border-gray-500/40",
+  revoked:   "bg-red-500/20 text-red-400 border-red-500/40",
 };
 
 const inputCls  = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
@@ -116,7 +116,7 @@ function CreateModal({
       validTo:      form.validTo,
       notes:        form.notes || undefined,
       createdBy:    adminEmail,
-      status:       "Active",
+      status:       "active",
     } as any);
 
     if (!result) { setError("Failed to create allocation. Try again."); setSaving(false); return; }
@@ -224,8 +224,8 @@ function DetailModal({ alloc, onUpdate, onClose }: {
 
   const revoke = async () => {
     const { api } = await import("@/lib/db-client");
-    await api.allocations.update(alloc._id, { status: "Revoked" } as any);
-    onUpdate(alloc._id, { status: "Revoked" });
+    await api.allocations.update(alloc._id, { status: "revoked" } as any);
+    onUpdate(alloc._id, { status: "revoked" });
     onClose();
   };
 
@@ -280,7 +280,7 @@ function DetailModal({ alloc, onUpdate, onClose }: {
         </div>
 
         <div className="px-6 py-4 border-t border-gray-800 flex justify-between gap-3">
-          {alloc.status !== "Revoked" && (
+          {alloc.status !== "revoked" && (
             <button onClick={revoke}
               className={`${btn} bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-400 text-xs`}>
               Revoke
@@ -349,10 +349,10 @@ export default function AdminAllocations() {
 
   const counts: Record<string, number> = {
     All: allocs.length,
-    Active:    allocs.filter(a => a.status === "Active").length,
-    Exhausted: allocs.filter(a => a.status === "Exhausted").length,
-    Expired:   allocs.filter(a => a.status === "Expired").length,
-    Revoked:   allocs.filter(a => a.status === "Revoked").length,
+    Active:    allocs.filter(a => a.status === "active").length,
+    Exhausted: allocs.filter(a => a.status === "exhausted").length,
+    Expired:   allocs.filter(a => a.status === "expired").length,
+    Revoked:   allocs.filter(a => a.status === "revoked").length,
   };
 
   const displayed = allocs
@@ -436,10 +436,10 @@ export default function AdminAllocations() {
         {/* Filters + search */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <div className="flex gap-1 bg-black/30 backdrop-blur-sm border border-gray-800 rounded-xl p-1 overflow-x-auto">
-            {(["All", "Active", "Exhausted", "Expired", "Revoked"] as const).map(s => (
+            {(["All", "active", "exhausted", "expired", "revoked"] as const).map(s => (
               <button key={s} onClick={() => setFilter(s)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${filter === s ? "bg-orange-500 text-white" : "text-gray-400 hover:text-white"}`}>
-                {s} {counts[s] !== undefined ? `(${counts[s]})` : ""}
+                {s.charAt(0).toUpperCase() + s.slice(1)} {counts[s.charAt(0).toUpperCase() + s.slice(1)] !== undefined ? `(${counts[s.charAt(0).toUpperCase() + s.slice(1)]})` : ""}
               </button>
             ))}
           </div>

@@ -252,8 +252,8 @@ const OwnerStage = ({ data, onChange }: { data: OwnerInfo; onChange: (d: Partial
 );
 
 const PurchaseStage = ({ data, onChange }: { data: PurchaseInfo; onChange: (d: Partial<PurchaseInfo>) => void }) => {
-  const isRentTruck = data.haulageTruck === "Rent Truck";
-  const isOwnedTruck = data.haulageTruck === "Owned Truck";
+  const isRentTruck = data.haulageTruck === "rent_truck";
+  const isOwnedTruck = data.haulageTruck === "owned_truck";
   const updateOwnedTruck = (d: Partial<OwnedTruckInfo>) => onChange({ ownedTruck: { ...data.ownedTruck, ...d } });
   return (
     <div className="space-y-4">
@@ -282,8 +282,8 @@ const PurchaseStage = ({ data, onChange }: { data: PurchaseInfo; onChange: (d: P
         <Field label="Haulage Truck">
           <select className={selectClass} value={data.haulageTruck} onChange={(e) => onChange({ haulageTruck: e.target.value, selectedRentTruck: "" })}>
             <option value="">select truck</option>
-            <option value="Owned Truck">Own Truck</option>
-            <option value="Rent Truck">Rent Truck</option>
+            <option value="owned_truck">Own Truck</option>
+            <option value="rent_truck">Rent Truck</option>
           </select>
         </Field>
 
@@ -565,7 +565,7 @@ export default function BuyNow() {
         .filter(Boolean).map(Number);
       const poDoc = await api.purchaseOrders.create({
         orderId: id,
-        status: "Pending",
+        status: "pending",
         loadingDepot: formData.company.loadingDepot,
         companyName: formData.company.name,
         dprRegNo: formData.company.dprRegNo,
@@ -582,8 +582,8 @@ export default function BuyNow() {
         ownerIdNumber: formData.owner.idNumber,
         productType: p.productType.toUpperCase(),
         productQuantity: Number(p.productQuantity),
-        haulageTruck: p.haulageTruck as "Owned Truck" | "Rent Truck",
-        ...(p.haulageTruck === "Owned Truck" && {
+        haulageTruck: p.haulageTruck as "owned_truck" | "rent_truck",
+        ...(p.haulageTruck === "owned_truck" && {
           vehicleType: p.ownedTruck.vehicleType || undefined,
           tankCapacity: p.ownedTruck.tankCapacity ? Number(p.ownedTruck.tankCapacity) : undefined,
           truckRegNumber: p.ownedTruck.truckRegNumber || undefined,
@@ -604,14 +604,14 @@ export default function BuyNow() {
       // Create Transaction and cross-link with PurchaseOrder
       const txnDoc = await api.transactions.create({
         txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-        type:          "Purchase Order",
+        type:          "purchase_order",
         user:          formData.owner.name || formData.company.name,
         userEmail:     formData.owner.email || formData.company.email,
-        userRole:      "Customer",
+        userRole:      "customer",
         product:       p.productType.toUpperCase(),
         quantity:      String(p.productQuantity),
         totalAmount:   computeOrderTotal(),
-        status:        paystackRef ? "Completed" : "Pending",
+        status:        paystackRef ? "completed" : "pending",
         paymentMethod: mapPaymentMethod(formData.payment.paymentMethod) as any,
         depot:         formData.company.loadingDepot,
         reference:     id,
@@ -689,7 +689,7 @@ export default function BuyNow() {
       if (!p.productType)     return "Please select a product type.";
       if (!p.productQuantity) return "Please select a product quantity.";
       if (!p.haulageTruck)    return "Please select a haulage option.";
-      if (p.haulageTruck === "Owned Truck") {
+      if (p.haulageTruck === "owned_truck") {
         if (!p.driverName.trim())   return "Driver name is required.";
         if (!p.driverIdType)        return "Please select driver ID type.";
         if (!p.driverIdNumber.trim()) return "Driver ID number is required.";

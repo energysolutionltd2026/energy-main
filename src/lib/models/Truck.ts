@@ -61,8 +61,8 @@ const TruckSchema = new Schema(
     // ── Review ────────────────────────────────────────────────────────────────
     status: {
       type: String,
-      enum: ["Pending Review", "Approved", "Rejected"],
-      default: "Pending Review",
+      enum: ["pending_review", "approved", "rejected"],
+      default: "pending_review",
     },
     reviewNote: { type: String },
 

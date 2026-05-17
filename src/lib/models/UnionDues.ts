@@ -56,8 +56,8 @@ const UnionDuesSchema = new Schema(
     periodEnd:     { type: Date },
     status: {
       type: String,
-      enum: ["Pending", "Paid", "Overdue", "Waived"],
-      default: "Pending",
+      enum: ["pending", "paid", "overdue", "waived"],
+      default: "pending",
     },
     transactionId: { type: Schema.Types.ObjectId },                    // FK → transactions._id
     paidAt:        { type: Date },

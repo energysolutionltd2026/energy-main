@@ -36,8 +36,8 @@ const LoadingRecordSchema = new Schema(
     remarks:         { type: String },
     status: {
       type: String,
-      enum: ["Pending", "In Progress", "Completed", "Cancelled"],
-      default: "Pending",
+      enum: ["pending", "in_progress", "completed", "cancelled"],
+      default: "pending",
     },
   },
   { timestamps: true }

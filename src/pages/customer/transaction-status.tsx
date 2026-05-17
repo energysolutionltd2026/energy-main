@@ -7,8 +7,8 @@ import tower from "@/../public/tower.jpg";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type TxnType   = "Fuel Purchase" | "Truck Rental" | "Union Dues";
-type TxnStatus = "Completed" | "Pending" | "Failed";
+type TxnType   = "purchase_order" | "truck_rental" | "union_dues";
+type TxnStatus = "completed" | "pending" | "failed";
 
 interface Transaction {
   id: string;
@@ -46,11 +46,11 @@ function buildTimeline(txn: Transaction): TimelineStep[] {
     return dt.toLocaleString("en-NG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   };
 
-  const isFailed    = txn.status === "Failed";
-  const isCompleted = txn.status === "Completed";
-  const isPending   = txn.status === "Pending";
+  const isFailed    = txn.status === "failed";
+  const isCompleted = txn.status === "completed";
+  const isPending   = txn.status === "pending";
 
-  if (txn.type === "Fuel Purchase") {
+  if (txn.type === "purchase_order") {
     const steps = [
       { label: "Order Placed",        description: "Your purchase order has been submitted to e-Nergy."    },
       { label: "Payment Verified",    description: "Payment confirmed and matched against your account."   },
@@ -64,7 +64,7 @@ function buildTimeline(txn: Transaction): TimelineStep[] {
     /* pending */    return steps.map((s, i) => ({ ...s, time: i <= 2 ? d(i === 0 ? 0 : 0) : null, state: (i < 2 ? "done" : i === 2 ? "active" : "pending") as TimelineStep["state"] }));
   }
 
-  if (txn.type === "Truck Rental") {
+  if (txn.type === "truck_rental") {
     const steps = [
       { label: "Booking Submitted",  description: "Truck rental booking received by e-Nergy."                   },
       { label: "Payment Verified",   description: "Rental payment confirmed and cleared."                       },
@@ -119,13 +119,13 @@ export default function TransactionStatus() {
             const apiTxns: Transaction[] = (result?.data ?? []).map((t: any) => ({
               id:            t.reference || t._id,
               date:          t.createdAt ? t.createdAt.slice(0, 10) : "",
-              type:          t.type === "union_dues" ? "Union Dues" : t.type === "truck_rental" ? "Truck Rental" : "Fuel Purchase",
+              type:          (t.type === "union_dues" ? "union_dues" : t.type === "truck_rental" ? "truck_rental" : "purchase_order") as TxnType,
               depot:         t.depot || "—",
               product:       t.product || "—",
               quantity:      t.quantity ? `${Number(t.quantity).toLocaleString()}` : "—",
               unitPrice:     t.unitPrice ? `₦${Number(t.unitPrice).toLocaleString()}` : "—",
               totalAmount:   `₦${Number(t.totalAmount || 0).toLocaleString()}`,
-              status:        t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
+              status:        (t.status === "completed" ? "completed" : t.status === "failed" ? "failed" : "pending") as TxnStatus,
               paymentMethod: t.paymentMethod || "—",
               truckNumber:   t.truckNumber || "—",
             }));
@@ -159,23 +159,23 @@ export default function TransactionStatus() {
   // ── Badge helpers ──
   const statusBadge = (s: TxnStatus) => {
     const m: Record<TxnStatus, string> = {
-      Completed: "bg-green-500/20 text-green-400 border-green-500/50",
-      Pending:   "bg-yellow-500/20 text-yellow-400 border-yellow-500/50",
-      Failed:    "bg-red-500/20 text-red-400 border-red-500/50",
+      completed: "bg-green-500/20 text-green-400 border-green-500/50",
+      pending:   "bg-yellow-500/20 text-yellow-400 border-yellow-500/50",
+      failed:    "bg-red-500/20 text-red-400 border-red-500/50",
     };
     return `${m[s]} px-2 py-0.5 rounded-full text-xs font-bold border`;
   };
 
   const typeBadge = (t: TxnType) => {
     const m: Record<TxnType, string> = {
-      "Fuel Purchase": "bg-blue-500/20 text-blue-400 border-blue-500/40",
-      "Truck Rental":  "bg-purple-500/20 text-purple-400 border-purple-500/40",
-      "Union Dues":    "bg-amber-500/20 text-amber-400 border-amber-500/40",
+      purchase_order: "bg-blue-500/20 text-blue-400 border-blue-500/40",
+      truck_rental:   "bg-purple-500/20 text-purple-400 border-purple-500/40",
+      union_dues:     "bg-amber-500/20 text-amber-400 border-amber-500/40",
     };
     return `${m[t]} px-2 py-0.5 rounded-full text-xs font-bold border`;
   };
 
-  const typeShort = (t: TxnType) => ({ "Fuel Purchase": "Fuel", "Truck Rental": "Truck", "Union Dues": "Dues" }[t]);
+  const typeShort = (t: TxnType) => ({ purchase_order: "Fuel", truck_rental: "Truck", union_dues: "Dues" }[t]);
 
   // ── Step icon ──
   const stepIcon = (state: TimelineStep["state"]) => {
@@ -298,9 +298,9 @@ export default function TransactionStatus() {
                     className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500 transition text-xs"
                   >
                     <option value="All">All Types</option>
-                    <option value="Fuel Purchase">Fuel Purchase</option>
-                    <option value="Truck Rental">Truck Rental</option>
-                    <option value="Union Dues">Union Dues</option>
+                    <option value="purchase_order">Fuel Purchase</option>
+                    <option value="truck_rental">Truck Rental</option>
+                    <option value="union_dues">Union Dues</option>
                   </select>
                   <select
                     value={filterStatus}
@@ -308,9 +308,9 @@ export default function TransactionStatus() {
                     className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500 transition text-xs"
                   >
                     <option value="All">All Status</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Failed">Failed</option>
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
                   </select>
                 </div>
                 <p className="text-xs text-gray-500">{filtered.length} transaction{filtered.length !== 1 ? "s" : ""}</p>
@@ -482,7 +482,7 @@ export default function TransactionStatus() {
                       Contact Support
                     </button>
 
-                    {selected.status === "Failed" && (
+                    {selected.status === "failed" && (
                       <button
                         onClick={() => { setDisputeMsg(""); setDisputeSent(false); setDisputeOpen(true); }}
                         className="flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 hover:text-red-300 text-xs font-semibold rounded-xl transition"
@@ -494,7 +494,7 @@ export default function TransactionStatus() {
                       </button>
                     )}
 
-                    {selected.status === "Pending" && (
+                    {selected.status === "pending" && (
                       <button className="flex items-center justify-center gap-2 px-4 py-3 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:text-yellow-300 text-xs font-semibold rounded-xl transition">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -503,7 +503,7 @@ export default function TransactionStatus() {
                       </button>
                     )}
 
-                    {selected.status === "Completed" && (
+                    {selected.status === "completed" && (
                       <button className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500/10 hover:bg-green-500/20 border border-green-500/40 text-green-400 hover:text-green-300 text-xs font-semibold rounded-xl transition">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

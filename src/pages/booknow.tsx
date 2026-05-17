@@ -420,7 +420,7 @@ const BookingStage = ({
           onChange={(e) => onChange({ haulageTruck: e.target.value })}
         >
           <option value="">select truck arrangement</option>
-          <option value="Owned Truck">Owned Truck</option>
+          <option value="owned_truck">Owned Truck</option>
           <option value="Company Provided">Company Provided Truck</option>
         </select>
       </Field>
@@ -878,7 +878,7 @@ export default function BookNow() {
         ownerIdNumber: sanitizeString(formData.owner.idNumber),
         productType: formData.booking.productType.toUpperCase(),
         productQuantity: parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
-        haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "Rent Truck" : "Owned Truck") as "Owned Truck" | "Rent Truck",
+        haulageTruck: (formData.booking.haulageTruck === "Rent Truck" ? "rent_truck" : "owned_truck") as "owned_truck" | "rent_truck",
         paymentMethod: pmMethod as import("@/lib/db-types").PaymentMethod,
         bankName: sanitizeString(formData.payment.bankName),
         bankAccountName: sanitizeString(formData.payment.accountName),
@@ -890,14 +890,14 @@ export default function BookNow() {
       // this record and updates it instead of creating a duplicate
       const txnDoc = await api.transactions.create({
         txnId:         `TXN-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-        type:          "Purchase Order",
+        type:          "purchase_order",
         user:          sanitizeString(formData.owner.name || formData.company.name),
         userEmail:     sanitizeString(formData.owner.email || formData.company.email),
-        userRole:      "Bulk Dealer",
+        userRole:      "bulk_dealer",
         product:       formData.booking.productType.toUpperCase(),
         quantity:      sanitizeString(formData.booking.productQuantity),
         totalAmount:   computeBookingTotal(),
-        status:        paystackRef ? "Completed" : "Pending",
+        status:        paystackRef ? "completed" : "pending",
         paymentMethod: pmMethod,
         depot:         sanitizeString(formData.company.loadingDepot),
         reference:     paystackRef || orderId,

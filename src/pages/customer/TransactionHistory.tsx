@@ -5,7 +5,7 @@ import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
 import tower from "@/../public/tower.jpg";
 
-type TransactionType = "Fuel Purchase" | "Truck Rental" | "Union Dues";
+type TransactionType = "purchase_order" | "truck_rental" | "union_dues";
 
 interface InvoiceItem {
   description: string;
@@ -35,7 +35,7 @@ interface Transaction {
   quantity: string;     // litres | "X days" | "—"
   unitPrice: string;    // per litre | daily rate | "—"
   totalAmount: string;
-  status: "Completed" | "Pending" | "Failed";
+  status: "completed" | "pending" | "failed";
   paymentMethod: string;
   truckNumber: string;  // reg number | truck ID | "—"
   invoice?: InvoiceData;
@@ -47,9 +47,9 @@ interface Transaction {
 function generateInvoice(txn: Transaction, user: { name: string; email: string }): InvoiceData {
   let items: InvoiceItem[];
 
-  if (txn.type === "Fuel Purchase") {
+  if (txn.type === "purchase_order") {
     items = [{ description: `${txn.product} — Petroleum Product`, qty: `${txn.quantity} L`, unitPrice: txn.unitPrice, amount: txn.totalAmount }];
-  } else if (txn.type === "Truck Rental") {
+  } else if (txn.type === "truck_rental") {
     items = [{ description: `${txn.product} (${txn.truckNumber})`, qty: txn.quantity, unitPrice: txn.unitPrice, amount: txn.totalAmount }];
   } else {
     items = [{ description: txn.product || "Union Dues", qty: "—", unitPrice: "—", amount: txn.totalAmount }];
@@ -190,7 +190,7 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
               <p className="text-xs text-gray-300"><span className="text-gray-500">Method: </span>{invoice.paymentMethod}</p>
               <p className="text-xs text-gray-300 mt-1">
                 <span className="text-gray-500">Status: </span>
-                <span className={`font-semibold ${invoice.status === "Completed" ? "text-green-400" : invoice.status === "Pending" ? "text-yellow-400" : "text-red-400"}`}>
+                <span className={`font-semibold ${invoice.status === "completed" ? "text-green-400" : invoice.status === "pending" ? "text-yellow-400" : "text-red-400"}`}>
                   {invoice.status}
                 </span>
               </p>
@@ -266,13 +266,13 @@ export default function TransactionHistory() {
             const apiTxns = (result?.data ?? []).map((t: any) => ({
               id: t.reference || t._id,
               date: t.createdAt ? t.createdAt.slice(0, 10) : "",
-              type: (t.type === "union_dues" ? "Union Dues" : t.type === "truck_rental" ? "Truck Rental" : "Fuel Purchase") as any,
+              type: (t.type === "union_dues" ? "union_dues" : t.type === "truck_rental" ? "truck_rental" : "purchase_order") as TransactionType,
               depot: t.depot || "—",
               product: t.product || "—",
               quantity: t.quantity ? `${Number(t.quantity).toLocaleString()}` : "—",
               unitPrice: t.unitPrice ? `₦${Number(t.unitPrice).toLocaleString()}` : "—",
               totalAmount: `₦${Number(t.totalAmount || 0).toLocaleString()}`,
-              status: t.status === "completed" ? "Completed" : t.status === "failed" ? "Failed" : "Pending",
+              status: (t.status === "completed" ? "completed" : t.status === "failed" ? "failed" : "pending") as "completed" | "pending" | "failed",
               paymentMethod: t.paymentMethod || "—",
               truckNumber: t.truckNumber || "—",
             }));
@@ -303,18 +303,18 @@ export default function TransactionHistory() {
     const matchesType = filterType === "All" || transaction.type === filterType;
     const matchesProduct =
       filterProduct === "All" ||
-      (transaction.type === "Fuel Purchase" && transaction.product === filterProduct);
+      (transaction.type === "purchase_order" && transaction.product === filterProduct);
 
     return matchesSearch && matchesStatus && matchesType && matchesProduct;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case "completed":
         return "bg-green-500/20 text-green-400 border-green-500/50";
-      case "Pending":
+      case "pending":
         return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
-      case "Failed":
+      case "failed":
         return "bg-red-500/20 text-red-400 border-red-500/50";
       default:
         return "bg-gray-500/20 text-gray-400 border-gray-500/50";
@@ -323,14 +323,14 @@ export default function TransactionHistory() {
 
   const getTypeColor = (type: TransactionType) => {
     switch (type) {
-      case "Fuel Purchase": return "bg-blue-500/20 text-blue-400 border-blue-500/40";
-      case "Truck Rental":  return "bg-purple-500/20 text-purple-400 border-purple-500/40";
-      case "Union Dues":    return "bg-amber-500/20 text-amber-400 border-amber-500/40";
+      case "purchase_order": return "bg-blue-500/20 text-blue-400 border-blue-500/40";
+      case "truck_rental":   return "bg-purple-500/20 text-purple-400 border-purple-500/40";
+      case "union_dues":     return "bg-amber-500/20 text-amber-400 border-amber-500/40";
     }
   };
 
   const getProductColor = (type: TransactionType, product: string) => {
-    if (type === "Fuel Purchase") {
+    if (type === "purchase_order") {
       switch (product) {
         case "PMS": return "bg-red-500/20 text-red-400 border-red-500/50";
         case "AGO": return "bg-blue-500/20 text-blue-400 border-blue-500/50";
@@ -390,9 +390,9 @@ export default function TransactionHistory() {
                   onChange={(e) => setFilterType(e.target.value)}
                 >
                   <option value="All">All Types</option>
-                  <option value="Fuel Purchase">Fuel Purchase</option>
-                  <option value="Truck Rental">Truck Rental</option>
-                  <option value="Union Dues">Union Dues</option>
+                  <option value="purchase_order">Fuel Purchase</option>
+                  <option value="truck_rental">Truck Rental</option>
+                  <option value="union_dues">Union Dues</option>
                 </select>
               </div>
 
@@ -407,9 +407,9 @@ export default function TransactionHistory() {
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
                   <option value="All">All Status</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Failed">Failed</option>
+                  <option value="completed">Completed</option>
+                  <option value="pending">Pending</option>
+                  <option value="failed">Failed</option>
                 </select>
               </div>
 
@@ -499,7 +499,7 @@ export default function TransactionHistory() {
                         </td>
                         <td className="px-3 py-2.5 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${getTypeColor(transaction.type)}`}>
-                            {transaction.type === "Fuel Purchase" ? "Fuel" : transaction.type === "Truck Rental" ? "Truck" : "Dues"}
+                            {transaction.type === "purchase_order" ? "Fuel" : transaction.type === "truck_rental" ? "Truck" : "Dues"}
                           </span>
                         </td>
                         <td className="px-3 py-2.5 text-xs text-gray-300 hidden lg:table-cell max-w-[140px] truncate">
@@ -555,38 +555,38 @@ export default function TransactionHistory() {
             <div className="bg-black/40 backdrop-blur-md border border-blue-800/50 rounded-lg p-4">
               <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Fuel Purchases</p>
               <p className="text-2xl font-bold text-blue-400">
-                {transactions.filter((t) => t.type === "Fuel Purchase").length}
+                {transactions.filter((t) => t.type === "purchase_order").length}
               </p>
             </div>
             <div className="bg-black/40 backdrop-blur-md border border-purple-800/50 rounded-lg p-4">
               <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Truck Rentals</p>
               <p className="text-2xl font-bold text-purple-400">
-                {transactions.filter((t) => t.type === "Truck Rental").length}
+                {transactions.filter((t) => t.type === "truck_rental").length}
               </p>
             </div>
             <div className="bg-black/40 backdrop-blur-md border border-amber-800/50 rounded-lg p-4">
               <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Union Dues</p>
               <p className="text-2xl font-bold text-amber-400">
-                {transactions.filter((t) => t.type === "Union Dues").length}
+                {transactions.filter((t) => t.type === "union_dues").length}
               </p>
             </div>
             <div className="col-span-2 lg:col-span-4 grid grid-cols-3 gap-4">
               <div className="bg-black/40 backdrop-blur-md border border-green-800/50 rounded-lg p-4">
                 <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Completed</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {transactions.filter((t) => t.status === "Completed").length}
+                  {transactions.filter((t) => t.status === "completed").length}
                 </p>
               </div>
               <div className="bg-black/40 backdrop-blur-md border border-yellow-800/50 rounded-lg p-4">
                 <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Pending</p>
                 <p className="text-2xl font-bold text-yellow-400">
-                  {transactions.filter((t) => t.status === "Pending").length}
+                  {transactions.filter((t) => t.status === "pending").length}
                 </p>
               </div>
               <div className="bg-black/40 backdrop-blur-md border border-red-800/50 rounded-lg p-4">
                 <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Failed</p>
                 <p className="text-2xl font-bold text-red-400">
-                  {transactions.filter((t) => t.status === "Failed").length}
+                  {transactions.filter((t) => t.status === "failed").length}
                 </p>
               </div>
             </div>

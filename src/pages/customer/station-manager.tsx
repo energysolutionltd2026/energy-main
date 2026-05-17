@@ -33,7 +33,7 @@ interface SupplyRecord {
   product: "PMS" | "AGO" | "ATK";
   quantity: string;
   depot: string;
-  status: "Completed" | "Processing" | "Pending" | "Cancelled";
+  status: "completed" | "processing" | "pending" | "cancelled";
   truckReg: string;
 }
 
@@ -48,7 +48,7 @@ interface Station {
   phone: string;
   email: string;
   openingHours: string;
-  status: "Active" | "Inactive" | "Suspended";
+  status: "active" | "inactive" | "suspended";
   manager: string;
   managerPhone: string;
   stock: ProductStock[];
@@ -77,7 +77,7 @@ function adaptStation(fs: any, supplies: SupplyRecord[]): Station & { _dbId: str
     phone:        fs.managerPhone ?? "",
     email:        "",
     openingHours: "6:00 AM – 10:00 PM",
-    status:       (fs.status ? fs.status.charAt(0).toUpperCase() + fs.status.slice(1) : "Active") as Station["status"],
+    status:       (fs.status ?? "active") as Station["status"],
     manager:      fs.managerName ?? "",
     managerPhone: fs.managerPhone ?? "",
     stock: (fs.tanks ?? []).map((t: any) => ({
@@ -221,7 +221,7 @@ export default function StationManager() {
                   product:  r.product as "PMS" | "AGO" | "ATK",
                   quantity: `${Number(r.quantity ?? 0).toLocaleString()} L`,
                   depot:    r.depot || r.aiAssignedDepot || "—",
-                  status:   (r.status === "Fulfilled" ? "Completed" : r.status === "In Transit" ? "Processing" : r.status) as SupplyRecord["status"],
+                  status:   (r.status === "fulfilled" ? "completed" : r.status === "in_transit" ? "processing" : r.status) as SupplyRecord["status"],
                   truckReg: "—",
                 }));
               return adaptStation(fs, supplies);
@@ -257,7 +257,7 @@ export default function StationManager() {
   const totalCapacity = station.stock.reduce((a, s) => a + s.capacity, 0);
   const fillPct       = totalCapacity > 0 ? Math.round((totalCurrent / totalCapacity) * 100) : 0;
   const activeStaff   = station.staff.filter((s) => s.status === "Active").length;
-  const pendingCount  = station.supplies.filter((s) => s.status === "Pending" || s.status === "Processing").length;
+  const pendingCount  = station.supplies.filter((s) => s.status === "pending" || s.status === "processing").length;
   const availProds    = station.stock.filter((s) => s.status !== "Empty").length;
 
   const badge = (s: string) => {
@@ -567,7 +567,7 @@ export default function StationManager() {
                     : "bg-black/40 backdrop-blur-md border-gray-700 text-gray-300 hover:border-orange-500/50 hover:text-orange-400"
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${s.status === "Active" ? "bg-green-400" : "bg-gray-500"}`} />
+                <span className={`w-2 h-2 rounded-full ${s.status === "active" ? "bg-green-400" : "bg-gray-500"}`} />
                 {s.name}
               </button>
             ))}
@@ -832,8 +832,8 @@ export default function StationManager() {
                           if (!d) return <td key={pk} className="px-4 py-3 text-xs text-gray-600">—</td>;
                           const barColor = d.level > 50 ? "bg-green-500" : d.level > 20 ? "bg-yellow-500" : "bg-red-500";
                           const statusColor =
-                            d.status === "Available"   ? "text-green-400" :
-                            d.status === "Limited"     ? "text-yellow-400" : "text-red-400";
+                            d.status === "available"   ? "text-green-400" :
+                            d.status === "limited"     ? "text-yellow-400" : "text-red-400";
                           return (
                             <td key={pk} className="px-4 py-3">
                               <div className="flex items-center gap-2 min-w-[110px]">

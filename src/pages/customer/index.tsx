@@ -31,13 +31,13 @@ function barColor(p: number) {
 
 function statusBadge(s: string) {
   const map: Record<string, string> = {
-    Available: "bg-green-500/20 text-green-400 border-green-500/40",
-    Limited:   "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
-    Empty:     "bg-red-500/20 text-red-400 border-red-500/40",
-    Pending:   "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
-    Completed: "bg-green-500/20 text-green-400 border-green-500/40",
-    Processing:"bg-orange-500/20 text-orange-400 border-orange-500/40",
-    Cancelled: "bg-red-500/20 text-red-400 border-red-500/40",
+    available:  "bg-green-500/20 text-green-400 border-green-500/40",
+    limited:    "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+    empty:      "bg-red-500/20 text-red-400 border-red-500/40",
+    pending:    "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+    completed:  "bg-green-500/20 text-green-400 border-green-500/40",
+    processing: "bg-orange-500/20 text-orange-400 border-orange-500/40",
+    cancelled:  "bg-red-500/20 text-red-400 border-red-500/40",
   };
   return (map[s] ?? "bg-gray-500/20 text-gray-400 border-gray-500/40") +
     " px-2 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap";
@@ -120,7 +120,7 @@ export default function CustomerDashboard() {
 
   // Derived stats
   const totalTxns      = transactions.length;
-  const pendingSupply  = supplyRequests.filter((r: any) => r.status === "Pending").length;
+  const pendingSupply  = supplyRequests.filter((r: any) => r.status === "pending").length;
   const allStock       = stationStock.flatMap((s) => s.stock);
   const criticalStock  = allStock.filter((s) => s.status === "Empty" || s.status === "Limited").length;
   const activeStations = stationStock.length;
@@ -250,7 +250,7 @@ export default function CustomerDashboard() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-orange-400">{txn.amount || txn.total || "—"}</p>
-                        <span className={statusBadge(txn.status || "Pending")}>{txn.status || "Pending"}</span>
+                        <span className={statusBadge(txn.status || "pending")}>{txn.status || "pending"}</span>
                       </div>
                     </div>
                   ))}

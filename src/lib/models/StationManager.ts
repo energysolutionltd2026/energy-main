@@ -17,8 +17,8 @@ const StationManagerSchema = new Schema(
     // ── Status ────────────────────────────────────────────────────────────────
     status: {
       type: String,
-      enum: ["Active", "Blocked", "Inactive"],
-      default: "Active",
+      enum: ["active", "blocked", "inactive"],
+      default: "active",
     },
 
     // ── Auth ──────────────────────────────────────────────────────────────────

@@ -8,8 +8,8 @@ const PurchaseOrderSchema = new Schema(
     // ── Status & linking ───────────────────────────────────────────────────────
     status: {
       type: String,
-      enum: ["Pending", "Processing", "In Transit", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: ["pending", "processing", "in_transit", "delivered", "cancelled"],
+      default: "pending",
     },
     dealer:          { type: String },                        // bulk dealer email (if via dealer portal)
     transactionId:   { type: Schema.Types.ObjectId },         // FK → transactions._id
@@ -35,7 +35,7 @@ const PurchaseOrderSchema = new Schema(
     // ── Stage 3: Product & truck details ──────────────────────────────────────
     productType:        { type: String, enum: ["PMS", "AGO", "ATK"], required: true },
     productQuantity:    { type: Number, required: true, min: 1 },      // litres
-    haulageTruck:       { type: String, enum: ["Owned Truck", "Rent Truck"], required: true },
+    haulageTruck:       { type: String, enum: ["owned_truck", "rent_truck"], required: true },
 
     // Owned truck fields (required when haulageTruck === "Owned Truck")
     vehicleType:        { type: String },                              // tanker | mini-tanker | etc.
