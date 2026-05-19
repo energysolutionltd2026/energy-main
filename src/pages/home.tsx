@@ -27,12 +27,51 @@ function HomeContent() {
   };
 
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [depotIds, setDepotIds] = useState<Record<string, string>>({});
+  const [inputVolume, setInputVolume] = useState("");
+  const [volumeSaving, setVolumeSaving] = useState(false);
+
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.user?.role === "admin") setIsSuperAdmin(true); })
       .catch(() => null);
   }, []);
+
+  useEffect(() => {
+    fetch("/api/db/depots?limit=50")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data?.data) return;
+        const map: Record<string, string> = {};
+        for (const d of data.data) map[d.name] = String(d._id);
+        setDepotIds(map);
+      })
+      .catch(() => null);
+  }, []);
+
+  // Sync input when depot or product changes
+  useEffect(() => {
+    const p = depotProducts[selectedDepot]?.[activeProduct];
+    setInputVolume(p?.capacityLitres ? String(p.capacityLitres) : "");
+  }, [selectedDepot, activeProduct, depotProducts]);
+
+  const handleApplyVolume = async () => {
+    const parsed = parseInt(inputVolume.replace(/,/g, ""), 10);
+    if (!parsed || parsed <= 0) return;
+    const id = depotIds[selectedDepot];
+    if (!id) return;
+    setVolumeSaving(true);
+    try {
+      await fetch(`/api/db/depots/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [`${activeProduct}.capacityLitres`]: parsed }),
+      });
+    } finally {
+      setVolumeSaving(false);
+    }
+  };
 
   const depotProduct = (product: ProductKey) => depotProducts[selectedDepot]?.[product];
 
@@ -105,6 +144,28 @@ function HomeContent() {
                   );
                 })}
               </div>
+
+              {/* Admin: max capacity editor */}
+              {isSuperAdmin && (
+                <div className="flex items-center gap-2 mb-2 bg-white/90 backdrop-blur rounded-lg px-3 py-2 shadow border border-slate-200 relative z-50">
+                  <p className="text-slate-600 text-[10px] md:text-xs font-medium whitespace-nowrap">Max Capacity (L):</p>
+                  <input
+                    type="text"
+                    value={inputVolume}
+                    onChange={(e) => setInputVolume(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyVolume()}
+                    className="border border-slate-300 rounded px-2 py-1 text-xs md:text-sm text-slate-800 w-32 md:w-40"
+                    placeholder="e.g. 220000"
+                  />
+                  <button
+                    onClick={handleApplyVolume}
+                    disabled={volumeSaving}
+                    className="px-2 md:px-3 py-1 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 text-white rounded text-[10px] md:text-xs font-semibold"
+                  >
+                    {volumeSaving ? "Saving…" : "Apply"}
+                  </button>
+                </div>
+              )}
 
               {/* Tank wrapper: pointer-events-none prevents SVG from blocking buttons */}
               <div className="flex-1 min-h-0 pointer-events-none">
