@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? "");
+const JWT_SECRET = process.env.JWT_SECRET;
+const SECRET = new TextEncoder().encode(JWT_SECRET ?? "");
 
 // Role → home dashboard after login
 const ROLE_HOME: Record<string, string> = {
@@ -40,7 +41,7 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get("token")?.value ?? null;
   let payload: { role?: string } | null = null;
 
-  if (token) {
+  if (token && JWT_SECRET) {
     try {
       const { payload: p } = await jwtVerify(token, SECRET);
       payload = p as { role?: string };
