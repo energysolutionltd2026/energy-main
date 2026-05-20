@@ -92,13 +92,15 @@ export default function CustomerDashboard() {
           });
           api.stationManagers.list({ userEmail: u.email, limit: 10 } as any).then((result: any) => {
             if (result?.data?.length) {
+              const stockStatus = (cur: number, cap: number) =>
+                cap > 0 ? (cur / cap > 0.4 ? "available" : cur / cap > 0.2 ? "limited" : "unavailable") : "unavailable";
               setStationStock(result.data.map((sm: any) => ({
                 id: sm._id,
                 name: sm.name || sm.depot || "Station",
                 stock: [
-                  { product: "PMS", current: sm.pmsCurrent ?? 0, capacity: sm.pmsCapacity ?? 0, status: sm.pmsStatus || "Empty" },
-                  { product: "AGO", current: sm.agoCurrent ?? 0, capacity: sm.agoCapacity ?? 0, status: sm.agoStatus || "Empty" },
-                  { product: "ATK", current: sm.atkCurrent ?? 0, capacity: sm.atkCapacity ?? 0, status: sm.atkStatus || "Empty" },
+                  { product: "PMS", current: sm.pmsCurrent ?? 0, capacity: sm.pmsCapacity ?? 0, status: stockStatus(sm.pmsCurrent ?? 0, sm.pmsCapacity ?? 0) },
+                  { product: "AGO", current: sm.agoCurrent ?? 0, capacity: sm.agoCapacity ?? 0, status: stockStatus(sm.agoCurrent ?? 0, sm.agoCapacity ?? 0) },
+                  { product: "ATK", current: sm.atkCurrent ?? 0, capacity: sm.atkCapacity ?? 0, status: stockStatus(sm.atkCurrent ?? 0, sm.atkCapacity ?? 0) },
                 ],
               })));
             }
@@ -123,7 +125,7 @@ export default function CustomerDashboard() {
   const totalTxns      = transactions.length;
   const pendingSupply  = supplyRequests.filter((r: any) => r.status === "pending").length;
   const allStock       = stationStock.flatMap((s) => s.stock);
-  const criticalStock  = allStock.filter((s) => s.status === "Empty" || s.status === "Limited").length;
+  const criticalStock  = allStock.filter((s) => s.status === "unavailable" || s.status === "limited").length;
   const activeStations = stationStock.length;
 
   const STATS = [

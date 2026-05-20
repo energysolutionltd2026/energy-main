@@ -1194,9 +1194,9 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
           name:     d.name,
           location: d.location || "",
           logo:     d.logo,
-          PMS: { ...deriveLevel(d.PMS, 220000), price: d.PMS?.price ? fmtP(d.PMS.price) : "₦1,300/L", status: (d.PMS?.status as any) || "Available" },
-          AGO: { ...deriveLevel(d.AGO, 260000), price: d.AGO?.price ? fmtP(d.AGO.price) : "₦1,900/L", status: (d.AGO?.status as any) || "Available" },
-          ATK: { ...deriveLevel(d.ATK, 120000), price: d.ATK?.price ? fmtP(d.ATK.price) : "₦1,300/L", status: (d.ATK?.status as any) || "Available" },
+          PMS: { ...deriveLevel(d.PMS, 220000), price: d.PMS?.price ? fmtP(d.PMS.price) : "₦1,300/L", status: (d.PMS?.status as any) || "available" },
+          AGO: { ...deriveLevel(d.AGO, 260000), price: d.AGO?.price ? fmtP(d.AGO.price) : "₦1,900/L", status: (d.AGO?.status as any) || "available" },
+          ATK: { ...deriveLevel(d.ATK, 120000), price: d.ATK?.price ? fmtP(d.ATK.price) : "₦1,300/L", status: (d.ATK?.status as any) || "available" },
           _id: d._id,
         })) as Depot[];
         setDepots((prev) => {
