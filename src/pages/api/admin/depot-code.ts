@@ -5,7 +5,8 @@ const DEPOT_CODE_WINDOW = 6 * 60 * 60 * 1000;
 const DEPOT_CODE_TTL    = 3 * 60 * 60 * 1000;
 
 function generateDepotCode(windowIndex: number): string {
-  const secret = process.env.DEPOT_CODE_SECRET ?? "ENRG-DEPOT-CONTROL-2026";
+  const secret = process.env.DEPOT_CODE_SECRET;
+  if (!secret) throw new Error("DEPOT_CODE_SECRET env var is not set");
   const seed = `${secret}-${windowIndex}`;
   let h = 5381;
   for (let i = 0; i < seed.length; i++) {

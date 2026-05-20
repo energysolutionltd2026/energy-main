@@ -14,8 +14,30 @@ import { StationManager } from "@/lib/models/StationManager";
 import { Session } from "@/lib/models/Session";
 import { signToken, setTokenCookie } from "@/lib/auth";
 
+// Server-side brute-force protection: max 10 attempts per IP per 15 minutes
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const RATE_WINDOW_MS = 15 * 60 * 1000;
+const RATE_MAX = 10;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  entry.count++;
+  if (entry.count > RATE_MAX) return false;
+  return true;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() || req.socket.remoteAddress || "unknown";
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: "Too many login attempts. Please try again in 15 minutes." });
+  }
 
   const { email, password } = req.body as { email?: string; password?: string };
   if (!email || !password) {
