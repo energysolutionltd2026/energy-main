@@ -13,8 +13,11 @@ import { connectDB } from "@/lib/db";
 import { PlatformSettings } from "@/lib/models/PlatformSettings";
 import { PriceHistory } from "@/lib/models/PriceHistory";
 import { getSessionUser } from "@/lib/auth";
+import { getCache, setCache, deleteCache } from "@/lib/cache";
 
 const PRICE_FIELDS = ["pmsPricePerLitre", "atkPricePerLitre", "agoPricePerLitre", "lgpPricePerLitre"] as const;
+const SETTINGS_CACHE_KEY = "platform-settings-global";
+const SETTINGS_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 async function savePriceSnapshot(settings: any) {
   const now = new Date();
@@ -41,6 +44,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await connectDB();
 
   if (req.method === "GET") {
+    // Try cache first
+    const cached = getCache<any>(SETTINGS_CACHE_KEY);
+    if (cached) {
+      return res.status(200).json(cached);
+    }
+
     const settings = await PlatformSettings.findOne({ settingsKey: "global" }).lean() as any;
     if (!settings) {
       const created = await PlatformSettings.create({ settingsKey: "global" });
@@ -48,11 +57,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       delete safe.apiKey;
       delete safe.depotCodeSecret;
       delete safe.paystackSecretKey;
+
+      setCache(SETTINGS_CACHE_KEY, safe, SETTINGS_TTL_MS);
       return res.status(200).json(safe);
     }
     delete settings.apiKey;
     delete settings.depotCodeSecret;
     delete settings.paystackSecretKey;
+
+    setCache(SETTINGS_CACHE_KEY, settings, SETTINGS_TTL_MS);
     return res.status(200).json(settings);
   }
 
@@ -80,8 +93,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       savePriceSnapshot(safe).catch(() => null);
     }
 
+    // Invalidate cache so subsequent GET sees fresh data
+    deleteCache(SETTINGS_CACHE_KEY);
+
     return res.status(200).json(safe ?? {});
   }
 
   return res.status(405).json({ error: "Method not allowed" });
-}
+}}
