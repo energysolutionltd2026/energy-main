@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
+import type { GetServerSideProps } from "next";
 import { DepotProvider, useDepot, type ProductKey } from "../context/DepotContext";
 import PmsTankSimulation from "../components/PmsTankSimulation";
 import AtkTankSimulation from "../components/AtkTankSimulation";
@@ -7,8 +8,12 @@ import AgoTankSimulation from "../components/AgoTankSimulation";
 import DepotDropdown from "../components/DepotDropdown";
 import MarketPriceSection from "../components/MarketPriceSection";
 
+interface HomeProps {
+  depotIds: Record<string, string>;
+}
+
 /* ============== MAIN CONTENT COMPONENT ============== */
-function HomeContent() {
+function HomeContent({ depotIds: initialDepotIds }: HomeProps) {
   const {
     depots,
     selectedDepot,
@@ -27,7 +32,7 @@ function HomeContent() {
   };
 
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [depotIds, setDepotIds] = useState<Record<string, string>>({});
+  const [depotIds, setDepotIds] = useState<Record<string, string>>(initialDepotIds || {});
   const [inputVolume, setInputVolume] = useState("");
   const [volumeSaving, setVolumeSaving] = useState(false);
 
@@ -38,9 +43,11 @@ function HomeContent() {
       .catch(() => null);
   }, []);
 
+  // If depotIds not provided for some reason, hydrate once on client as fallback
   useEffect(() => {
+    if (Object.keys(depotIds).length > 0) return;
     fetch("/api/db/depots?limit=50")
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data?.data) return;
         const map: Record<string, string> = {};
@@ -48,7 +55,7 @@ function HomeContent() {
         setDepotIds(map);
       })
       .catch(() => null);
-  }, []);
+  }, [depotIds]);
 
   // Sync input when depot or product changes
   useEffect(() => {
@@ -106,7 +113,21 @@ function HomeContent() {
       />
       <div className="absolute inset-0 bg-black/60 pointer-events-none" />
 
-      {/* Main Content Wrapper */}
+export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
+  const { getCachedDepots } = await import("@/lib/cached-queries");
+  let depotIds: Record<string, string> = {};
+  try {
+    const depots = await getCachedDepots(50);
+    for (const d of depots ?? []) {
+      if (!d?.name || !d?._id) continue;
+      depotIds[d.name] = String(d._id);
+    }
+  } catch {
+    depotIds = {};
+  }
+
+  return { props: { depotIds } };
+};
       <div className="relative z-10 pb-20 sm:pb-24 pt-16 sm:pt-20">
         {/* ============== TOP SECTION: TANK + PRODUCT TABLE ============== */}
         <div className="flex flex-col lg:flex-row justify-center items-start max-w-7xl mx-auto gap-4 sm:gap-6 px-3 sm:px-4 py-4 sm:py-8">
