@@ -112,22 +112,6 @@ function HomeContent({ depotIds: initialDepotIds }: HomeProps) {
         style={{ backgroundImage: "url('/tower.jpg')" }}
       />
       <div className="absolute inset-0 bg-black/60 pointer-events-none" />
-
-export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
-  const { getCachedDepots } = await import("@/lib/cached-queries");
-  let depotIds: Record<string, string> = {};
-  try {
-    const depots = await getCachedDepots(50);
-    for (const d of depots ?? []) {
-      if (!d?.name || !d?._id) continue;
-      depotIds[d.name] = String(d._id);
-    }
-  } catch {
-    depotIds = {};
-  }
-
-  return { props: { depotIds } };
-};
       <div className="relative z-10 pb-20 sm:pb-24 pt-16 sm:pt-20">
         {/* ============== TOP SECTION: TANK + PRODUCT TABLE ============== */}
         <div className="flex flex-col lg:flex-row justify-center items-start max-w-7xl mx-auto gap-4 sm:gap-6 px-3 sm:px-4 py-4 sm:py-8">
@@ -300,12 +284,28 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
 }
 
 /* ============== MAIN COMPONENT WITH PROVIDER ============== */
-function Home() {
+function Home({ depotIds }: HomeProps) {
   return (
     <DepotProvider>
-      <HomeContent />
+      <HomeContent depotIds={depotIds} />
     </DepotProvider>
   );
 }
 
 export default Home;
+
+export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
+  const { getCachedDepots } = await import("@/lib/cached-queries");
+  let depotIds: Record<string, string> = {};
+  try {
+    const depots = await getCachedDepots(50);
+    for (const d of depots ?? []) {
+      if (!d?.name || !d?._id) continue;
+      depotIds[d.name] = String(d._id);
+    }
+  } catch {
+    depotIds = {};
+  }
+
+  return { props: { depotIds } };
+};
