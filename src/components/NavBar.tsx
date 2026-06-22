@@ -112,7 +112,7 @@ function NavBar() {
               />
             </Link>
           </div>
-          <div className="hidden md:flex items-center gap-2 mt-4">
+          <div className="hidden lg:flex items-center gap-2 mt-4">
             <Link href="/auth/login"
               className={`px-4 py-1.5 rounded font-bold text-sm border border-white/40 hover:bg-white/20 transition ${isActive("/auth/login") ? "bg-white/20" : ""}`}>
               Login
@@ -125,7 +125,7 @@ function NavBar() {
         </div>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex space-x-6 items-center relative z-0">
+        <div className="hidden lg:flex space-x-2 xl:space-x-6 items-center relative z-0">
           {navItems.map((item) =>
             item.dropdown ? (
               <div key={item.label} className="relative">
@@ -137,7 +137,7 @@ function NavBar() {
                   }
                   aria-haspopup="true"
                   aria-expanded={dropdownOpen === item.label}
-                  className={`px-4 py-2 rounded font-bold text-xl flex items-center gap-1 transition ${
+                  className={`px-2 xl:px-4 py-2 rounded font-bold text-sm xl:text-base flex items-center gap-1 transition ${
                     isActive(item.path) ? "bg-primary" : "hover:bg-white/20"
                   }`}
                 >
@@ -178,7 +178,7 @@ function NavBar() {
               <Link
                 key={item.label}
                 href={item.path}
-                className={`px-4 py-2 rounded font-bold text-xl transition ${
+                className={`px-2 xl:px-4 py-2 rounded font-bold text-sm xl:text-base transition ${
                   isActive(item.path) ? "bg-primary" : "hover:bg-white/20"
                 }`}
               >
@@ -189,7 +189,7 @@ function NavBar() {
         </div>
 
         {/* Mobile Burger */}
-        <div className="md:hidden flex items-center">
+        <div className="lg:hidden flex items-center">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Open menu"
@@ -203,7 +203,7 @@ function NavBar() {
       {menuOpen && (
         <div
           ref={mobileMenuRef}
-          className="fixed top-0 right-0 w-2/3 h-full bg-white shadow-lg flex flex-col p-6 z-[60] md:hidden"
+          className="fixed top-0 right-0 w-2/3 h-full bg-white shadow-lg flex flex-col p-6 z-[60] lg:hidden"
         >
           <button
             onClick={() => setMenuOpen(false)}
