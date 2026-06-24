@@ -2,7 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { connectDB } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { PurchaseOrder } from "@/lib/models/PurchaseOrder";
+import { Transaction } from "@/lib/models/Transaction";
 import { notifyAdmins } from "@/lib/notifyAdmins";
+import { initiatePayment } from "@/lib/globalpay";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await connectDB();
@@ -51,7 +53,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         String(doc._id)
       ).catch(() => null);
 
-      return res.status(201).json(doc);
+      // Create pending Transaction
+      const ref = doc.orderId ?? `BUY-${Date.now()}`;
+      await Transaction.create({
+        txnId:         `TXN-${ref}`,
+        type:          "purchase_order",
+        user:          session.email,
+        userEmail:     session.email,
+        userRole:      session.role as "customer" | "bulk_dealer",
+        product:       req.body.productType,
+        quantity:      String(req.body.productQuantity ?? ""),
+        totalAmount:   req.body.totalAmount ?? 0,
+        status:        "pending",
+        paymentMethod: "card",
+        reference:     ref,
+        referenceType: "purchase_order",
+        referenceId:   doc._id,
+      });
+
+      // Initiate GlobalPay checkout
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+      const gp = await initiatePayment({
+        amount:                      req.body.totalAmount ?? 0,
+        merchantTransactionReference: ref,
+        redirectUrl:                 `${appUrl}/customer/transaction-status?ref=${ref}`,
+        customer: {
+          name:  req.body.directorName ?? company,
+          email: req.body.email ?? session.email,
+          phone: req.body.telephone,
+        },
+      });
+
+      return res.status(201).json({ ...doc.toObject(), checkoutUrl: gp.checkoutUrl });
     } catch (err: unknown) {
       console.error("[PurchaseOrder] POST error:", err);
       if ((err as { code?: number }).code === 11000) {

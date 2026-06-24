@@ -2,8 +2,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { connectDB } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { UnionDues } from "@/lib/models/UnionDues";
+import { Transaction } from "@/lib/models/Transaction";
 import { sendSms } from "@/lib/sms";
 import { User } from "@/lib/models/User";
+import { initiatePayment } from "@/lib/globalpay";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await connectDB();
@@ -52,7 +54,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      return res.status(201).json(doc);
+      // Create pending Transaction
+      const ref = doc.paymentId ?? `DUES-${Date.now()}`;
+      await Transaction.create({
+        txnId:         `TXN-${ref}`,
+        type:          "union_dues",
+        user:          req.body.fullName ?? session.email,
+        userEmail:     session.email,
+        userRole:      "customer",
+        totalAmount:   req.body.amountDue ?? 0,
+        status:        "pending",
+        paymentMethod: "card",
+        reference:     ref,
+        referenceType: "union_dues",
+        referenceId:   doc._id,
+      });
+
+      // Initiate GlobalPay checkout
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+      const gp = await initiatePayment({
+        amount:                      req.body.amountDue ?? 0,
+        merchantTransactionReference: ref,
+        redirectUrl:                 `${appUrl}/customer/transaction-status?ref=${ref}`,
+        customer: {
+          name:  req.body.fullName ?? session.email,
+          email: req.body.userEmail ?? session.email,
+          phone: req.body.telephone,
+        },
+      });
+
+      return res.status(201).json({ ...doc.toObject(), checkoutUrl: gp.checkoutUrl });
     } catch (err: unknown) {
       console.error("[UnionDues] POST error:", err);
       if ((err as { code?: number }).code === 11000) {
