@@ -9,7 +9,7 @@ import {
 } from "./email-templates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@e-nergy.app";
+const FROM = process.env.RESEND_FROM_EMAIL ?? "info@e-nergy.com.ng";
 
 async function send(to: string, subject: string, html: string) {
   if (!process.env.RESEND_API_KEY) {

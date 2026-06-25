@@ -205,12 +205,12 @@ const NavItem = ({
 // ─── Main Privacy Policy Page ─────────────────────────────────────────────────
 
 export default function PrivacyPolicy() {
-  const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Solutions Limited", supportEmail: "info@energy.ng", supportPhone: "(+234) 08087550875" });
+  const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Solutions Limited", supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
       if (!s) return;
-      setPlatformInfo({ platformName: s.platformName || "e-Nergy Solutions Limited", supportEmail: s.supportEmail || "info@energy.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
+      setPlatformInfo({ platformName: s.platformName || "e-Nergy Solutions Limited", supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
     }).catch(() => null);
   }, []);
 

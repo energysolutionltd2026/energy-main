@@ -680,11 +680,11 @@ const WaybillModal = ({
 // ─── Main Load Page ───────────────────────────────────────────────────────────
 
 export default function LoadPage() {
-  const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Oil & Gas Platform", supportEmail: "info@energy.ng", supportPhone: "(+234) 08087550875", rcNumber: "" });
+  const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Oil & Gas Platform", supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875", rcNumber: "" });
 
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
-      if (s) setPlatformInfo({ platformName: s.platformName || "e-Nergy Oil & Gas Platform", supportEmail: s.supportEmail || "info@energy.ng", supportPhone: s.supportPhone || "(+234) 08087550875", rcNumber: s.rcNumber || "" });
+      if (s) setPlatformInfo({ platformName: s.platformName || "e-Nergy Oil & Gas Platform", supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875", rcNumber: s.rcNumber || "" });
     }).catch(() => null);
   }, []);
 

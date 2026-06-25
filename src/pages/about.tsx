@@ -131,7 +131,7 @@ export default function AboutUs() {
     tagline: "Nigeria's trusted downstream petroleum distribution partner since 2011.",
     businessAddress: "Ijegun Waterside, Lagos",
     rcNumber: "RC 123456",
-    supportEmail: "info@energy.ng",
+    supportEmail: "info@e-nergy.com.ng",
     supportPhone: "(+234) 08087550875",
   });
 
@@ -143,7 +143,7 @@ export default function AboutUs() {
         tagline: s.tagline || "Nigeria's trusted downstream petroleum distribution partner since 2011.",
         businessAddress: s.businessAddress || "Ijegun Waterside, Lagos",
         rcNumber: s.rcNumber || "RC 123456",
-        supportEmail: s.supportEmail || "info@energy.ng",
+        supportEmail: s.supportEmail || "info@e-nergy.com.ng",
         supportPhone: s.supportPhone || "(+234) 08087550875",
       });
     }).catch(() => null);
