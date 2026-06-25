@@ -21,14 +21,11 @@ import { sendPaymentConfirmed } from "@/lib/email";
 export const config = { api: { bodyParser: true } };
 
 function decryptPayload(encrypted: string): Record<string, unknown> {
-  const apiKey = process.env.GLOBALPAY_API_KEY!;
-  // Key: first 16 bytes of API key, padded to 32 bytes for AES-256
-  const key = Buffer.alloc(32);
-  Buffer.from(apiKey, "utf8").slice(0, 16).copy(key);
+  const key       = Buffer.from(process.env.GLOBALPAY_API_KEY!, "utf8");
   const cipherBuf = Buffer.from(encrypted, "base64");
-  const iv   = cipherBuf.slice(0, 16);
-  const data = cipherBuf.slice(16);
-  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  const iv        = cipherBuf.slice(0, 16);
+  const data      = cipherBuf.slice(16);
+  const decipher  = crypto.createDecipheriv("aes-256-cbc", key, iv);
   const decrypted = Buffer.concat([decipher.update(data), decipher.final()]);
   return JSON.parse(decrypted.toString("utf8"));
 }

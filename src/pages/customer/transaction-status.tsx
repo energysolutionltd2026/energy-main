@@ -115,7 +115,13 @@ export default function TransactionStatus() {
         if (!u || u.role !== "customer") { router.push("/auth/login"); return; }
         setUser(u);
 
-        import("@/lib/db-client").then(({ api }) => {
+        // If returning from GlobalPay checkout, verify payment before loading transactions
+        const ref = router.query.ref as string | undefined;
+        const verifyPromise = ref
+          ? fetch(`/api/payments/verify?ref=${encodeURIComponent(ref)}`).catch(() => null)
+          : Promise.resolve(null);
+
+        verifyPromise.then(() => import("@/lib/db-client")).then(({ api }) => {
           api.transactions.list({ limit: 200 } as any).then((result) => {
             const apiTxns: Transaction[] = (result?.data ?? []).map((t: any) => ({
               id:            t.reference || t._id,
@@ -135,7 +141,10 @@ export default function TransactionStatus() {
             const seen = new Set<string>();
             const unique = combined.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
             setTransactions(unique);
-            if (unique.length > 0) setSelected(unique[0]);
+            const refParam = router.query.ref as string | undefined;
+            const preselect = refParam ? unique.find((t) => t.id === refParam) : null;
+            if (preselect) setSelected(preselect);
+            else if (unique.length > 0) setSelected(unique[0]);
           });
         });
       })
