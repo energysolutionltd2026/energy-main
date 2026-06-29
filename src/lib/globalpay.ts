@@ -4,7 +4,7 @@
  * Auth: apiKey header (your public key from dashboard)
  */
 
-const BASE = "https://paygw.globalpay.com.ng/globalpay-paymentgateway/api";
+const BASE = "https://paygw.globalpay.com.ng/globalpay-paymentgateway/api/paymentgateway";
 
 function headers() {
   return {
@@ -20,7 +20,7 @@ export async function initiatePayment(payload: {
   redirectUrl: string;
   customer: { name: string; email: string; phone?: string };
 }) {
-  const res = await fetch(`${BASE}/paymentgateway/generate-payment-link`, {
+  const res = await fetch(`${BASE}/generate-payment-link`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify({
@@ -43,7 +43,7 @@ export async function initiatePayment(payload: {
 
 export async function verifyByMerchantRef(merchantTransRef: string) {
   const res = await fetch(
-    `${BASE}/paymentgateway/query-single-transaction-by-merchant-reference/${merchantTransRef}`,
+    `${BASE}/query-single-transaction-by-merchant-reference/${merchantTransRef}`,
     { method: "POST", headers: headers() }
   );
   const data = await res.json();
@@ -60,7 +60,7 @@ export async function verifyByMerchantRef(merchantTransRef: string) {
 
 export async function verifyByGlobalPayRef(transRef: string) {
   const res = await fetch(
-    `${BASE}/paymentgateway/query-single-transaction/${transRef}`,
+    `${BASE}/query-single-transaction/${transRef}`,
     { method: "POST", headers: headers() }
   );
   const data = await res.json();
