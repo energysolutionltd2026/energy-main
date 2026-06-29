@@ -2950,6 +2950,7 @@ const DEFAULT_ADMIN_SETTINGS = {
   bankAccountNumber: "",
   opayNumber: "",
   enablePaystack: true,
+  enableGlobalpay: true,
   enableBankTransfer: true,
   enableCash: true,
   enableWallet: true,
@@ -3695,6 +3696,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
             <p className="text-gray-500 text-xs -mt-2">Toggle which methods customers can use at checkout.</p>
             {([
               ["enablePaystack",     "Paystack (Card / Online)", "Customers pay via Paystack checkout"],
+              ["enableGlobalpay",   "GlobalPay",                  "Customers pay via GlobalPay checkout"],
               ["enableBankTransfer", "Bank Transfer",             "Manual bank transfer with reference upload"],
               ["enableCash",        "Cash on Delivery",           "Pay at depot on collection"],
               ["enableWallet",      "e-Nergy Wallet",             "Deduct from customer platform wallet"],
