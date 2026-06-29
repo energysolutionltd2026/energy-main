@@ -283,6 +283,17 @@ const PAYMENT_METHODS = [
       </svg>
     ),
   },
+  {
+    value: "globalpay",
+    label: "GlobalPay",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3a15 15 0 010 18M3 12h18" strokeLinecap="round" />
+        <path d="M5.6 7h12.8M5.6 17h12.8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
 const PaymentStage = ({
@@ -297,7 +308,8 @@ const PaymentStage = ({
   availableMethods?: typeof PAYMENT_METHODS;
 }) => {
   const isPaystack = data.paymentMethod === "paystack";
-  const isManual = data.paymentMethod && data.paymentMethod !== "paystack";
+  const isGlobalpay = data.paymentMethod === "globalpay";
+  const isManual = data.paymentMethod && data.paymentMethod !== "paystack" && data.paymentMethod !== "globalpay";
 
   return (
     <div className="space-y-4">
@@ -356,6 +368,31 @@ const PaymentStage = ({
             </p>
           </div>
           <div className="flex items-center gap-2 text-teal-600 text-xs font-medium">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" />
+            </svg>
+            256-bit SSL encrypted · PCI DSS compliant
+          </div>
+        </div>
+      )}
+
+      {isGlobalpay && (
+        <div className="rounded-lg border-2 border-blue-400 bg-blue-50 p-5 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-6 h-6">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 3a15 15 0 010 18M3 12h18" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-bold text-blue-800 text-sm">Secure Payment via GlobalPay</p>
+            <p className="text-blue-700 text-xs mt-1 leading-relaxed">
+              You will be securely redirected to GlobalPay&apos;s checkout to complete your dues payment. No card
+              details needed here.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-blue-600 text-xs font-medium">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
               <rect x="3" y="11" width="18" height="11" rx="2" />
               <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" />
@@ -604,7 +641,7 @@ export default function PayDues() {
   const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "", opayNumber: "" });
   const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
-  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
+  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableGlobalpay: true });
   const rateLimit = useRateLimit({ maxAttempts: 5, windowMs: 60_000 });
 
   useEffect(() => {
@@ -647,7 +684,7 @@ export default function PayDues() {
           setBankSettings({ bankName: settings.bankName || "First Bank of Nigeria", bankAccountName: settings.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: settings.bankAccountNumber || "", opayNumber: settings.opayNumber || "" });
           setPlatformInfo({ supportEmail: settings.supportEmail || "info@e-nergy.com.ng", supportPhone: settings.supportPhone || "(+234) 08087550875" });
           if (settings.paystackPublicKey) setPaystackKey(settings.paystackPublicKey);
-          setEnabledMethods({ enableBankTransfer: settings.enableBankTransfer !== false, enablePaystack: settings.enablePaystack !== false, enableOpay: settings.enableOpay !== false });
+          setEnabledMethods({ enableBankTransfer: settings.enableBankTransfer !== false, enablePaystack: settings.enablePaystack !== false, enableOpay: settings.enableOpay !== false, enableGlobalpay: settings.enableGlobalpay !== false });
         }
       })
       .catch(() => null);
@@ -701,7 +738,7 @@ export default function PayDues() {
     const txnId = opts.paystackRef ?? (payment.transactionRef?.trim() || `DUE-${Date.now().toString().slice(-8)}`);
     const txnDate = new Date().toISOString().slice(0, 10);
     const isPaid = isPaystack;
-    const pmMethod = isPaystack ? "card" : payment.paymentMethod === "bank-transfer" ? "bank_transfer" : (payment.paymentMethod as any) || "bank_transfer";
+    const pmMethod = isPaystack ? "card" : payment.paymentMethod === "globalpay" ? "card" : payment.paymentMethod === "bank-transfer" ? "bank_transfer" : (payment.paymentMethod as any) || "bank_transfer";
 
     // Create Transaction + UnionDues and cross-link them
     import("@/lib/db-client").then(async ({ api }) => {
@@ -783,6 +820,28 @@ export default function PayDues() {
     handler.openIframe();
   };
 
+  const handleGlobalPay = async () => {
+    try {
+      const id = `DUES-${Date.now()}`;
+      const { initiatePayment } = await import("@/lib/globalpay");
+      const redirectUrl = `${window.location.origin}/customer/transaction-status?ref=${id}`;
+      const result = await initiatePayment({
+        amount: computeTotal(),
+        merchantTransactionReference: id,
+        redirectUrl,
+        customer: {
+          name: formData.member.fullName,
+          email: formData.member.email,
+          phone: formData.member.telephone,
+        },
+      });
+      saveDuesTransaction();
+      window.location.href = result.checkoutUrl;
+    } catch (err: any) {
+      setSubmitError(err?.message ?? "GlobalPay initiation failed. Please try again.");
+    }
+  };
+
   const validateStage = (s: number): string => {
     if (s === 0) {
       const m = formData.member;
@@ -809,6 +868,7 @@ export default function PayDues() {
       return;
     }
     if (formData.payment.paymentMethod === "paystack") handlePaystack();
+    else if (formData.payment.paymentMethod === "globalpay") { handleGlobalPay(); return; }
     else { saveDuesTransaction(); setShowInvoice(true); setShowFlowModal(true); }
   };
 
@@ -923,7 +983,7 @@ export default function PayDues() {
 
               {stage === 0 && <MemberStage data={formData.member} onChange={updateMember} />}
                {stage === 1 && <DuesStage amount={duesAmount} />}
-              {stage === 2 && <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : enabledMethods.enablePaystack)} />}
+              {stage === 2 && <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : m.value === "globalpay" ? enabledMethods.enableGlobalpay : enabledMethods.enablePaystack)} />}
 
               {/* Navigation */}
               {submitError && <p className="text-sm text-red-500 text-center mt-2">{submitError}</p>}

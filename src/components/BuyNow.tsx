@@ -381,11 +381,13 @@ const PAYMENT_METHODS = [
   { value: "card", label: "Debit / Credit Card", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" strokeLinecap="round" /><path d="M6 15h4" strokeLinecap="round" /></svg>) },
   { value: "opay", label: "OPay", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" strokeLinecap="round" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /></svg>) },
   { value: "paystack", label: "Paystack", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" strokeLinecap="round" /><path d="M7 15h4M15 15h2" strokeLinecap="round" /><circle cx="6" cy="7.5" r="0.8" fill="currentColor" stroke="none" /></svg>) },
+  { value: "globalpay", label: "GlobalPay", icon: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7"><circle cx="12" cy="12" r="9" /><path d="M12 3a15 15 0 010 18M3 12h18" strokeLinecap="round" /><path d="M5.6 7h12.8M5.6 17h12.8" strokeLinecap="round" /></svg>) },
 ];
 
 const PaymentStage = ({ data, onChange, bankSettings, availableMethods = PAYMENT_METHODS }: { data: PaymentInfo; onChange: (d: Partial<PaymentInfo>) => void; bankSettings: { bankName: string; bankAccountName: string; bankAccountNumber: string; opayNumber: string }; availableMethods?: typeof PAYMENT_METHODS }) => {
   const isPaystack = data.paymentMethod === "paystack";
-  const isManual = data.paymentMethod && data.paymentMethod !== "paystack";
+  const isGlobalpay = data.paymentMethod === "globalpay";
+  const isManual = data.paymentMethod && data.paymentMethod !== "paystack" && data.paymentMethod !== "globalpay";
   return (
     <div className="space-y-4">
       <div>
@@ -418,6 +420,21 @@ const PaymentStage = ({ data, onChange, bankSettings, availableMethods = PAYMENT
             <p className="text-teal-700 text-xs mt-1 leading-relaxed">You will be securely redirected to Paystack&apos;s checkout to complete your payment. Paystack accepts cards, bank transfers, and USSD — no details needed here.</p>
           </div>
           <div className="flex items-center gap-2 text-teal-600 text-xs font-medium">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" /></svg>
+            256-bit SSL encrypted · PCI DSS compliant
+          </div>
+        </div>
+      )}
+      {isGlobalpay && (
+        <div className="rounded-lg border-2 border-blue-400 bg-blue-50 p-5 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-6 h-6"><circle cx="12" cy="12" r="9" /><path d="M12 3a15 15 0 010 18M3 12h18" strokeLinecap="round" /></svg>
+          </div>
+          <div>
+            <p className="font-bold text-blue-800 text-sm">Secure Payment via GlobalPay</p>
+            <p className="text-blue-700 text-xs mt-1 leading-relaxed">You will be securely redirected to GlobalPay&apos;s checkout to complete your payment. GlobalPay accepts cards, bank transfers, and more — no details needed here.</p>
+          </div>
+          <div className="flex items-center gap-2 text-blue-600 text-xs font-medium">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" /></svg>
             256-bit SSL encrypted · PCI DSS compliant
           </div>
@@ -474,7 +491,7 @@ function generateOrderId(): string {
   return `ENR-${year}-${seq}${letter}`;
 }
 
-const mapPaymentMethod = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m;
+const mapPaymentMethod = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m === "globalpay" ? "card" : m;
 
 export default function BuyNow() {
   const [stage, setStage] = useState(0);
@@ -487,7 +504,7 @@ export default function BuyNow() {
   const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "", opayNumber: "" });
   const [platformInfo, setPlatformInfo] = useState({ platformName: "e-Nergy Oil & Gas Purchasing Portal", supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
-  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
+  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableGlobalpay: true });
   const [prices, setPrices] = useState({ pms: 0, ago: 0, atk: 0 });
 
   useEffect(() => {
@@ -496,7 +513,7 @@ export default function BuyNow() {
       setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
       setPlatformInfo({ platformName: s.platformName || "e-Nergy Oil & Gas Purchasing Portal", supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
-      setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
+      setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false, enableGlobalpay: s.enableGlobalpay !== false });
       setPrices({ pms: s.pmsPricePerLitre || 0, ago: s.agoPricePerLitre || 0, atk: s.atkPricePerLitre || 0 });
     }).catch(() => null);
   }, []);
@@ -663,6 +680,31 @@ export default function BuyNow() {
     handler.openIframe();
   };
 
+  const handleGlobalPay = async () => {
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const id = generateOrderId();
+      const { initiatePayment } = await import("@/lib/globalpay");
+      const redirectUrl = `${window.location.origin}/customer/transaction-status?ref=${id}`;
+      const result = await initiatePayment({
+        amount: computeOrderTotal(),
+        merchantTransactionReference: id,
+        redirectUrl,
+        customer: {
+          name: formData.owner.name || formData.company.name,
+          email: formData.owner.email || formData.company.email,
+          phone: formData.owner.telephone || formData.company.telephone,
+        },
+      });
+      await submitOrder(id);
+      window.location.href = result.checkoutUrl;
+    } catch (err: any) {
+      setSubmitError(err?.message ?? "GlobalPay initiation failed. Please try again.");
+      setSubmitting(false);
+    }
+  };
+
   const validateStage = (s: number): string => {
     if (s === 0) {
       const c = formData.company;
@@ -707,6 +749,7 @@ export default function BuyNow() {
     if (err) { setSubmitError(err); return; }
     if (stage < 3) { setStage((s) => s + 1); return; }
     if (formData.payment.paymentMethod === "paystack") handlePaystack();
+    else if (formData.payment.paymentMethod === "globalpay") handleGlobalPay();
     else { submitOrder(generateOrderId()); }
   };
   const handleBack = () => { if (stage > 0) setStage((s) => s - 1); };
@@ -784,12 +827,12 @@ export default function BuyNow() {
               {stage === 0 && <CompanyStage data={formData.company} onChange={updateCompany} />}
               {stage === 1 && <OwnerStage data={formData.owner} onChange={updateOwner} />}
               {stage === 2 && <PurchaseStage data={formData.purchase} onChange={updatePurchase} />}
-              {stage === 3 && <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : enabledMethods.enablePaystack)} />}
+              {stage === 3 && <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : m.value === "globalpay" ? enabledMethods.enableGlobalpay : enabledMethods.enablePaystack)} />}
               {submitError && <p className="text-sm text-red-500 text-center mt-4">{submitError}</p>}
               <div className="flex justify-between items-center mt-4 pt-6 border-t border-gray-100">
                 {stage > 0 ? <button onClick={handleBack} className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition">‹ Back</button> : <div />}
                 <button onClick={handleNext} disabled={submitting} className="px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                  {submitting ? "Submitting…" : stage === 3 ? (formData.payment.paymentMethod === "paystack" ? "Pay Now →" : formData.payment.paymentMethod ? "Proceed with Payment →" : "Submit Order") : "Next ›"}
+                  {submitting ? "Submitting…" : stage === 3 ? (formData.payment.paymentMethod === "paystack" || formData.payment.paymentMethod === "globalpay" ? "Pay Now →" : formData.payment.paymentMethod ? "Proceed with Payment →" : "Submit Order") : "Next ›"}
                 </button>
               </div>
             </div>

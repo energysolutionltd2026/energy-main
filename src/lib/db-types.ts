@@ -465,6 +465,7 @@ export interface PlatformSettings {
   enableCash: boolean;
   enableWallet: boolean;
   enableOpay: boolean;
+  enableGlobalpay: boolean;
   notifyNewSupplyRequests: boolean;
   notifyNewPurchaseOrders: boolean;
   notifyLowStock: boolean;

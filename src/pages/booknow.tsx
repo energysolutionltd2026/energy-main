@@ -516,6 +516,17 @@ const PAYMENT_METHODS = [
       </svg>
     ),
   },
+  {
+    value: "globalpay",
+    label: "GlobalPay",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3a15 15 0 010 18M3 12h18" strokeLinecap="round" />
+        <path d="M5.6 7h12.8M5.6 17h12.8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
 const PaymentStage = ({
@@ -530,7 +541,8 @@ const PaymentStage = ({
   availableMethods?: typeof PAYMENT_METHODS;
 }) => {
   const isPaystack = data.paymentMethod === "paystack";
-  const isManual   = data.paymentMethod && data.paymentMethod !== "paystack";
+  const isGlobalpay = data.paymentMethod === "globalpay";
+  const isManual   = data.paymentMethod && data.paymentMethod !== "paystack" && data.paymentMethod !== "globalpay";
 
   return (
     <div className="space-y-4">
@@ -588,6 +600,31 @@ const PaymentStage = ({
             </p>
           </div>
           <div className="flex items-center gap-2 text-teal-600 text-xs font-medium">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" />
+            </svg>
+            256-bit SSL encrypted · PCI DSS compliant
+          </div>
+        </div>
+      )}
+
+      {isGlobalpay && (
+        <div className="rounded-lg border-2 border-blue-400 bg-blue-50 p-5 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-6 h-6">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 3a15 15 0 010 18M3 12h18" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-bold text-blue-800 text-sm">Secure Booking Deposit via GlobalPay</p>
+            <p className="text-blue-700 text-xs mt-1 leading-relaxed">
+              You will be securely redirected to GlobalPay&apos;s checkout to complete your booking deposit.
+              No card details needed here.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-blue-600 text-xs font-medium">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
               <rect x="3" y="11" width="18" height="11" rx="2" />
               <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" />
@@ -709,7 +746,7 @@ export default function BookNow() {
   const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "" });
   const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey]   = useState("pk_test_REPLACE_WITH_YOUR_KEY");
-  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true });
+  const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableGlobalpay: true });
   const [prices, setPrices] = useState({ pms: 0, ago: 0, atk: 0 });
   const rateLimit = useRateLimit({ maxAttempts: 5, windowMs: 60_000 });
 
@@ -737,7 +774,7 @@ export default function BookNow() {
       setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: s.bankAccountNumber || "" });
       setPlatformInfo({ supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
-      setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false });
+      setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false, enableGlobalpay: s.enableGlobalpay !== false });
       setPrices({ pms: s.pmsPricePerLitre || 0, ago: s.agoPricePerLitre || 0, atk: s.atkPricePerLitre || 0 });
     }).catch(() => null);
   }, []);
@@ -819,6 +856,28 @@ export default function BookNow() {
     handler.openIframe();
   };
 
+  const handleGlobalPay = async () => {
+    try {
+      const id = `ENR-${Date.now()}`;
+      const { initiatePayment } = await import("@/lib/globalpay");
+      const redirectUrl = `${window.location.origin}/customer/transaction-status?ref=${id}`;
+      const result = await initiatePayment({
+        amount: computeBookingTotal(),
+        merchantTransactionReference: id,
+        redirectUrl,
+        customer: {
+          name: sanitizeString(formData.owner.name || formData.company.name),
+          email: sanitizeString(formData.owner.email || formData.company.email),
+          phone: sanitizeString(formData.owner.telephone || formData.company.telephone),
+        },
+      });
+      await handleManualSubmit();
+      window.location.href = result.checkoutUrl;
+    } catch (err: any) {
+      setSubmitError(err?.message ?? "GlobalPay initiation failed. Please try again.");
+    }
+  };
+
   const validateStage = (s: number): string => {
     if (s === 0) {
       const c = formData.company;
@@ -856,7 +915,7 @@ export default function BookNow() {
     try {
       const { api } = await import("@/lib/db-client");
       const orderId = `ENR-${Date.now()}`;
-      const mapPM = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m;
+      const mapPM = (m: string) => m === "bank-transfer" ? "bank_transfer" : m === "paystack" ? "card" : m === "globalpay" ? "card" : m;
       const pmMethod = paystackRef ? "card" : mapPM(formData.payment.paymentMethod);
       const txnRef = paystackRef || sanitizeString(formData.payment.transactionRef);
 
@@ -927,6 +986,7 @@ export default function BookNow() {
       return;
     }
     if (formData.payment.paymentMethod === "paystack") { handlePaystack(); return; }
+    if (formData.payment.paymentMethod === "globalpay") { handleGlobalPay(); return; }
     handleManualSubmit();
   };
 
@@ -1045,7 +1105,7 @@ export default function BookNow() {
                 />
               )}
               {stage === 3 && (
-                <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : enabledMethods.enablePaystack)} />
+                <PaymentStage data={formData.payment} onChange={updatePayment} bankSettings={bankSettings} availableMethods={PAYMENT_METHODS.filter(m => m.value === "bank-transfer" ? enabledMethods.enableBankTransfer : m.value === "opay" ? enabledMethods.enableOpay : m.value === "globalpay" ? enabledMethods.enableGlobalpay : enabledMethods.enablePaystack)} />
               )}
 
               {/* Navigation */}

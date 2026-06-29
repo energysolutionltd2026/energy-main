@@ -56,6 +56,7 @@ const PlatformSettingsSchema = new Schema(
     enableCash:         { type: Boolean, default: true },
     enableWallet:       { type: Boolean, default: true },
     enableOpay:         { type: Boolean, default: true },
+    enableGlobalpay:    { type: Boolean, default: true },
 
     // ── API / backend ─────────────────────────────────────────────────────────
     backendUrl:       { type: String },
