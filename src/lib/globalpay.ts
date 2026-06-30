@@ -8,8 +8,8 @@ const BASE = "https://paygw.globalpay.com.ng/globalpay-paymentgateway/api/paymen
 
 function headers() {
   return {
-    "apiKey": process.env.GLOBALPAY_API_KEY!,
-    "language": "en",
+    apiKey: process.env.GLOBALPAY_API_KEY!,
+    language: "en",
     "Content-Type": "application/json",
   };
 }
@@ -30,9 +30,29 @@ export async function initiatePayment(payload: {
       customer: payload.customer,
     }),
   });
-  const data = await res.json();
-  if (!data.isSuccessful) throw new Error(data.error ?? "GlobalPay initiation failed");
-  // Returns: { checkoutUrl, accessCode, transactionReference, ... }
+
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error(
+      "[GlobalPay:initiate] non-JSON response",
+      res.status,
+      text,
+    );
+    throw new Error(`GlobalPay ${res.status}: ${text}`);
+  }
+
+  console.log("[GlobalPay:initiate] status", res.status, "body", data);
+
+  if (!data.isSuccessful) {
+    throw new Error(
+      data.error ?? `GlobalPay initiation failed (status ${res.status})`,
+    );
+  }
+
+  // Returns: { checkoutUrl, access, transactionReference, ... }
   return data.data as {
     checkoutUrl: string;
     accessCode: string;
@@ -44,10 +64,24 @@ export async function initiatePayment(payload: {
 export async function verifyByMerchantRef(merchantTransRef: string) {
   const res = await fetch(
     `${BASE}/query-single-transaction-by-merchant-reference/${merchantTransRef}`,
-    { method: "POST", headers: headers() }
+    { method: "POST", headers: headers() },
   );
-  const data = await res.json();
-  if (!data.isSuccessful) throw new Error(data.error ?? "GlobalPay verify failed");
+
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error(
+      "[GlobalPay:verifyByMerchantRef] non-JSON response",
+      res.status,
+      text,
+    );
+    throw new Error(`GlobalPay ${res.status}: ${text}`);
+  }
+
+  if (!data.isSuccessful)
+    throw new Error(data.error ?? "GlobalPay verify failed");
   return data.data as {
     amountFromMerchant: number;
     amountPaid: number;
@@ -59,11 +93,25 @@ export async function verifyByMerchantRef(merchantTransRef: string) {
 }
 
 export async function verifyByGlobalPayRef(transRef: string) {
-  const res = await fetch(
-    `${BASE}/query-single-transaction/${transRef}`,
-    { method: "POST", headers: headers() }
-  );
-  const data = await res.json();
-  if (!data.isSuccessful) throw new Error(data.error ?? "GlobalPay verify failed");
+  const res = await fetch(`${BASE}/query-single-transaction/${transRef}`, {
+    method: "POST",
+    headers: headers(),
+  });
+
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error(
+      "[GlobalPay:verifyByGlobalPayRef] non-JSON response",
+      res.status,
+      text,
+    );
+    throw new Error(`GlobalPay ${res.status}: ${text}`);
+  }
+
+  if (!data.isSuccessful)
+    throw new Error(data.error ?? "GlobalPay verify failed");
   return data.data;
 }
