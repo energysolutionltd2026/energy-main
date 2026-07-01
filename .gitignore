@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev notes (never commit to repo)
+memory.md
+HANDOFF.md
+GLOBALPAY_INTEGRATION.md
+globalpay-complete-documentation.md
+WIREFRAMES.html
+src/pages/RentTruck.text.tsx
+src/pages/RentTruck.text2.tsx
