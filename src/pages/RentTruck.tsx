@@ -681,7 +681,7 @@ export default function RentTruck() {
     handler.openIframe();
   };
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     setBookingError("");
     if (!rentBook.paymentMethod) { setBookingError("Please select a payment method."); return; }
     if (!rateLimit.attempt()) {
@@ -690,19 +690,73 @@ export default function RentTruck() {
     }
     if (rentBook.paymentMethod === "paystack") {
       handlePaystack();
-    } else {
-      const safeRef = `ENR-RNT-${Date.now()}`;
-      const safeName = sanitizeString(rentBook.fullName);
-      const safePhone = sanitizeString(rentBook.phone);
-      const safeCompany = sanitizeString(rentBook.company);
-      const safeAddr = sanitizeString(rentBook.destinationAddress);
-      void safeName; void safePhone; void safeCompany; void safeAddr; // used by backend when wired
-      saveRentalBooking(safeRef);
-      setLastBookingRef(safeRef);
-      setShowFlowModal(true);
-      setRentStep(1);
-      setRentBook({ depot: "", capacity: "", vehicleType: "", productType: "", zone: "", state: "", lga: "", fullName: "", phone: "", email: "", company: "", destinationAddress: "", pickupDate: "", rentalDays: "1", notes: "", paymentMethod: "" });
+      return;
     }
+
+    // For GlobalPay (card) — POST to API route which triggers GlobalPay and returns checkoutUrl
+    if (rentBook.paymentMethod === "card" || rentBook.paymentMethod === "globalpay") {
+      try {
+        const safeRef = `ENR-RNT-${Date.now()}`;
+        const price = statePrices[rentBook.state] || 0;
+        const days = Number(rentBook.rentalDays || 1);
+        const total = price * days;
+        const startDate = rentBook.pickupDate || new Date().toISOString().slice(0, 10);
+        const endDate = new Date(new Date(startDate).getTime() + days * 86400000).toISOString().slice(0, 10);
+
+        const rentalPayload = {
+          rentalId:        safeRef,
+          rentedBy:        sanitizeString(rentBook.email) || "guest@energy.ng",
+          renterPhone:     sanitizeString(rentBook.phone),
+          pickupDepot:     rentBook.depot,
+          deliveryState:   rentBook.state,
+          deliveryAddress: sanitizeString(rentBook.destinationAddress) || undefined,
+          product:         (({ PMS: "PMS", AGO: "AGO", ATK: "ATK" } as Record<string, string>)[rentBook.productType?.toUpperCase() ?? ""] ?? "PMS"),
+          quantityLitres:  rentBook.capacity ? parseInt(rentBook.capacity.replace(/,/g, ""), 10) : 33000,
+          totalDays:       days,
+          dailyRateLocked: price,
+          totalCost:       total,
+          totalAmount:     total,
+          startDate,
+          endDate,
+          status:          "requested",
+          paymentStatus:   "unpaid",
+        };
+
+        const res = await fetch("/api/db/truck-rentals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(rentalPayload),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          setBookingError(result.error ?? "Failed to create rental booking.");
+          return;
+        }
+
+        if (result.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+        } else {
+          // Fallback if no checkout URL
+          setLastBookingRef(safeRef);
+          setShowFlowModal(true);
+          setRentStep(1);
+          setRentBook({ depot: "", capacity: "", vehicleType: "", productType: "", zone: "", state: "", lga: "", fullName: "", phone: "", email: "", company: "", destinationAddress: "", pickupDate: "", rentalDays: "1", notes: "", paymentMethod: "" });
+        }
+      } catch (err: any) {
+        setBookingError(err?.message ?? "Booking failed. Please try again.");
+      }
+      return;
+    }
+
+    // For other manual methods (bank_transfer, opay, cash) — client-side save only
+    const safeRef = `ENR-RNT-${Date.now()}`;
+    saveRentalBooking(safeRef);
+    setLastBookingRef(safeRef);
+    setShowFlowModal(true);
+    setRentStep(1);
+    setRentBook({ depot: "", capacity: "", vehicleType: "", productType: "", zone: "", state: "", lga: "", fullName: "", phone: "", email: "", company: "", destinationAddress: "", pickupDate: "", rentalDays: "1", notes: "", paymentMethod: "" });
   };
 
   useEffect(() => {

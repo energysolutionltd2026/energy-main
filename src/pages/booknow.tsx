@@ -859,20 +859,55 @@ export default function BookNow() {
   const handleGlobalPay = async () => {
     try {
       const id = `ENR-${Date.now()}`;
-      const { initiatePayment } = await import("@/lib/globalpay");
-      const redirectUrl = `${window.location.origin}/customer/transaction-status?ref=${id}`;
-      const result = await initiatePayment({
-        amount: computeBookingTotal(),
-        merchantTransactionReference: id,
-        redirectUrl,
-        customer: {
-          name: sanitizeString(formData.owner.name || formData.company.name),
-          email: sanitizeString(formData.owner.email || formData.company.email),
-          phone: sanitizeString(formData.owner.telephone || formData.company.telephone),
-        },
+      const mapPM = (m: string) => m === "bank-transfer" ? "bank_transfer" : "card";
+
+      // Build the purchase order payload (same as handleManualSubmit)
+      const poPayload = {
+        orderId:          id,
+        loadingDepot:     sanitizeString(formData.company.loadingDepot),
+        companyName:      sanitizeString(formData.company.name),
+        dprRegNo:         sanitizeString(formData.company.dprRegNo),
+        cacRegNo:         sanitizeString(formData.company.cacRegNo),
+        companyAddress:   sanitizeString(formData.company.headOfficeAddress),
+        companyTelephone: sanitizeString(formData.company.telephone),
+        companyEmail:     sanitizeString(formData.company.email),
+        stationAddress:   sanitizeString(formData.company.deliveryAddress),
+        ownerName:        sanitizeString(formData.owner.name),
+        ownerTelephone:   sanitizeString(formData.owner.telephone),
+        ownerAddress:     sanitizeString(formData.owner.address),
+        ownerEmail:       sanitizeString(formData.owner.email),
+        ownerIdType:      sanitizeString(formData.owner.officialIdType),
+        ownerIdNumber:    sanitizeString(formData.owner.idNumber),
+        productType:      formData.booking.productType.toUpperCase(),
+        productQuantity:  parseInt(sanitizeString(formData.booking.productQuantity).replace(/[^0-9]/g, ""), 10) || 0,
+        haulageTruck:     (formData.booking.haulageTruck === "rent_truck" ? "rent_truck" : "owned_truck"),
+        paymentMethod:    "card",
+        totalAmount:      computeBookingTotal(),
+        // fields GlobalPay backend needs for customer info
+        directorName:     sanitizeString(formData.owner.name || formData.company.name),
+        email:            sanitizeString(formData.owner.email || formData.company.email),
+        telephone:        sanitizeString(formData.owner.telephone || formData.company.telephone),
+      };
+
+      const res = await fetch("/api/db/purchase-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(poPayload),
       });
-      await handleManualSubmit();
-      window.location.href = result.checkoutUrl;
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error ?? "Failed to create booking");
+      }
+
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      } else {
+        // Fallback: show success if no checkout URL (shouldn't happen)
+        setSubmitted(true);
+        setShowFlowModal(true);
+      }
     } catch (err: any) {
       setSubmitError(err?.message ?? "GlobalPay initiation failed. Please try again.");
     }

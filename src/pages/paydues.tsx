@@ -823,20 +823,43 @@ export default function PayDues() {
   const handleGlobalPay = async () => {
     try {
       const id = `DUES-${Date.now()}`;
-      const { initiatePayment } = await import("@/lib/globalpay");
-      const redirectUrl = `${window.location.origin}/customer/transaction-status?ref=${id}`;
-      const result = await initiatePayment({
-        amount: computeTotal(),
-        merchantTransactionReference: id,
-        redirectUrl,
-        customer: {
-          name: formData.member.fullName,
-          email: formData.member.email,
-          phone: formData.member.telephone,
-        },
+
+      const duesPayload = {
+        paymentId:    id,
+        userEmail:    sanitizeString(formData.member.email),
+        userRole:     "customer",
+        fullName:     sanitizeString(formData.member.fullName),
+        companyName:  sanitizeString(formData.member.companyName),
+        membershipId: sanitizeString(formData.member.membershipId),
+        telephone:    sanitizeString(formData.member.telephone),
+        address:      sanitizeString(formData.member.address),
+        paymentDepot: formData.member.paymentDepot,
+        amountDue:    duesAmount,
+        amountPaid:   0,
+        paymentMethod: "card",
+        status:       "pending",
+        duesPeriod:   new Date().toISOString().slice(0, 7),
+      };
+
+      const res = await fetch("/api/db/union-dues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(duesPayload),
       });
-      saveDuesTransaction();
-      window.location.href = result.checkoutUrl;
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error ?? "Failed to create dues record");
+      }
+
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      } else {
+        // Fallback if no checkout URL
+        setShowInvoice(true);
+        setShowFlowModal(true);
+      }
     } catch (err: any) {
       setSubmitError(err?.message ?? "GlobalPay initiation failed. Please try again.");
     }

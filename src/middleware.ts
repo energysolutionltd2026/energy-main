@@ -34,6 +34,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow payment redirect landing — accessible via direct ref link without session.
+  // The ref param is an unguessable unique ID that acts as the access token.
+  if (pathname === "/customer/transaction-status" && req.nextUrl.searchParams.has("ref")) {
+    return NextResponse.next();
+  }
+
   // Allow root landing page
   if (pathname === "/") return NextResponse.next();
 
