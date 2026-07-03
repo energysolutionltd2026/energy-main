@@ -129,8 +129,7 @@ export default function productbooking() {
           <div className="flex flex-col justify-center order-1 lg:order-1 col-span-1 lg:col-span-1">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
               WELCOME TO <br />
-              PIPES & BARRELS <br />
-              OIL & GAS <br />
+              e-Nergy Solutions Limited <br />
               BOOKING PAGE
             </h1>
 
