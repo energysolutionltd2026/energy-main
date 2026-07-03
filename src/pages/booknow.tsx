@@ -473,50 +473,6 @@ const BookingStage = ({
 
 const PAYMENT_METHODS = [
   {
-    value: "bank-transfer",
-    label: "Bank Transfer",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7">
-        <rect x="3" y="8" width="18" height="12" rx="2" />
-        <path d="M3 10h18M7 15h2M12 15h2" strokeLinecap="round" />
-        <path d="M12 3L3 8h18L12 3z" />
-      </svg>
-    ),
-  },
-  {
-    value: "card",
-    label: "Debit / Credit Card",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7">
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <path d="M2 10h20" strokeLinecap="round" />
-        <path d="M6 15h4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    value: "opay",
-    label: "OPay",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M8 12h8M12 8v8" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    value: "paystack",
-    label: "Paystack",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-7 h-7">
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <path d="M2 10h20" strokeLinecap="round" />
-        <path d="M7 15h4M15 15h2" strokeLinecap="round" />
-        <circle cx="6" cy="7.5" r="0.8" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-  },
-  {
     value: "globalpay",
     label: "GlobalPay",
     icon: (
@@ -540,9 +496,8 @@ const PaymentStage = ({
   bankSettings: { bankName: string; bankAccountName: string; bankAccountNumber: string };
   availableMethods?: typeof PAYMENT_METHODS;
 }) => {
-  const isPaystack = data.paymentMethod === "paystack";
   const isGlobalpay = data.paymentMethod === "globalpay";
-  const isManual   = data.paymentMethod && data.paymentMethod !== "paystack" && data.paymentMethod !== "globalpay";
+  const isManual   = false;
 
   return (
     <div className="space-y-4">

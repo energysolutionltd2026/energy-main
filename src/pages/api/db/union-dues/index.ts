@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         userRole:      "customer",
         totalAmount:   req.body.amountDue ?? 0,
         status:        "pending",
-        paymentMethod: "card",
+        paymentMethod: "globalpay",
         reference:     ref,
         referenceType: "union_dues",
         referenceId:   doc._id,
