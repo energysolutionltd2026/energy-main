@@ -743,7 +743,7 @@ export default function BookNow() {
   const [showFlowModal, setShowFlowModal] = useState(false);
   const [detectedProduct, setDetected]  = useState<ProductKey>("");
   const [submitError, setSubmitError]   = useState("");
-  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "" });
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Solutions Limited", bankAccountNumber: "" });
   const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey]   = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableGlobalpay: true });
@@ -771,7 +771,7 @@ export default function BookNow() {
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
       if (!s) return;
-      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: s.bankAccountNumber || "" });
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Solutions Limited", bankAccountNumber: s.bankAccountNumber || "" });
       setPlatformInfo({ supportEmail: s.supportEmail || "info@e-nergy.com.ng", supportPhone: s.supportPhone || "(+234) 08087550875" });
       if (s.paystackPublicKey) setPaystackKey(s.paystackPublicKey);
       setEnabledMethods({ enableBankTransfer: s.enableBankTransfer !== false, enablePaystack: s.enablePaystack !== false, enableOpay: s.enableOpay !== false, enableGlobalpay: s.enableGlobalpay !== false });

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import tower from "@/../public/tower.jpg";
 import Link from "next/link";
 
@@ -312,6 +313,7 @@ export default function Contact() {
           </div>
         )}
       </main>
+          <Footer />
     </div>
   );
 }

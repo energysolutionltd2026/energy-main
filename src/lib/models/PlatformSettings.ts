@@ -48,7 +48,7 @@ const PlatformSettingsSchema = new Schema(
     // ── Payment methods ───────────────────────────────────────────────────────
     paystackPublicKey:  { type: String },
     bankName:           { type: String, default: "First Bank of Nigeria" },
-    bankAccountName:    { type: String, default: "e-Nergy Oil & Gas" },
+    bankAccountName:    { type: String, default: "e-Nergy Solutions Limited" },
     bankAccountNumber:  { type: String },
     opayNumber:         { type: String },
     enablePaystack:     { type: Boolean, default: true },

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import tower from "@/../public/tower.jpg";
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
@@ -390,6 +391,7 @@ export default function AboutUs() {
           </div>
         </div>
       </main>
+          <Footer />
     </div>
   );
 }

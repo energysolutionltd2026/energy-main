@@ -312,7 +312,7 @@ export default function RentTruck() {
   const [showFlowModal, setShowFlowModal] = useState(false);
   const [lastBookingRef, setLastBookingRef] = useState("");
   const [bookingError, setBookingError] = useState("");
-  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "", opayNumber: "" });
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Solutions Limited", bankAccountNumber: "", opayNumber: "" });
   const [statePrices, setStatePrices] = useState<Record<string, number>>(DEFAULT_statePrices);
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableCash: true, enableWallet: true });
@@ -762,7 +762,7 @@ export default function RentTruck() {
   useEffect(() => {
     import("@/lib/db-client").then(({ api }) => api.platformSettings.get()).then((s) => {
       if (!s) return;
-      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
+      setBankSettings({ bankName: s.bankName || "First Bank of Nigeria", bankAccountName: s.bankAccountName || "e-Nergy Solutions Limited", bankAccountNumber: s.bankAccountNumber || "", opayNumber: s.opayNumber || "" });
       if (s.truckRates && Object.keys(s.truckRates).length > 0) {
         setStatePrices(Object.fromEntries(Object.entries(s.truckRates).map(([k, v]) => [k, Number(v)])));
       }

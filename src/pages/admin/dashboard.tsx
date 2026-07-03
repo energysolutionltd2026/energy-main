@@ -2946,7 +2946,7 @@ const DEFAULT_ADMIN_SETTINGS = {
   // ── Payment Methods ────────────────────────────────────────────────────────
   paystackPublicKey: "",
   bankName: "First Bank of Nigeria",
-  bankAccountName: "e-Nergy Oil & Gas",
+  bankAccountName: "e-Nergy Solutions Limited",
   bankAccountNumber: "",
   opayNumber: "",
   enablePaystack: true,
@@ -3737,7 +3737,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
             </div>
             <div>
               <label className={labelCls}>Account Name</label>
-              <input className={inputCls} placeholder="e.g. e-Nergy Oil & Gas" value={cfg.bankAccountName}
+              <input className={inputCls} placeholder="e.g. e-Nergy Solutions Limited" value={cfg.bankAccountName}
                 onChange={e => setCfg(p => ({ ...p, bankAccountName: e.target.value }))} />
             </div>
             <div>

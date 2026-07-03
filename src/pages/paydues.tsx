@@ -513,7 +513,7 @@ const InvoiceModal = ({
               Official Invoice
             </p>
             <h2 className="text-white font-extrabold text-2xl leading-tight">
-              e-Nergy Oil &amp; Gas
+              e-Nergy Solutions Limited
             </h2>
             <p className="text-orange-100 text-xs mt-1">Dues Payment Receipt</p>
           </div>
@@ -638,7 +638,7 @@ export default function PayDues() {
   const [isCustomer, setIsCustomer] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [duesAmount, setDuesAmount] = useState(DEFAULT_DUES_AMOUNT);
-  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Oil & Gas", bankAccountNumber: "", opayNumber: "" });
+  const [bankSettings, setBankSettings] = useState({ bankName: "First Bank of Nigeria", bankAccountName: "e-Nergy Solutions Limited", bankAccountNumber: "", opayNumber: "" });
   const [platformInfo, setPlatformInfo] = useState({ supportEmail: "info@e-nergy.com.ng", supportPhone: "(+234) 08087550875" });
   const [paystackKey, setPaystackKey] = useState("pk_test_REPLACE_WITH_YOUR_KEY");
   const [enabledMethods, setEnabledMethods] = useState({ enableBankTransfer: true, enablePaystack: true, enableOpay: true, enableGlobalpay: true });
@@ -681,7 +681,7 @@ export default function PayDues() {
       .then((settings) => {
         if (settings?.annualMembershipFee) setDuesAmount(settings.annualMembershipFee);
         if (settings) {
-          setBankSettings({ bankName: settings.bankName || "First Bank of Nigeria", bankAccountName: settings.bankAccountName || "e-Nergy Oil & Gas", bankAccountNumber: settings.bankAccountNumber || "", opayNumber: settings.opayNumber || "" });
+          setBankSettings({ bankName: settings.bankName || "First Bank of Nigeria", bankAccountName: settings.bankAccountName || "e-Nergy Solutions Limited", bankAccountNumber: settings.bankAccountNumber || "", opayNumber: settings.opayNumber || "" });
           setPlatformInfo({ supportEmail: settings.supportEmail || "info@e-nergy.com.ng", supportPhone: settings.supportPhone || "(+234) 08087550875" });
           if (settings.paystackPublicKey) setPaystackKey(settings.paystackPublicKey);
           setEnabledMethods({ enableBankTransfer: settings.enableBankTransfer !== false, enablePaystack: settings.enablePaystack !== false, enableOpay: settings.enableOpay !== false, enableGlobalpay: settings.enableGlobalpay !== false });

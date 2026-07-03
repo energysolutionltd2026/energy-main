@@ -285,6 +285,28 @@ function NavBar() {
               </Link>
             )
           )}
+
+          {/* Legal links */}
+          <div className="mt-auto pt-4 border-t border-gray-100">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Legal</p>
+            {[
+              { label: "Terms & Conditions", path: "/terms-and-conditions" },
+              { label: "Refund Policy",       path: "/refund-policy"        },
+              { label: "Privacy Policy",      path: "/privacy-policy"       },
+            ].map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className="w-full text-left px-4 py-2.5 rounded mb-1 text-gray-500 text-sm hover:text-orange-500 hover:bg-orange-50 transition flex items-center gap-2"
+                onClick={() => setMenuOpen(false)}
+              >
+                <svg className="w-3.5 h-3.5 text-orange-400 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </>
