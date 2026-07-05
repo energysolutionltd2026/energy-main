@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import NavBar from "@/components/NavBar";
-import Footer from "@/components/Footer";
 import tower from "@/../public/tower.jpg";
 
 // ─── Policy Sections ──────────────────────────────────────────────────────────
@@ -341,7 +340,6 @@ export default function PrivacyPolicy() {
           </div>
         </div>
       </main>
-          <Footer />
     </div>
   );
 }

@@ -47,6 +47,10 @@ function NavBar() {
   // ── Scroll hide/show ──────────────────────────────────────────────────────
   useEffect(() => {
     function handleScroll() {
+      // If the mobile menu is open, do NOT auto-hide the navbar.
+      // This lets users scroll the sidebar without it disappearing.
+      if (menuOpen) return;
+
       // Use documentElement.scrollTop as a consistent cross-browser fallback.
       const currentScrollY =
         window.scrollY ?? document.documentElement.scrollTop ?? 0;
@@ -72,7 +76,7 @@ function NavBar() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [menuOpen]);
 
   // ── Outside-click closes dropdown ─────────────────────────────────────────
   useEffect(() => {
@@ -203,7 +207,7 @@ function NavBar() {
       {menuOpen && (
         <div
           ref={mobileMenuRef}
-          className="fixed top-0 right-0 w-2/3 h-full bg-white shadow-lg flex flex-col p-6 z-[60] lg:hidden"
+          className="fixed top-0 right-0 w-2/3 h-full max-h-screen overflow-y-auto bg-white shadow-lg flex flex-col p-6 z-[60] lg:hidden"
         >
           <button
             onClick={() => setMenuOpen(false)}
@@ -290,6 +294,8 @@ function NavBar() {
           <div className="mt-auto pt-4 border-t border-gray-100">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Legal</p>
             {[
+              { label: "Contact",             path: "/contact"              },
+              { label: "About Us",            path: "/about"                },
               { label: "Terms & Conditions", path: "/terms-and-conditions" },
               { label: "Refund Policy",       path: "/refund-policy"        },
               { label: "Privacy Policy",      path: "/privacy-policy"       },

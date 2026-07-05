@@ -83,9 +83,10 @@ const navigationLinks = [
 ];
 
 export default function CustomerNavigation({ user }: CustomerNavigationProps) {
-  if (!user) return null;
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (!user) return null;
 
   const handleLogout = () => {
     fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"));
@@ -244,9 +245,11 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
         {/* Footer links */}
         <div className="px-3 py-4 border-t border-gray-800 space-y-1">
           {[
-            { href: "/contact",        label: "Contact"        },
-            { href: "/privacy-policy", label: "Privacy Policy" },
-            { href: "/about",          label: "About Us"       },
+            { href: "/contact",              label: "Contact"            },
+            { href: "/terms-and-conditions", label: "Terms & Conditions" },
+            { href: "/refund-policy",        label: "Refund Policy"      },
+            { href: "/privacy-policy",       label: "Privacy Policy"     },
+            { href: "/about",                label: "About Us"           },
           ].map((link) => (
             <Link
               key={link.href}

@@ -3,7 +3,7 @@ import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import Head from "next/head";
-import { NavBar, ButtomNavbar } from "@/components";
+import { NavBar, Footer } from "@/components";
 import { DepotProvider } from "@/context/DepotContext";
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -46,9 +46,8 @@ export default function App({ Component, pageProps }: AppProps) {
           <Component {...pageProps} />
         </main>
 
-        {!hideLayout && <ButtomNavbar />}
+        {!hideLayout && <Footer />}
       </div>
     </DepotProvider>
   );
-
 }

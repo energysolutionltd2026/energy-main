@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import NavBar from "@/components/NavBar";
-import Footer from "@/components/Footer";
 import tower from "@/../public/tower.jpg";
 
 // ─── Terms Sections ───────────────────────────────────────────────────────────
@@ -715,7 +714,6 @@ export default function TermsAndConditions() {
           </div>
         </div>
       </main>
-          <Footer />
     </div>
   );
 }

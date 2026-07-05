@@ -268,12 +268,16 @@ export default function BulkDealerNotifications() {
           </div>
         </main>
 
-        <footer className="px-6 py-4 border-t border-gray-800/60 flex items-center justify-center gap-6 text-xs text-gray-500">
-          <Link href="/contact" className="hover:text-gray-300 transition">Contact</Link>
+        <footer className="px-6 py-4 border-t border-gray-800/60 flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 hidden md:flex">
+          <Link href="/contact"              className="hover:text-gray-300 transition">Contact</Link>
           <span className="text-gray-700">|</span>
-          <Link href="/privacy-policy" className="hover:text-gray-300 transition">Privacy Policy</Link>
+          <Link href="/terms-and-conditions" className="hover:text-gray-300 transition">Terms &amp; Conditions</Link>
           <span className="text-gray-700">|</span>
-          <Link href="/about" className="hover:text-gray-300 transition">About Us</Link>
+          <Link href="/refund-policy"        className="hover:text-gray-300 transition">Refund Policy</Link>
+          <span className="text-gray-700">|</span>
+          <Link href="/privacy-policy"       className="hover:text-gray-300 transition">Privacy Policy</Link>
+          <span className="text-gray-700">|</span>
+          <Link href="/about"                className="hover:text-gray-300 transition">About Us</Link>
         </footer>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import BookingNavbar from "./BookingNavbar";
-import ButtomNavbar from "./ButtomNavbar";
+import Footer from "./Footer";
 import type { ReactNode } from "react";
 
 export default function BookingLayout({ children }: { children: ReactNode }) {
@@ -21,7 +21,7 @@ export default function BookingLayout({ children }: { children: ReactNode }) {
       </main>
 
       <div className="relative z-20">
-        <ButtomNavbar />
+        <Footer />
       </div>
     </div>
   );

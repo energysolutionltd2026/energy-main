@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
+import Link from "next/link";
 import NavBar from "@/components/NavBar";
-import Footer from "@/components/Footer";
 import tower from "@/../public/tower.jpg";
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
@@ -381,17 +381,16 @@ export default function AboutUs() {
               <p className="text-xs text-gray-400 italic">
                 {platformInfo.platformName} · {platformInfo.rcNumber} · DPR Licensed
               </p>
-              <a
+              <Link
                 href="/contact"
-                className="px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 active:scale-95 transition-all"
+                className="px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded hover:bg-orange-600 active:scale-95 transition-all text-center"
               >
                 Contact Us →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
       </main>
-          <Footer />
     </div>
   );
 }

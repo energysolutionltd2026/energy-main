@@ -497,6 +497,7 @@ const PaymentStage = ({
   availableMethods?: typeof PAYMENT_METHODS;
 }) => {
   const isGlobalpay = data.paymentMethod === "globalpay";
+  const isPaystack  = data.paymentMethod === "paystack";
   const isManual   = false;
 
   return (

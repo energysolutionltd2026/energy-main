@@ -4,8 +4,8 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative z-10 w-full border-t border-white/10 bg-black/30 backdrop-blur-sm">
-      <div className="max-w-5xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-white/10 bg-black/60 backdrop-blur-md hidden md:block">
+      <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Left: copyright */}
         <p className="text-white/50 text-xs">
           © {year} e-Nergy Solutions Limited. All rights reserved.
@@ -13,6 +13,10 @@ export default function Footer() {
 
         {/* Right: legal links */}
         <div className="flex items-center gap-5 text-xs">
+          <Link href="/contact" className="text-white/60 hover:text-orange-400 transition font-medium">Contact</Link>
+          <span className="text-white/20">|</span>
+          <Link href="/about" className="text-white/60 hover:text-orange-400 transition font-medium">About</Link>
+          <span className="text-white/20">|</span>
           <Link
             href="/terms-and-conditions"
             className="text-white/60 hover:text-orange-400 transition font-medium"
