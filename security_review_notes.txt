@@ -1,0 +1,74 @@
+Security review notes for e-Nergy project
+
+Completed hardening steps (excluding GlobalPay webhook):
+
+1) Cookie/session security
+- Updated clearTokenCookie to mirror the Secure flag used in setTokenCookie, so Secure cookies are reliably cleared in production.
+
+2) Login brute-force protection
+- Confirmed IP-based rate limiting is in place for /api/auth/login (10 attempts per 15 minutes per process). Recommended moving to shared store or edge rate limiting if horizontally scaled.
+
+3) CSRF and state-changing APIs
+- Frontend CSRF helper (double-submit cookie) exists but server-side CSRF validation is not yet wired into API routes. Need follow-up work to enforce X-CSRF-Token vs csrf_token cookie on state-changing endpoints.
+
+4) Session validation and middleware
+- API routes use getSessionUser + Session.isValid/expiresAt to guard access.
+- Next middleware currently trusts JWT only and does not consult Session; this means DB session invalidation does not affect already-issued JWTs for page routing. Consider adding a lightweight session check or shortening JWT TTL.
+
+5) Upload endpoint
+- /api/upload requires a valid session; uses Cloudinary with signed uploads.
+- Remaining TODOs: restrict or validate folder parameter, consider MIME/type checks on data URIs, and apply rate limiting.
+
+6) Payments verify endpoint
+- /api/payments/verify relies on merchant ref only and is unauthenticated. Recommendations: use long, random references; optionally require auth and ownership checks; add rate limiting.
+
+GlobalPay webhook (/api/webhooks/globalpay) intentionally left for later hardening.
+
+────────────────────────────────────────────────────────────────────────────
+Addendum — Financer Overview access hardening + audit (identity-based gate)
+────────────────────────────────────────────────────────────────────────────
+
+Context: the read-only overview dashboard was converted from a shared demo
+password to identity-based access restricted to an email allowlist
+(OVERVIEW_ALLOWED_EMAILS = super admin + one other user). Page renamed
+/overview → /financer-overview-e-nergy.
+
+FIXED (clear issues):
+
+A) Sensitive-column leak via /api/db/users  [HIGH — data delivery]
+   - The CRUD factory reads with `.lean()`, which BYPASSES the User schema's
+     toJSON transform that strips secrets. As a result GET /api/db/users and
+     GET /api/db/users/[id] returned passwordHash (bcrypt), email-verify OTP
+     hash/expiry/attempts, and password-reset token hash/expiry to any admin
+     session (and to anything holding an admin token).
+   - Fix: added a `projection` option to collectionHandler/documentHandler and
+     applied an exclusion projection on both users routes:
+       -passwordHash -emailVerifyCode -emailVerifyExp -emailVerifyAttempts
+       -resetToken -resetTokenExp
+     Applies to list, get-one, and the update response.
+
+B) Financer Overview data feed  [access control]
+   - New /api/overview/data enforces getSessionUser + isOverviewAllowed (fail
+     closed), is GET-only, sets Cache-Control: no-store/private, and returns
+     only explicitly projected safe fields (no secrets). Page GSSP verifies the
+     platform `token` JWT + allowlist and returns notFound (404) for everyone
+     else, so the route is not discoverable.
+
+NOTED (broader — needs product decision, not changed to avoid breaking flows):
+
+C) /api/db/supply-requests GET has NO role restriction  [role placement]
+   - Any authenticated user (customer, truck_owner, etc.) can list ALL supply
+     requests across every station via query filters — an over-broad read /
+     enumeration. Consumers today: admin dashboard (all), bulk-dealer dashboard
+     (all — appears intentional for fulfilment), customer + station-manager
+     (already scoped to requestedBy=self).
+   - Recommendation: restrict to ["admin","bulk_dealer","station_manager"] and
+     force non-privileged callers to filter.requestedBy = session.email. Left
+     unchanged here because bulk-dealer fulfilment relies on the broad list and
+     changing it needs product confirmation.
+
+D) Middleware trusts JWT only, not the DB Session (pre-existing, see item 4
+   above). A revoked session still routes pages until the 7-day JWT expires.
+   API routes are safe (getSessionUser checks Session validity); page-level
+   routing is the gap. Consider shortening JWT TTL or a lightweight session
+   check in middleware.

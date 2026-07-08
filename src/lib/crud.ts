@@ -25,9 +25,16 @@ export function collectionHandler<T extends AnyDoc>(
     defaultSort?: Record<string, 1 | -1>;
     pageSize?: number;
     allowedRoles?: UserRole[];
+    /**
+     * Mongoose projection string applied to every read. Because `.lean()`
+     * bypasses schema `toJSON` transforms, sensitive fields (e.g. passwordHash)
+     * would otherwise be returned. Pass an exclusion projection such as
+     * "-passwordHash -resetToken" for models with secret columns.
+     */
+    projection?: string;
   } = {}
 ) {
-  const { filterFields = [], defaultSort = { createdAt: -1 }, pageSize = 100, allowedRoles } = options;
+  const { filterFields = [], defaultSort = { createdAt: -1 }, pageSize = 100, allowedRoles, projection } = options;
 
   return async function handler(
     req: NextApiRequest,
@@ -58,7 +65,7 @@ export function collectionHandler<T extends AnyDoc>(
         const skip  = (page - 1) * limit;
 
         const [docs, total] = await Promise.all([
-          Model.find(filter).sort(defaultSort).skip(skip).limit(limit).lean(),
+          Model.find(filter).select(projection || "").sort(defaultSort).skip(skip).limit(limit).lean(),
           Model.countDocuments(filter),
         ]);
 
@@ -99,9 +106,11 @@ export function documentHandler<T extends AnyDoc>(
   options: {
     immutableFields?: string[];
     allowedRoles?: UserRole[];
+    /** Mongoose exclusion projection applied to GET/PUT reads (see collectionHandler). */
+    projection?: string;
   } = {}
 ) {
-  const { immutableFields = ["_id", "__v"], allowedRoles } = options;
+  const { immutableFields = ["_id", "__v"], allowedRoles, projection } = options;
 
   return async function handler(
     req: NextApiRequest,
@@ -120,7 +129,7 @@ export function documentHandler<T extends AnyDoc>(
     // ── GET: fetch one ──
     if (req.method === "GET") {
       try {
-        const doc = await Model.findById(id).lean();
+        const doc = await Model.findById(id).select(projection || "").lean();
         if (!doc) return res.status(404).json({ error: "Not found" });
         return res.status(200).json(doc);
       } catch (err) {
@@ -142,7 +151,7 @@ export function documentHandler<T extends AnyDoc>(
         const doc = await Model.findByIdAndUpdate(
           id,
           { $set: updates },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true, projection: projection || undefined }
         ).lean();
 
         if (!doc) return res.status(404).json({ error: "Not found" });

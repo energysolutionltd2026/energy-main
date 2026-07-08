@@ -23,7 +23,7 @@ export default function App({ Component, pageProps }: AppProps) {
     pathname.startsWith("/bulk-dealer") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/station-manager") ||
-    pathname === "/overview" ||
+    pathname === "/financer-overview-e-nergy" ||
     pathname === "/" ||
     pathname === "/landing" ||
     pathname === "/landingPage";

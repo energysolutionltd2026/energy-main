@@ -112,6 +112,8 @@ export function setTokenCookie(res: NextApiResponse, token: string) {
 export function clearTokenCookie(res: NextApiResponse) {
   res.setHeader(
     "Set-Cookie",
-    "token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax"
+    `token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${
+      process.env.NODE_ENV === "production" ? "; Secure" : ""
+    }`
   );
 }

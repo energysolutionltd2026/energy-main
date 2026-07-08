@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 import {
   LayoutDashboard, Users, Truck, Fuel, Building2, Receipt, MapPin,
-  TrendingUp, Package, ClipboardList, Lock, LogOut, RefreshCw,
+  Package, ClipboardList, LogOut, RefreshCw,
   AlertTriangle, ArrowRight, Banknote, Gauge, ShieldCheck,
 } from "lucide-react";
 import { toLabel } from "@/utils/toLabel";
@@ -21,34 +21,39 @@ async function tryGet<T>(url: string): Promise<T | null> {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-   Read-only Platform Overview Dashboard
-   - Client-side demo password gate (view-only; no write actions anywhere)
-   - Fetches live data from the platform API, falls back to mock data so the
-     page is fully usable for testing before the database is populated.
+   Restricted Financer Overview Dashboard
+   - Identity-gated: only the platform session emails on OVERVIEW_ALLOWED_EMAILS
+     (the super admin + one other user) can reach this page. Everyone else gets
+     a genuine 404 — the page's existence is not disclosed.
+   - View-only (no write actions anywhere). Live data comes from a dedicated,
+     allow-list-guarded endpoint; mock data is used only as a visual fallback.
 ──────────────────────────────────────────────────────────────────────────── */
 
 import type { GetServerSidePropsContext } from "next";
+import { isOverviewAllowed } from "@/lib/overviewAccess";
 
-const DEMO_USER = "demo";
-const DEMO_PASS = "energy2026";
-
-/* Server-side gate: only render the dashboard when a valid, signed
-   `overview_session` cookie is present. Without it, the page renders just the
-   login screen — the dashboard markup and data are never served. */
+/* Server-side gate. We verify the platform `token` cookie (the same JWT the rest
+   of the app issues), extract the email, and confirm it is on the overview
+   allowlist. Unauthorized visitors — logged-in non-allowlisted users and
+   anonymous visitors alike — receive a 404 so the route stays undiscoverable.
+   The dashboard markup is never served unless the viewer is authorized. */
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
-  const token = ctx.req.cookies?.overview_session;
-  let authed = false;
-  if (token && process.env.JWT_SECRET) {
-    try {
-      const { jwtVerify } = await import("jose");
-      const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-      const { payload } = await jwtVerify(token, secret);
-      authed = payload?.scope === "overview";
-    } catch {
-      authed = false;
-    }
+  const token = ctx.req.cookies?.token;
+  if (!token || !process.env.JWT_SECRET) {
+    return { notFound: true };
   }
-  return { props: { authed } };
+  try {
+    const { jwtVerify } = await import("jose");
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
+    const email = typeof payload?.email === "string" ? payload.email : null;
+    if (!isOverviewAllowed(email)) {
+      return { notFound: true };
+    }
+  } catch {
+    return { notFound: true };
+  }
+  return { props: {} };
 }
 
 // ─── Formatting helpers ─────────────────────────────────────────────────────
@@ -244,75 +249,6 @@ function LevelBar({ level }: { level: number }) {
   );
 }
 
-// ─── Login gate ─────────────────────────────────────────────────────────────
-function LoginGate() {
-  const [user, setUser] = useState("");
-  const [pass, setPass] = useState("");
-  const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErr("");
-    setBusy(true);
-    try {
-      const res = await fetch("/api/overview/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: pass }),
-      });
-      if (res.ok) {
-        // Cookie is set; reload so the server-side guard re-runs and renders the dashboard.
-        window.location.reload();
-      } else if (res.status === 429) {
-        setErr("Too many attempts. Please wait a few minutes and try again.");
-      } else {
-        setErr("Invalid credentials. Use the demo login below.");
-      }
-    } catch {
-      setErr("Network error. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <form onSubmit={submit} className="w-full max-w-sm bg-gray-900/70 border border-gray-800 rounded-2xl p-8">
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center mb-3">
-            <Lock className="w-6 h-6 text-orange-400" />
-          </div>
-          <h1 className="text-lg font-bold text-white">Platform Overview</h1>
-          <p className="text-xs text-gray-500 mt-1">Read-only operations dashboard — sign in to continue</p>
-        </div>
-
-        <label className="block text-xs text-gray-400 mb-1">Username</label>
-        <input value={user} onChange={(e) => setUser(e.target.value)} autoFocus
-          className="w-full mb-3 bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
-          placeholder="username" />
-
-        <label className="block text-xs text-gray-400 mb-1">Password</label>
-        <input type="password" value={pass} onChange={(e) => setPass(e.target.value)}
-          className="w-full mb-4 bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
-          placeholder="••••••••" />
-
-        {err && <p className="text-xs text-red-400 mb-3">{err}</p>}
-
-        <button type="submit" disabled={busy}
-          className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition text-white font-semibold rounded-lg py-2.5 text-sm">
-          {busy ? "Verifying…" : "Enter Dashboard"}
-        </button>
-
-        <div className="mt-5 rounded-lg bg-gray-950/60 border border-gray-800 p-3 text-center">
-          <p className="text-[11px] text-gray-500 mb-1">Demo login</p>
-          <p className="text-xs text-gray-300 font-mono">{DEMO_USER} / {DEMO_PASS}</p>
-        </div>
-      </form>
-    </div>
-  );
-}
-
 // ─── Main page ──────────────────────────────────────────────────────────────
 type Data = {
   settings: any; dealers: any[]; allocations: any[]; transactions: any[];
@@ -320,8 +256,7 @@ type Data = {
   truckRentals: any[]; depots: any[]; unionDues: any[];
 };
 
-export default function Overview({ authed }: { authed: boolean }) {
-  const [unlocked, setUnlocked] = useState(authed);
+export default function FinancerOverview() {
   const [tab, setTab] = useState("Overview");
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
@@ -335,41 +270,27 @@ export default function Overview({ authed }: { authed: boolean }) {
 
   async function load() {
     setLoading(true);
-    const [
-      settings, dealers, allocations, transactions, supplyRequests,
-      purchaseOrders, trucks, truckRentals, depots, unionDues,
-    ] = await Promise.all([
-      tryGet<any>("/api/db/platform-settings"),
-      tryGet<any>("/api/db/users?role=bulk_dealer&limit=100"),
-      tryGet<any>("/api/db/allocations?limit=200"),
-      tryGet<any>("/api/db/transactions?limit=200"),
-      tryGet<any>("/api/db/supply-requests?limit=200"),
-      tryGet<any>("/api/db/purchase-orders?limit=200"),
-      tryGet<any>("/api/db/trucks?limit=200"),
-      tryGet<any>("/api/db/truck-rentals?limit=200"),
-      tryGet<any>("/api/db/depots?limit=50"),
-      tryGet<any>("/api/db/union-dues?limit=200"),
-    ]);
+    // Single allow-list-guarded endpoint. It returns already-projected, safe
+    // fields for every dataset (no admin-only /api/db/* calls needed).
+    const res = await tryGet<Partial<Data>>("/api/overview/data");
 
-    const pick = <T,>(res: any, fallback: T[]): { rows: T[]; live: boolean } => {
-      const rows = res?.data;
-      return Array.isArray(rows) && rows.length ? { rows, live: true } : { rows: fallback, live: false };
-    };
+    const pick = <T,>(rows: any, fallback: T[]): { rows: T[]; live: boolean } =>
+      Array.isArray(rows) && rows.length ? { rows, live: true } : { rows: fallback, live: false };
 
-    const d = pick(dealers, MOCK.dealers);
-    const a = pick(allocations, MOCK.allocations);
-    const t = pick(transactions, MOCK.transactions);
-    const s = pick(supplyRequests, MOCK.supplyRequests);
-    const p = pick(purchaseOrders, MOCK.purchaseOrders);
-    const k = pick(trucks, MOCK.trucks);
-    const r = pick(truckRentals, MOCK.truckRentals);
-    const dp = pick(depots, MOCK.depots);
-    const u = pick(unionDues, MOCK.unionDues);
+    const d = pick(res?.dealers, MOCK.dealers);
+    const a = pick(res?.allocations, MOCK.allocations);
+    const t = pick(res?.transactions, MOCK.transactions);
+    const s = pick(res?.supplyRequests, MOCK.supplyRequests);
+    const p = pick(res?.purchaseOrders, MOCK.purchaseOrders);
+    const k = pick(res?.trucks, MOCK.trucks);
+    const r = pick(res?.truckRentals, MOCK.truckRentals);
+    const dp = pick(res?.depots, MOCK.depots);
+    const u = pick(res?.unionDues, MOCK.unionDues);
 
-    const anyLive = [d, a, t, s, p, k, r, dp, u].some((x) => x.live) || !!settings;
+    const anyLive = [d, a, t, s, p, k, r, dp, u].some((x) => x.live) || !!res?.settings;
     setLive(anyLive);
     setData({
-      settings: settings || MOCK.settings,
+      settings: res?.settings || MOCK.settings,
       dealers: d.rows, allocations: a.rows, transactions: t.rows,
       supplyRequests: s.rows, purchaseOrders: p.rows, trucks: k.rows,
       truckRentals: r.rows, depots: dp.rows, unionDues: u.rows,
@@ -378,8 +299,8 @@ export default function Overview({ authed }: { authed: boolean }) {
   }
 
   useEffect(() => {
-    if (unlocked) load();
-  }, [unlocked]);
+    load();
+  }, []);
 
   // ── Derived metrics ──
   const m = useMemo(() => {
@@ -409,13 +330,6 @@ export default function Overview({ authed }: { authed: boolean }) {
     ATK: settings?.atkPricePerLitre ?? 1095,
   };
 
-  if (!unlocked) return (
-    <>
-      <Head><title>Sign in · Platform Overview</title></Head>
-      <LoginGate />
-    </>
-  );
-
   const TABS = [
     { id: "Overview", icon: LayoutDashboard },
     { id: "Bulk Dealers", icon: Building2 },
@@ -424,19 +338,15 @@ export default function Overview({ authed }: { authed: boolean }) {
     { id: "Depots & Pricing", icon: Fuel },
   ];
 
-  async function logout() {
-    try {
-      await fetch("/api/overview/session", { method: "DELETE" });
-    } catch {
-      /* ignore */
-    }
-    setUnlocked(false);
-    window.location.reload();
+  function exit() {
+    // Access is tied to the platform session; "Exit" just leaves the dashboard.
+    // It does not end the platform session (use the app's own logout for that).
+    window.location.href = "/";
   }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <Head><title>Platform Overview · e-Nergy</title></Head>
+      <Head><title>Financer Overview · e-Nergy</title></Head>
 
       {/* Top bar */}
       <header className="sticky top-0 z-30 bg-gray-900/85 backdrop-blur border-b border-gray-800 px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -445,8 +355,8 @@ export default function Overview({ authed }: { authed: boolean }) {
             <Gauge className="w-4.5 h-4.5 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-sm leading-tight">Platform Overview</h1>
-            <p className="text-[11px] text-gray-500 leading-tight">Read-only operations dashboard</p>
+            <h1 className="text-white font-bold text-sm leading-tight">Financer Overview</h1>
+            <p className="text-[11px] text-gray-500 leading-tight">Restricted read-only dashboard</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -458,7 +368,7 @@ export default function Overview({ authed }: { authed: boolean }) {
             className="w-8 h-8 rounded-lg border border-gray-700 hover:border-gray-500 flex items-center justify-center text-gray-400 hover:text-white transition">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
-          <button onClick={logout}
+          <button onClick={exit}
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white transition">
             <LogOut className="w-3.5 h-3.5" /> Exit
           </button>
@@ -680,7 +590,7 @@ export default function Overview({ authed }: { authed: boolean }) {
                 { icon: Package, title: "4. Bulk Purchase Orders", desc: "Bulk dealers place depot loading orders (BuyNow), locking product, quantity and price at order time.", stat: `${m.poCount} orders · ${num(m.poVolume)} L` },
                 { icon: Truck, title: "5. Haulage & Loading", desc: "Owned or rented trucks are assigned; depot loading records track compartment ullage and dispatch.", stat: `${m.approvedTrucks} trucks approved · ${data.truckRentals.length} rentals` },
                 { icon: ArrowRight, title: "6. Delivery Tracking", desc: "Orders move through processing → in transit → delivered, with status visible to all parties.", stat: `${data.supplyRequests.filter((s) => s.status === "delivered").length} delivered` },
-                { icon: Banknote, title: "7. Payments & Settlement", desc: "Payments via bank transfer, card, wallet, OPay or cash flow into a unified transaction ledger.", stat: `${naira(m.totalValue)} settled` },
+                { icon: Banknote, title: "7. Payments & Settlement", desc: "Payments are processed through GlobalPay and flow into a unified transaction ledger.", stat: `${naira(m.totalValue)} settled` },
                 { icon: ShieldCheck, title: "8. Union Dues & Compliance", desc: "Members pay annual dues and custom levies; AI anomaly detection flags irregular transactions.", stat: `${data.unionDues.length} dues records · ${m.flagged} flagged txns` },
               ].map((step, i) => (
                 <div key={i} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex items-start gap-4">
