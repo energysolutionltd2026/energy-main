@@ -13,6 +13,7 @@ const LABELS: Record<string, string> = {
   in_progress:       "In Progress",
   one_time:          "One-time",
   bank_transfer:     "Bank Transfer",
+  globalpay:         "GlobalPay",
   truck_owner:       "Truck Owner",
   station_manager:   "Station Manager",
 };
