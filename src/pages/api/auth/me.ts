@@ -13,6 +13,11 @@ import { getSessionUser } from "@/lib/auth";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
+  // This response is per-user and role-bearing. Forbid any shared/browser
+  // caching so one user's auth state (e.g. an admin's) can never be replayed
+  // to another viewer — which would leak admin-only UI like the tank editor.
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
   const session = await getSessionUser(req);
   if (!session) return res.status(401).json({ error: "Not authenticated" });
 

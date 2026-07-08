@@ -37,10 +37,10 @@ function HomeContent({ depotIds: initialDepotIds }: HomeProps) {
   const [volumeSaving, setVolumeSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me")
+    fetch("/api/auth/me", { cache: "no-store", credentials: "same-origin" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.user?.role === "admin") setIsSuperAdmin(true); })
-      .catch(() => null);
+      .then((data) => { setIsSuperAdmin(data?.user?.role === "admin"); })
+      .catch(() => setIsSuperAdmin(false));
   }, []);
 
   // If depotIds not provided for some reason, hydrate once on client as fallback

@@ -7,6 +7,16 @@ import { invalidateDepotsCache } from "@/lib/cached-queries";
 const baseHandler = documentHandler(Depot, {
   immutableFields: ["_id", "__v", "name", "coordinates"],
   allowedRoles: ["admin", "station_manager"],
+  // Station managers may adjust stock levels, but only an admin may change a
+  // tank's max capacity. These are the exact (dotted) keys the homepage admin
+  // editor sends; they're stripped from any non-admin PUT so a crafted request
+  // can't resize a tank.
+  adminOnlyFields: [
+    "capacityLitres",
+    "PMS.capacityLitres",
+    "AGO.capacityLitres",
+    "ATK.capacityLitres",
+  ],
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
