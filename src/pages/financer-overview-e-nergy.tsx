@@ -249,6 +249,16 @@ function LevelBar({ level }: { level: number }) {
   );
 }
 
+function EmptyState({ icon: Icon, label }: { icon: any; label: string }) {
+  return (
+    <div className="bg-gray-900/40 border border-dashed border-gray-800 rounded-xl py-12 flex flex-col items-center justify-center text-center">
+      <Icon className="w-6 h-6 text-gray-600 mb-2" />
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-[11px] text-gray-600 mt-0.5">Records will appear here once data is available.</p>
+    </div>
+  );
+}
+
 // ─── Main page ──────────────────────────────────────────────────────────────
 type Data = {
   settings: any; dealers: any[]; allocations: any[]; transactions: any[];
@@ -256,16 +266,33 @@ type Data = {
   truckRentals: any[]; depots: any[]; unionDues: any[];
 };
 
+/* Mock data is a DEVELOPMENT-ONLY convenience so the dashboard renders populated
+   before the database is seeded. In production we never fabricate figures on a
+   financial oversight page — an empty database shows clean empty states instead.
+   `process.env.NODE_ENV` is inlined by Next at build time, so every mock fallback
+   below collapses to an empty array in the production build. */
+const DEV = process.env.NODE_ENV !== "production";
+
+const EMPTY: Data = {
+  settings: null, dealers: [], allocations: [], transactions: [],
+  supplyRequests: [], purchaseOrders: [], trucks: [],
+  truckRentals: [], depots: [], unionDues: [],
+};
+
+const INITIAL: Data = DEV
+  ? {
+      settings: MOCK.settings, dealers: MOCK.dealers, allocations: MOCK.allocations,
+      transactions: MOCK.transactions, supplyRequests: MOCK.supplyRequests,
+      purchaseOrders: MOCK.purchaseOrders, trucks: MOCK.trucks,
+      truckRentals: MOCK.truckRentals, depots: MOCK.depots, unionDues: MOCK.unionDues,
+    }
+  : EMPTY;
+
 export default function FinancerOverview() {
   const [tab, setTab] = useState("Overview");
   const [loading, setLoading] = useState(true);
-  const [live, setLive] = useState(false);
-  const [data, setData] = useState<Data>({
-    settings: MOCK.settings, dealers: MOCK.dealers, allocations: MOCK.allocations,
-    transactions: MOCK.transactions, supplyRequests: MOCK.supplyRequests,
-    purchaseOrders: MOCK.purchaseOrders, trucks: MOCK.trucks,
-    truckRentals: MOCK.truckRentals, depots: MOCK.depots, unionDues: MOCK.unionDues,
-  });
+  const [demo, setDemo] = useState(DEV); // true only while showing dev mock data
+  const [data, setData] = useState<Data>(INITIAL);
   const [openDealer, setOpenDealer] = useState<string | null>(null);
 
   async function load() {
@@ -274,8 +301,11 @@ export default function FinancerOverview() {
     // fields for every dataset (no admin-only /api/db/* calls needed).
     const res = await tryGet<Partial<Data>>("/api/overview/data");
 
+    // In production the fallback is empty (no fabricated data); in dev it's MOCK.
     const pick = <T,>(rows: any, fallback: T[]): { rows: T[]; live: boolean } =>
-      Array.isArray(rows) && rows.length ? { rows, live: true } : { rows: fallback, live: false };
+      Array.isArray(rows) && rows.length
+        ? { rows, live: true }
+        : { rows: DEV ? fallback : [], live: false };
 
     const d = pick(res?.dealers, MOCK.dealers);
     const a = pick(res?.allocations, MOCK.allocations);
@@ -287,10 +317,11 @@ export default function FinancerOverview() {
     const dp = pick(res?.depots, MOCK.depots);
     const u = pick(res?.unionDues, MOCK.unionDues);
 
-    const anyLive = [d, a, t, s, p, k, r, dp, u].some((x) => x.live) || !!res?.settings;
-    setLive(anyLive);
+    const hadLive = [d, a, t, s, p, k, r, dp, u].some((x) => x.live) || !!res?.settings;
+    // "Demo" only applies in dev when we fell back to mock. Production is never demo.
+    setDemo(DEV && !hadLive);
     setData({
-      settings: res?.settings || MOCK.settings,
+      settings: res?.settings || (DEV ? MOCK.settings : null),
       dealers: d.rows, allocations: a.rows, transactions: t.rows,
       supplyRequests: s.rows, purchaseOrders: p.rows, trucks: k.rows,
       truckRentals: r.rows, depots: dp.rows, unionDues: u.rows,
@@ -360,9 +391,9 @@ export default function FinancerOverview() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${live ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" : "bg-amber-500/10 text-amber-300 border-amber-500/30"}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${live ? "bg-emerald-400" : "bg-amber-400"}`} />
-            {live ? "Live data" : "Demo data"}
+          <span className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${demo ? "bg-amber-500/10 text-amber-300 border-amber-500/30" : "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${demo ? "bg-amber-400" : "bg-emerald-400"}`} />
+            {demo ? "Demo data" : "Live data"}
           </span>
           <button onClick={load} title="Refresh"
             className="w-8 h-8 rounded-lg border border-gray-700 hover:border-gray-500 flex items-center justify-center text-gray-400 hover:text-white transition">
@@ -425,6 +456,7 @@ export default function FinancerOverview() {
             <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Top Bulk Dealers by Completed Value</p>
               <div className="space-y-2.5">
+                {!data.dealers.length && <p className="text-xs text-gray-600">No dealer activity to rank yet.</p>}
                 {[...data.dealers]
                   .map((d) => ({
                     d,
@@ -453,6 +485,7 @@ export default function FinancerOverview() {
             <p className="text-xs text-gray-500 mb-2">
               {data.dealers.length} registered bulk dealers — their business identity, location, storage capacity, set prices, allocations and transaction activity. Click a dealer to expand.
             </p>
+            {!data.dealers.length && <EmptyState icon={Building2} label="No bulk dealers registered yet." />}
             {data.dealers.map((d) => {
               const dealerTx = data.transactions.filter((t) => t.userEmail === d.email);
               const dealerAlloc = data.allocations.filter((a) => a.dealerEmail === d.email);
@@ -614,6 +647,8 @@ export default function FinancerOverview() {
         {tab === "Transactions" && (
           <div className="space-y-3">
             <p className="text-xs text-gray-500 mb-2">{data.transactions.length} transactions across all roles and payment methods.</p>
+            {!data.transactions.length && <EmptyState icon={Receipt} label="No transactions recorded yet." />}
+            {!!data.transactions.length && (
             <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
@@ -653,6 +688,7 @@ export default function FinancerOverview() {
                 </table>
               </div>
             </div>
+            )}
           </div>
         )}
 
@@ -660,6 +696,7 @@ export default function FinancerOverview() {
         {tab === "Depots & Pricing" && (
           <div className="space-y-3">
             <p className="text-xs text-gray-500 mb-2">{data.depots.length} depots — live stock level and per-litre price by product.</p>
+            {!data.depots.length && <EmptyState icon={Fuel} label="No depots configured yet." />}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {data.depots.map((dp) => (
                 <div key={dp.name} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4">
@@ -700,7 +737,7 @@ export default function FinancerOverview() {
 
         <div className="mt-10 pt-5 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-600">
           <span>e-Nergy · Read-only platform overview</span>
-          <span>{live ? "Connected to live API" : "Showing demo data"}</span>
+          <span>{demo ? "Showing demo data (development)" : "Connected to live data"}</span>
         </div>
       </div>
     </div>
