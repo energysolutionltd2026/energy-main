@@ -49,7 +49,7 @@ export async function middleware(req: NextRequest) {
 
   if (token && JWT_SECRET) {
     try {
-      const { payload: p } = await jwtVerify(token, SECRET);
+      const { payload: p } = await jwtVerify(token, SECRET, { algorithms: ["HS256"] });
       payload = p as { role?: string };
     } catch {
       payload = null;

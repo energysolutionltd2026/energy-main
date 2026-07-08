@@ -44,13 +44,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // Gate 2: email must be on the overview allowlist. Fail closed.
-  if (!isOverviewAllowed(user.email)) {
-    return res.status(403).json({ error: "Forbidden" });
-  }
-
   try {
     await connectDB();
+
+    // Gate 2: access requires EITHER the env allowlist (super-admin bootstrap)
+    // OR a super-admin-granted `financerAccess` flag on the user record. Fail
+    // closed for everyone else.
+    let allowed = isOverviewAllowed(user.email);
+    if (!allowed) {
+      const grantee = await User.findById(user.userId).select("financerAccess").lean();
+      allowed = Boolean((grantee as { financerAccess?: boolean } | null)?.financerAccess);
+    }
+    if (!allowed) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
 
     const [
       settings,

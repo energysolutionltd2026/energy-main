@@ -41,10 +41,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // POST: create + SMS confirmation
   if (req.method === "POST") {
     try {
-      const doc = await TruckRental.create(req.body);
+      // Force the renter to the session and never trust client-supplied
+      // status/paymentStatus (payment state is set by the payment webhook).
+      const { status: _s, paymentStatus: _ps, ...rentalBody } = req.body ?? {};
+      const doc = await TruckRental.create({ ...rentalBody, rentedBy: session.email });
 
       // SMS to renter
-      const rentedBy = req.body.rentedBy as string | undefined;
+      const rentedBy = session.email as string | undefined;
       if (rentedBy) {
         const user = await User.findOne({ email: rentedBy.toLowerCase().trim() }).lean();
         if (user?.phone) {

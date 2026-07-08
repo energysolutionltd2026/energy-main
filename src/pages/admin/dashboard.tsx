@@ -32,7 +32,12 @@ interface AdminUser {
   pmsTankMaxML?: number;
   agoTankMaxML?: number;
   atkTankMaxML?: number;
+  financerAccess?: boolean;
 }
+
+// Maximum number of users who may hold financer dashboard access. Mirrors the
+// server-side cap enforced in /api/db/users/[id].
+const FINANCER_ACCESS_LIMIT = 2;
 
 interface SupplyRequest {
   id: string;
@@ -464,6 +469,9 @@ function SectionUsers({ users, setUsers, setToast }: {
     );
   });
 
+  // How many users currently hold financer dashboard access (capped).
+  const financerGrantedCount = users.filter(u => u.financerAccess).length;
+
   const toggleSuspend = (user: AdminUser) => {
     const next = user.status === "active" ? "suspended" : "active";
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: next as AdminUser["status"] } : u));
@@ -515,6 +523,38 @@ function SectionUsers({ users, setUsers, setToast }: {
       setToast(`Tank volumes updated for ${selected.name}`);
     } catch { /**/ }
     setTankSaving(false);
+  };
+
+  // Grant / revoke read-only access to the financer overview dashboard.
+  // Server-side, only an admin session may change this flag AND at most
+  // FINANCER_ACCESS_LIMIT users may hold it (see /api/db/users/[id]). We update
+  // optimistically, then revert if the server rejects (e.g. cap reached).
+  const toggleFinancerAccess = async (user: AdminUser) => {
+    const next = !user.financerAccess;
+
+    // Client-side guard so the admin gets instant feedback before hitting the API.
+    if (next && financerGrantedCount >= FINANCER_ACCESS_LIMIT) {
+      setToast(`Financer dashboard access is limited to ${FINANCER_ACCESS_LIMIT} users. Revoke an existing user first.`);
+      return;
+    }
+
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, financerAccess: next } : u));
+    setSelected(prev => prev && prev.id === user.id ? { ...prev, financerAccess: next } : prev);
+
+    if (user._id) {
+      const { api } = await import("@/lib/db-client");
+      const result = await api.users.update(user._id, { financerAccess: next });
+      if (!result) {
+        // Server rejected (cap reached or other error) — roll back the toggle.
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, financerAccess: !next } : u));
+        setSelected(prev => prev && prev.id === user.id ? { ...prev, financerAccess: !next } : prev);
+        setToast(next
+          ? `Could not grant access — the ${FINANCER_ACCESS_LIMIT}-user limit may be reached.`
+          : "Could not update financer access. Please try again.");
+        return;
+      }
+    }
+    setToast(`Financer dashboard access ${next ? "granted to" : "revoked from"} ${user.name}`);
   };
 
   const rc = (role: string) => role === "customer" ? "orange" : role === "bulk_dealer" ? "green" : "blue";
@@ -659,6 +699,43 @@ function SectionUsers({ users, setUsers, setToast }: {
               </button>
             </div>
           )}
+
+          {/* ── Financer overview dashboard access ─────────────────────────── */}
+          {(() => {
+            const capReached = financerGrantedCount >= FINANCER_ACCESS_LIMIT;
+            const lockedOut = !selected.financerAccess && capReached;
+            return (
+              <div className="mt-5 border-t border-gray-700 pt-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                      Financer Dashboard Access
+                    </p>
+                    <p className="text-[11px] text-gray-600 mt-1 max-w-[16rem]">
+                      Grants read-only access to the financer overview dashboard. The user keeps
+                      their normal role and login. Limited to {FINANCER_ACCESS_LIMIT} users.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleFinancerAccess(selected)}
+                    disabled={lockedOut}
+                    role="switch"
+                    aria-checked={Boolean(selected.financerAccess)}
+                    title={lockedOut ? `Limit of ${FINANCER_ACCESS_LIMIT} users reached — revoke another user first` : undefined}
+                    className={`relative shrink-0 w-12 h-6 rounded-full transition-colors ${selected.financerAccess ? "bg-orange-500" : "bg-gray-600"} ${lockedOut ? "opacity-40 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${selected.financerAccess ? "translate-x-6" : "translate-x-0"}`}
+                    />
+                  </button>
+                </div>
+                <p className={`text-[11px] mt-2 font-medium ${selected.financerAccess ? "text-orange-400" : "text-gray-500"}`}>
+                  {selected.financerAccess ? "Access granted" : lockedOut ? `Limit reached (${financerGrantedCount}/${FINANCER_ACCESS_LIMIT})` : "No access"}
+                  <span className="ml-2 text-gray-600 font-normal">· {financerGrantedCount}/{FINANCER_ACCESS_LIMIT} granted</span>
+                </p>
+              </div>
+            );
+          })()}
 
           <div className="flex justify-end mt-4">
             <button onClick={() => toggleSuspend(selected)}
@@ -4006,6 +4083,7 @@ export default function AdminDashboard() {
               pmsTankMaxML: u.pmsTankMaxML,
               agoTankMaxML: u.agoTankMaxML,
               atkTankMaxML: u.atkTankMaxML,
+              financerAccess: Boolean(u.financerAccess),
             }));
             setUsers(apiUsers);
           } else {

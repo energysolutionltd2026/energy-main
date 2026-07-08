@@ -33,10 +33,12 @@ import type { GetServerSidePropsContext } from "next";
 import { isOverviewAllowed } from "@/lib/overviewAccess";
 
 /* Server-side gate. We verify the platform `token` cookie (the same JWT the rest
-   of the app issues), extract the email, and confirm it is on the overview
-   allowlist. Unauthorized visitors — logged-in non-allowlisted users and
-   anonymous visitors alike — receive a 404 so the route stays undiscoverable.
-   The dashboard markup is never served unless the viewer is authorized. */
+   of the app issues) and confirm the viewer is authorized to see the overview.
+   Authorization is granted EITHER by the OVERVIEW_ALLOWED_EMAILS env allowlist
+   (the super-admin bootstrap) OR by a super-admin-granted `financerAccess` flag
+   on the user record. Unauthorized visitors — logged-in non-allowlisted users
+   and anonymous visitors alike — receive a 404 so the route stays
+   undiscoverable. The dashboard markup is never served unless authorized. */
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
   const token = ctx.req.cookies?.token;
   if (!token || !process.env.JWT_SECRET) {
@@ -45,9 +47,21 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
   try {
     const { jwtVerify } = await import("jose");
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
     const email = typeof payload?.email === "string" ? payload.email : null;
-    if (!isOverviewAllowed(email)) {
+    const userId = typeof payload?.userId === "string" ? payload.userId : null;
+
+    let allowed = isOverviewAllowed(email);
+    if (!allowed && userId) {
+      const { connectDB } = await import("@/lib/db");
+      const { User } = await import("@/lib/models/User");
+      await connectDB();
+      const grantee = await User.findById(userId).select("financerAccess").lean();
+      allowed = Boolean(
+        (grantee as { financerAccess?: boolean } | null)?.financerAccess
+      );
+    }
+    if (!allowed) {
       return { notFound: true };
     }
   } catch {

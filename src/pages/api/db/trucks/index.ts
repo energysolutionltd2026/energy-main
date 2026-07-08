@@ -39,10 +39,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // POST: create + admin notification
   if (req.method === "POST") {
     try {
-      const doc = await Truck.create(req.body);
+      // Force ownership to the session and never trust a client status (trucks
+      // must start unapproved and be reviewed by an admin).
+      const { status: _ignoredStatus, ...truckBody } = req.body ?? {};
+      const doc = await Truck.create({ ...truckBody, ownerEmail: session.email });
 
       const regNum = req.body.truckRegNumber ?? "N/A";
-      const owner  = req.body.ownerName ?? req.body.ownerEmail ?? "Unknown";
+      const owner  = req.body.ownerName ?? session.email ?? "Unknown";
       notifyAdmins(
         "New Truck Registration",
         `${owner} submitted truck ${regNum} for review. Pending approval.`,

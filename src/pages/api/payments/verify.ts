@@ -7,6 +7,7 @@
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 import { connectDB } from "@/lib/db";
+import { getSessionUser } from "@/lib/auth";
 import { verifyByMerchantRef } from "@/lib/globalpay";
 import { Transaction } from "@/lib/models/Transaction";
 import { PurchaseOrder } from "@/lib/models/PurchaseOrder";
@@ -20,16 +21,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!ref) return res.status(400).json({ error: "Missing ref" });
 
   try {
+    await connectDB();
+
+    // Require a valid session, and only allow the payer (or an admin) to verify
+    // a reference — prevents anonymous enumeration of payment state by ref.
+    const user = await getSessionUser(req);
+    if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+    const txn = await Transaction.findOne({ reference: ref });
+    if (!txn) return res.status(404).json({ error: "Unknown reference" });
+    if (user.role !== "admin" && txn.userEmail !== user.email) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     const gp = await verifyByMerchantRef(ref);
 
-    if (gp.transactionStatus !== "Successful") {
+    // Only treat as paid when GlobalPay confirms success AND the paid amount
+    // covers what was requested.
+    if (gp.transactionStatus !== "Successful" || !(Number(gp.amountPaid) >= Number(gp.amountFromMerchant))) {
       return res.status(200).json({ status: gp.transactionStatus });
     }
 
-    await connectDB();
-
-    const txn = await Transaction.findOne({ reference: ref });
-    if (txn && txn.status !== "completed") {
+    if (txn.status !== "completed") {
       await Transaction.findByIdAndUpdate(txn._id, { status: "completed", totalAmount: gp.amountPaid });
 
       if (ref.startsWith("BUY-")) {

@@ -26,6 +26,26 @@ export function collectionHandler<T extends AnyDoc>(
     pageSize?: number;
     allowedRoles?: UserRole[];
     /**
+     * Roles permitted to POST (create). Defaults to `allowedRoles`. Use this to
+     * allow broad read access while restricting writes (e.g. price-history:
+     * anyone may read, only admin may create).
+     */
+    writeRoles?: UserRole[];
+    /**
+     * Field holding the owning user's email. When set, non-admin callers are
+     * scoped to their own records: list queries are forced to
+     * `{ [ownerField]: session.email }` and creates have that field forced to
+     * the session email (prevents reading/spoofing other users' data).
+     */
+    ownerField?: string;
+    /**
+     * Restrict how `ownerField` is applied. "all" (default) scopes both list
+     * reads and forces the field on create. "read" scopes list reads only,
+     * leaving create free (e.g. notifications, where a user legitimately
+     * creates a message addressed to an admin).
+     */
+    ownerScope?: "all" | "read";
+    /**
      * Mongoose projection string applied to every read. Because `.lean()`
      * bypasses schema `toJSON` transforms, sensitive fields (e.g. passwordHash)
      * would otherwise be returned. Pass an exclusion projection such as
@@ -34,7 +54,7 @@ export function collectionHandler<T extends AnyDoc>(
     projection?: string;
   } = {}
 ) {
-  const { filterFields = [], defaultSort = { createdAt: -1 }, pageSize = 100, allowedRoles, projection } = options;
+  const { filterFields = [], defaultSort = { createdAt: -1 }, pageSize = 100, allowedRoles, writeRoles, ownerField, ownerScope = "all", projection } = options;
 
   return async function handler(
     req: NextApiRequest,
@@ -48,16 +68,26 @@ export function collectionHandler<T extends AnyDoc>(
       return res.status(403).json({ error: "Forbidden — insufficient role" });
     }
 
+    const isAdmin = user.role === "admin";
+
     // ── GET: list with optional filters, pagination, sort ──
     if (req.method === "GET") {
       try {
         const filter: Record<string, unknown> = {};
 
-        // Apply allowed filter fields from query string
+        // Apply allowed filter fields from query string. Coerce to primitive
+        // strings so a crafted query (?field[$ne]=x) can't inject a Mongo
+        // operator object into the filter.
         for (const field of filterFields) {
-          if (req.query[field]) {
-            filter[field] = req.query[field];
+          const raw = req.query[field];
+          if (raw !== undefined && raw !== "") {
+            filter[field] = Array.isArray(raw) ? String(raw[0]) : String(raw);
           }
+        }
+
+        // Scope non-admins to their own records.
+        if (ownerField && !isAdmin) {
+          filter[ownerField] = user.email;
         }
 
         const page  = Math.max(1, parseInt(req.query.page  as string) || 1);
@@ -83,8 +113,18 @@ export function collectionHandler<T extends AnyDoc>(
 
     // ── POST: create ──
     if (req.method === "POST") {
+      const postRoles = writeRoles ?? allowedRoles;
+      if (postRoles && !postRoles.includes(user.role)) {
+        return res.status(403).json({ error: "Forbidden — insufficient role" });
+      }
       try {
-        const doc = await Model.create(req.body);
+        const body = { ...req.body };
+        // Force ownership to the session so a caller can't create records
+        // attributed to another user (unless ownership scopes reads only).
+        if (ownerField && ownerScope === "all" && !isAdmin) {
+          body[ownerField] = user.email;
+        }
+        const doc = await Model.create(body);
         return res.status(201).json(doc);
       } catch (err: unknown) {
         console.error(`[${Model.modelName}] POST error:`, err);
@@ -106,11 +146,28 @@ export function documentHandler<T extends AnyDoc>(
   options: {
     immutableFields?: string[];
     allowedRoles?: UserRole[];
+    /**
+     * Roles permitted to PUT (update). Defaults to `allowedRoles`. DELETE is
+     * always admin-only regardless of this setting.
+     */
+    writeRoles?: UserRole[];
+    /**
+     * Field holding the owning user's email. When set, non-admin callers may
+     * only GET/PUT a record they own (`doc[ownerField] === session.email`);
+     * others receive 404 so record existence isn't leaked.
+     */
+    ownerField?: string;
+    /**
+     * Fields only an admin may change. Stripped from PUT payloads for non-admin
+     * callers (e.g. `status`, `paymentStatus`, prices) to prevent a user from
+     * self-approving or marking their own record paid.
+     */
+    adminOnlyFields?: string[];
     /** Mongoose exclusion projection applied to GET/PUT reads (see collectionHandler). */
     projection?: string;
   } = {}
 ) {
-  const { immutableFields = ["_id", "__v"], allowedRoles, projection } = options;
+  const { immutableFields = ["_id", "__v"], allowedRoles, writeRoles, ownerField, adminOnlyFields = [], projection } = options;
 
   return async function handler(
     req: NextApiRequest,
@@ -125,11 +182,17 @@ export function documentHandler<T extends AnyDoc>(
     }
 
     const { id } = req.query as { id: string };
+    const isAdmin = user.role === "admin";
+
+    // Non-admins are scoped to records they own. Building the ownership clause
+    // into the query means a non-owned id is indistinguishable from a missing
+    // one (404), avoiding existence disclosure.
+    const scope = ownerField && !isAdmin ? { [ownerField]: user.email } : {};
 
     // ── GET: fetch one ──
     if (req.method === "GET") {
       try {
-        const doc = await Model.findById(id).select(projection || "").lean();
+        const doc = await Model.findOne({ _id: id, ...scope }).select(projection || "").lean();
         if (!doc) return res.status(404).json({ error: "Not found" });
         return res.status(200).json(doc);
       } catch (err) {
@@ -140,6 +203,10 @@ export function documentHandler<T extends AnyDoc>(
 
     // ── PUT: update (partial) ──
     if (req.method === "PUT") {
+      const putRoles = writeRoles ?? allowedRoles;
+      if (putRoles && !putRoles.includes(user.role)) {
+        return res.status(403).json({ error: "Forbidden — insufficient role" });
+      }
       try {
         const updates = { ...req.body };
 
@@ -148,8 +215,15 @@ export function documentHandler<T extends AnyDoc>(
           delete updates[field];
         }
 
-        const doc = await Model.findByIdAndUpdate(
-          id,
+        // Strip privileged fields for non-admins (status, prices, …).
+        if (!isAdmin) {
+          for (const field of adminOnlyFields) {
+            delete updates[field];
+          }
+        }
+
+        const doc = await Model.findOneAndUpdate(
+          { _id: id, ...scope },
           { $set: updates },
           { new: true, runValidators: true, projection: projection || undefined }
         ).lean();
@@ -164,7 +238,7 @@ export function documentHandler<T extends AnyDoc>(
 
     // ── DELETE (admin only) ──
     if (req.method === "DELETE") {
-      if (user.role !== "admin") {
+      if (!isAdmin) {
         return res.status(403).json({ error: "Forbidden — only admins can delete records" });
       }
       try {

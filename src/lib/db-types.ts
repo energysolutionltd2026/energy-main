@@ -85,6 +85,9 @@ export interface User {
   agoTankMaxML?: number;
   atkTankMaxML?: number;
 
+  /** Grants read-only access to the financer overview dashboard (admin-set). */
+  financerAccess?: boolean;
+
   joinedAt: string;
   lastLogin?: string;
   updatedAt: string;

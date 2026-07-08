@@ -31,12 +31,14 @@ export interface JwtPayload {
 // ── Token creation ────────────────────────────────────────────────────────────
 
 export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: `${TOKEN_TTL_DAYS}d` });
+  return jwt.sign(payload, JWT_SECRET, { algorithm: "HS256", expiresIn: `${TOKEN_TTL_DAYS}d` });
 }
 
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload;
+    // Pin the algorithm so a token forged with a different alg (e.g. "none")
+    // can never be accepted.
+    return jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as JwtPayload;
   } catch {
     return null;
   }

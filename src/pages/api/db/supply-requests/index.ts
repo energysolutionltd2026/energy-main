@@ -36,10 +36,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // POST: create + SMS confirmation
   if (req.method === "POST") {
     try {
-      const doc = await SupplyRequest.create(req.body);
+      // Force the requester to the session and never trust a client status.
+      const { status: _ignoredStatus, ...srBody } = req.body ?? {};
+      const doc = await SupplyRequest.create({ ...srBody, requestedBy: session.email });
 
       // SMS to requester
-      const requestedBy = req.body.requestedBy as string | undefined;
+      const requestedBy = session.email as string | undefined;
       if (requestedBy) {
         const user = await User.findOne({ email: requestedBy.toLowerCase().trim() }).lean();
         if (user?.phone) {

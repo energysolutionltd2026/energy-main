@@ -3,8 +3,38 @@ import { connectDB } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { PurchaseOrder } from "@/lib/models/PurchaseOrder";
 import { Transaction } from "@/lib/models/Transaction";
+import { PlatformSettings } from "@/lib/models/PlatformSettings";
 import { notifyAdmins } from "@/lib/notifyAdmins";
 import { initiatePayment } from "@/lib/globalpay";
+
+// Server-side price floor per product (₦/litre). Fallbacks match the
+// PlatformSettings schema defaults so this stays safe even before an admin
+// has ever saved settings.
+const DEFAULT_PRICES: Record<string, number> = { PMS: 897, AGO: 1200, ATK: 1095 };
+
+// Recompute the minimum acceptable order value from trusted server-side
+// prices. Legitimate totals are fuelCost + delivery/handling fees, so any
+// client-supplied totalAmount below the raw fuel cost is rejected. A small
+// tolerance absorbs rounding without opening a meaningful under-charge window.
+async function fuelCostFloor(productType: unknown, productQuantity: unknown): Promise<number | null> {
+  const type = String(productType ?? "").toUpperCase();
+  const qty = Number(productQuantity);
+  if (!DEFAULT_PRICES[type] || !Number.isFinite(qty) || qty <= 0) return null;
+
+  let price = DEFAULT_PRICES[type];
+  try {
+    const settings = await PlatformSettings.findOne({ settingsKey: "global" })
+      .select("pmsPricePerLitre agoPricePerLitre atkPricePerLitre")
+      .lean() as Record<string, number> | null;
+    if (settings) {
+      const key = { PMS: "pmsPricePerLitre", AGO: "agoPricePerLitre", ATK: "atkPricePerLitre" }[type]!;
+      if (Number.isFinite(settings[key]) && settings[key] > 0) price = settings[key];
+    }
+  } catch {
+    // Fall back to defaults if settings can't be read.
+  }
+  return price * qty;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await connectDB();
@@ -41,7 +71,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // POST: create + admin notification
   if (req.method === "POST") {
     try {
-      const doc = await PurchaseOrder.create(req.body);
+      // Force ownership to the session and never trust a client-supplied status.
+      const { status: _ignoredStatus, ...body } = req.body ?? {};
+
+      // Reject under-priced orders: recompute the fuel-cost floor from trusted
+      // server-side prices and ensure the client's totalAmount covers it, so a
+      // tampered checkout can't initiate payment for less than the goods cost.
+      const floor = await fuelCostFloor(body.productType, body.productQuantity);
+      if (floor !== null) {
+        const submitted = Number(body.totalAmount);
+        const tolerance = 1; // ₦ — absorb rounding only
+        if (!Number.isFinite(submitted) || submitted < floor - tolerance) {
+          return res.status(400).json({
+            error: "Order total is below the minimum price for the selected product and quantity.",
+          });
+        }
+      }
+
+      const doc = await PurchaseOrder.create({ ...body, ownerEmail: session.email });
 
       const company  = req.body.companyName ?? "Unknown";
       const product  = req.body.productType ?? "N/A";

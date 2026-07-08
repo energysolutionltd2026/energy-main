@@ -11,6 +11,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import { connectDB } from "@/lib/db";
+import { verifyByMerchantRef } from "@/lib/globalpay";
 import { Transaction } from "@/lib/models/Transaction";
 import { PurchaseOrder } from "@/lib/models/PurchaseOrder";
 import { UnionDues } from "@/lib/models/UnionDues";
@@ -42,13 +43,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const merchantRef = payload.MerchantTransactionreference as string;
-  const amount      = payload.InAmount as number;
 
   if (!merchantRef) {
     return res.status(200).json({ ResponseCode: "99", ResponseDescription: "Missing reference", Status: false });
   }
 
   try {
+    // NEVER trust the amount/status in the webhook payload. Independently
+    // re-query GlobalPay for the authoritative result, so a forged or replayed
+    // webhook (the payload is only AES-encrypted, not signed) cannot mark an
+    // order paid or set an attacker-chosen amount.
+    let verified: Awaited<ReturnType<typeof verifyByMerchantRef>>;
+    try {
+      verified = await verifyByMerchantRef(merchantRef);
+    } catch (err) {
+      console.error("[globalpay-webhook] verify re-query failed:", err);
+      // Ask GlobalPay to retry rather than trusting an unverifiable payload.
+      return res.status(200).json({ ResponseCode: "99", ResponseDescription: "Verification pending", Status: false });
+    }
+
+    const amount = Number(verified.amountPaid);
+    const expected = Number(verified.amountFromMerchant);
+
+    // Only proceed on a confirmed, fully-paid transaction.
+    if (verified.transactionStatus !== "Successful" || !(amount >= expected)) {
+      return res.status(200).json({ ResponseCode: "00", ResponseDescription: "Acknowledged (not paid)", Status: true });
+    }
+
     await connectDB();
 
     const txn = await Transaction.findOne({ reference: merchantRef });

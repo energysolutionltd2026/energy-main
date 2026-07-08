@@ -12,6 +12,11 @@ const UserSchema = new Schema(
     role:          { type: String, enum: ["customer", "bulk_dealer", "truck_owner", "admin"], required: true },
     status:        { type: String, enum: ["active", "suspended", "pending"], default: "active" },
 
+    // Grants read-only access to the restricted financer overview dashboard.
+    // Set by the super admin from the admin UI (in addition to the
+    // OVERVIEW_ALLOWED_EMAILS env bootstrap). Never self-serviceable.
+    financerAccess: { type: Boolean, default: false },
+
     // ── Auth ──────────────────────────────────────────────────────────────────
     passwordHash:    { type: String },                   // bcrypt hash — never returned to client
     emailVerified:   { type: Boolean, default: false },
