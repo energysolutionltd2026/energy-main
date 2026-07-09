@@ -109,14 +109,14 @@ const ENV_VARS = [
 function Badge({ label, color }: { label: string; color: string }) {
   const map: Record<string, string> = {
     LIST:   "bg-blue-500/20 text-blue-300 border-blue-500/40",
-    GET:    "bg-gray-700/60 text-gray-300 border-gray-600",
+    GET:    "bg-card-2/60 text-foreground border-line",
     POST:   "bg-green-500/20 text-green-300 border-green-500/40",
     PUT:    "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
     DELETE: "bg-red-500/20 text-red-300 border-red-500/40",
     SEED:   "bg-orange-500/20 text-orange-300 border-orange-500/40",
   };
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${map[label] || "bg-gray-700 text-gray-300 border-gray-600"}`}>
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${map[label] || "bg-card-2 text-foreground border-line"}`}>
       {label}
     </span>
   );
@@ -129,7 +129,7 @@ function MethodBadge({ method }: { method: string }) {
     PUT:  "bg-yellow-500/20 text-yellow-300",
   };
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${map[method] || "bg-gray-700 text-gray-300"}`}>
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${map[method] || "bg-card-2 text-foreground"}`}>
       {method}
     </span>
   );
@@ -142,19 +142,19 @@ export default function BackendSummary() {
   const TABS = ["Overview", "Collections", "Auth Routes", "AI Routes", "Migration", "Environment"];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <Head><title>Backend Summary | e-Nergy</title></Head>
 
       {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-card/80 backdrop-blur border-b border-line px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/admin/dashboard" className="text-orange-400 hover:text-orange-300 text-sm font-semibold transition">
             ← Admin
           </Link>
-          <span className="text-gray-600">/</span>
-          <h1 className="text-white font-bold text-base">Backend Summary</h1>
+          <span className="text-muted">/</span>
+          <h1 className="text-foreground font-bold text-base">Backend Summary</h1>
         </div>
-        <span className="text-xs text-gray-500 hidden sm:block">e-Nergy Platform · MongoDB Atlas · Next.js 15 Pages Router</span>
+        <span className="text-xs text-muted hidden sm:block">e-Nergy Platform · MongoDB Atlas · Next.js 15 Pages Router</span>
       </header>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -168,8 +168,8 @@ export default function BackendSummary() {
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white mb-1">e-Nergy Backend Documentation</h2>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
+              <h2 className="text-xl font-bold text-foreground mb-1">e-Nergy Backend Documentation</h2>
+              <p className="text-muted text-sm leading-relaxed max-w-2xl">
                 Full-stack Nigerian fuel distribution platform. 17 MongoDB collections, 7 auth routes, 17 CRUD API routes, 7 AI routes powered by Claude Opus 4.6. All pages migrated from localStorage to real API with graceful fallback.
               </p>
               <div className="flex flex-wrap gap-3 mt-3">
@@ -179,7 +179,7 @@ export default function BackendSummary() {
                   { label: "7 AI Routes",    color: "text-purple-400" },
                   { label: "3-Tier Migration", color: "text-green-400" },
                 ].map((s) => (
-                  <span key={s.label} className={`text-xs font-semibold ${s.color} bg-gray-800 px-3 py-1 rounded-full border border-gray-700`}>
+                  <span key={s.label} className={`text-xs font-semibold ${s.color} bg-card-2 px-3 py-1 rounded-full border border-line`}>
                     {s.label}
                   </span>
                 ))}
@@ -189,11 +189,11 @@ export default function BackendSummary() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 mb-6 overflow-x-auto w-fit">
+        <div className="flex gap-1 bg-card border border-line rounded-xl p-1 mb-6 overflow-x-auto w-fit">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition ${
-                tab === t ? "bg-orange-500 text-white shadow-md shadow-orange-500/20" : "text-gray-400 hover:text-white"
+                tab === t ? "bg-orange-500 text-white shadow-md shadow-orange-500/20" : "text-muted hover:text-foreground"
               }`}>
               {t}
             </button>
@@ -204,7 +204,7 @@ export default function BackendSummary() {
         {tab === "Overview" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5">
+            <div className="bg-card/60 border border-line rounded-xl p-5">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Stack</p>
               <div className="space-y-2.5 text-sm">
                 {[
@@ -218,24 +218,24 @@ export default function BackendSummary() {
                   { k: "Payments",    v: "Paystack (wired in env)" },
                 ].map(({ k, v }) => (
                   <div key={k} className="flex gap-3">
-                    <span className="text-gray-500 w-28 shrink-0">{k}</span>
-                    <span className="text-white">{v}</span>
+                    <span className="text-muted w-28 shrink-0">{k}</span>
+                    <span className="text-foreground">{v}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5">
+            <div className="bg-card/60 border border-line rounded-xl p-5">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Architecture</p>
-              <div className="space-y-3 text-sm text-gray-300">
-                <p><span className="text-white font-semibold">CRUD factory pattern:</span> <code className="text-orange-300 text-xs">collectionHandler</code> and <code className="text-orange-300 text-xs">documentHandler</code> in <code className="text-xs text-gray-400">src/lib/crud.ts</code> — every collection gets full REST from two lines.</p>
-                <p><span className="text-white font-semibold">API client:</span> <code className="text-orange-300 text-xs">api</code> namespace in <code className="text-xs text-gray-400">src/lib/db-client.ts</code> wraps every route with a <code className="text-orange-300 text-xs">safe()</code> helper that returns <code className="text-orange-300 text-xs">null</code> on error — no uncaught exceptions.</p>
-                <p><span className="text-white font-semibold">Migration strategy:</span> API-first with localStorage fallback. All pages try the real API; on null response fall back to localStorage. Dual-write keeps both in sync during transition.</p>
-                <p><span className="text-white font-semibold">Seeding:</span> <code className="text-gray-400 text-xs">POST /api/db/seed</code> with <code className="text-orange-300 text-xs">SEED_SECRET</code> header seeds admin, demo dealer, demo customer, depot stock, and platform settings.</p>
+              <div className="space-y-3 text-sm text-foreground">
+                <p><span className="text-foreground font-semibold">CRUD factory pattern:</span> <code className="text-orange-300 text-xs">collectionHandler</code> and <code className="text-orange-300 text-xs">documentHandler</code> in <code className="text-xs text-muted">src/lib/crud.ts</code> — every collection gets full REST from two lines.</p>
+                <p><span className="text-foreground font-semibold">API client:</span> <code className="text-orange-300 text-xs">api</code> namespace in <code className="text-xs text-muted">src/lib/db-client.ts</code> wraps every route with a <code className="text-orange-300 text-xs">safe()</code> helper that returns <code className="text-orange-300 text-xs">null</code> on error — no uncaught exceptions.</p>
+                <p><span className="text-foreground font-semibold">Migration strategy:</span> API-first with localStorage fallback. All pages try the real API; on null response fall back to localStorage. Dual-write keeps both in sync during transition.</p>
+                <p><span className="text-foreground font-semibold">Seeding:</span> <code className="text-muted text-xs">POST /api/db/seed</code> with <code className="text-orange-300 text-xs">SEED_SECRET</code> header seeds admin, demo dealer, demo customer, depot stock, and platform settings.</p>
               </div>
             </div>
 
-            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5 md:col-span-2">
+            <div className="bg-card/60 border border-line rounded-xl p-5 md:col-span-2">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">User Roles</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
@@ -243,12 +243,12 @@ export default function BackendSummary() {
                   { role: "Bulk Dealer", dbRole: "bulk_dealer", color: "text-green-400",   pages: ["Dashboard (Stock, Allocations, Sales, Buyers)", "Profile", "Notifications"] },
                   { role: "Admin",       dbRole: "admin",       color: "text-purple-400",  pages: ["Dashboard (Users, Supply Requests, Station Managers, Settings, Levies, Sales)"] },
                 ].map(({ role, dbRole, color, pages }) => (
-                  <div key={role} className="bg-gray-800/50 rounded-xl p-4">
+                  <div key={role} className="bg-card-2/50 rounded-xl p-4">
                     <p className={`font-bold text-sm ${color} mb-1`}>{role}</p>
-                    <p className="text-xs text-gray-500 mb-2">DB role: <code className="text-gray-400">{dbRole}</code></p>
+                    <p className="text-xs text-muted mb-2">DB role: <code className="text-muted">{dbRole}</code></p>
                     <ul className="space-y-1">
                       {pages.map((p) => (
-                        <li key={p} className="text-xs text-gray-400 flex items-center gap-1.5">
+                        <li key={p} className="text-xs text-muted flex items-center gap-1.5">
                           <span className={`w-1 h-1 rounded-full shrink-0 ${color.replace("text-", "bg-")}`} />
                           {p}
                         </li>
@@ -265,16 +265,16 @@ export default function BackendSummary() {
         {/* ── Collections ── */}
         {tab === "Collections" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-4">All 17 collections in MongoDB database <code className="text-orange-300">e-nergy</code>. Every collection uses the CRUD factory — collection routes support GET+POST, document routes support GET+PUT (and DELETE where applicable).</p>
+            <p className="text-xs text-muted mb-4">All 17 collections in MongoDB database <code className="text-orange-300">e-nergy</code>. Every collection uses the CRUD factory — collection routes support GET+POST, document routes support GET+PUT (and DELETE where applicable).</p>
             {COLLECTIONS.map((c) => (
-              <div key={c.name} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4">
+              <div key={c.name} className="bg-card/60 border border-line rounded-xl p-4">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <code className="text-orange-400 font-bold text-sm">{c.name}</code>
-                      <code className="text-gray-500 text-xs">{c.route}</code>
+                      <code className="text-muted text-xs">{c.route}</code>
                     </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">{c.desc}</p>
+                    <p className="text-xs text-muted leading-relaxed">{c.desc}</p>
                   </div>
                   <div className="flex gap-1 flex-wrap shrink-0">
                     {c.ops.map((op) => <Badge key={op} label={op} color="" />)}
@@ -288,28 +288,28 @@ export default function BackendSummary() {
         {/* ── Auth Routes ── */}
         {tab === "Auth Routes" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-4">JWT-based authentication. Tokens stored in HTTP-only cookies (<code className="text-orange-300">e-nergy-token</code>). Passwords hashed with bcrypt (12 rounds). Password reset uses a 1-hour expiry JWT.</p>
+            <p className="text-xs text-muted mb-4">JWT-based authentication. Tokens stored in HTTP-only cookies (<code className="text-orange-300">e-nergy-token</code>). Passwords hashed with bcrypt (12 rounds). Password reset uses a 1-hour expiry JWT.</p>
             {AUTH_ROUTES.map((r) => (
-              <div key={r.path} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex items-start gap-4">
+              <div key={r.path} className="bg-card/60 border border-line rounded-xl p-4 flex items-start gap-4">
                 <MethodBadge method={r.method} />
                 <div>
                   <code className="text-orange-400 text-sm font-bold">{r.path}</code>
-                  <p className="text-xs text-gray-400 mt-1">{r.desc}</p>
+                  <p className="text-xs text-muted mt-1">{r.desc}</p>
                 </div>
               </div>
             ))}
-            <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4 mt-4">
-              <p className="text-xs font-bold text-gray-300 mb-2">Seeded credentials (from <code className="text-orange-300">POST /api/db/seed</code>)</p>
+            <div className="bg-card-2/40 border border-line rounded-xl p-4 mt-4">
+              <p className="text-xs font-bold text-foreground mb-2">Seeded credentials (from <code className="text-orange-300">POST /api/db/seed</code>)</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 {[
                   { role: "Admin",       email: "admin@e-nergy.ng",      pass: "Admin@2026!" },
                   { role: "Bulk Dealer", email: "dealer@e-nergy.ng",     pass: "Dealer@2026!" },
                   { role: "Customer",    email: "customer@e-nergy.ng",   pass: "Customer@2026!" },
                 ].map(({ role, email, pass }) => (
-                  <div key={role} className="bg-gray-900/60 rounded-lg p-3">
+                  <div key={role} className="bg-card/60 rounded-lg p-3">
                     <p className="text-orange-400 font-semibold mb-1">{role}</p>
-                    <p className="text-gray-300">{email}</p>
-                    <p className="text-gray-400 font-mono">{pass}</p>
+                    <p className="text-foreground">{email}</p>
+                    <p className="text-muted font-mono">{pass}</p>
                   </div>
                 ))}
               </div>
@@ -320,19 +320,19 @@ export default function BackendSummary() {
         {/* ── AI Routes ── */}
         {tab === "AI Routes" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-4">All AI routes use <strong className="text-gray-300">Claude Opus 4.6</strong> via the Anthropic SDK. They query the MongoDB database for real data, perform structured analysis, and return JSON results. Feedback is stored in the <code className="text-orange-300">ai_feedback</code> collection.</p>
+            <p className="text-xs text-muted mb-4">All AI routes use <strong className="text-foreground">Claude Opus 4.6</strong> via the Anthropic SDK. They query the MongoDB database for real data, perform structured analysis, and return JSON results. Feedback is stored in the <code className="text-orange-300">ai_feedback</code> collection.</p>
             {AI_ROUTES.map((r) => (
-              <div key={r.path} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex items-start gap-4">
+              <div key={r.path} className="bg-card/60 border border-line rounded-xl p-4 flex items-start gap-4">
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 shrink-0 mt-0.5">POST</span>
                 <div>
                   <code className="text-purple-400 text-sm font-bold">{r.path}</code>
-                  <p className="text-xs text-gray-400 mt-1">{r.desc}</p>
+                  <p className="text-xs text-muted mt-1">{r.desc}</p>
                 </div>
               </div>
             ))}
             <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4 mt-2">
               <p className="text-xs text-purple-300 font-semibold mb-1">Implementation note</p>
-              <p className="text-xs text-gray-400">AI routes are built (50/50 Tier split) but not yet wired to live DB data — they use structured prompts with context from the DB. Full wiring happens as real data accumulates in production.</p>
+              <p className="text-xs text-muted">AI routes are built (50/50 Tier split) but not yet wired to live DB data — they use structured prompts with context from the DB. Full wiring happens as real data accumulates in production.</p>
             </div>
           </div>
         )}
@@ -340,7 +340,7 @@ export default function BackendSummary() {
         {/* ── Migration ── */}
         {tab === "Migration" && (
           <div className="space-y-5">
-            <p className="text-xs text-gray-500 mb-2">All pages were migrated from localStorage-only storage to API-first with localStorage fallback. The strategy: try the API, use results if available, otherwise fall back to localStorage. Write operations go to both. This means the app works offline/on first load and seamlessly transitions to real data as the database fills.</p>
+            <p className="text-xs text-muted mb-2">All pages were migrated from localStorage-only storage to API-first with localStorage fallback. The strategy: try the API, use results if available, otherwise fall back to localStorage. Write operations go to both. This means the app works offline/on first load and seamlessly transitions to real data as the database fills.</p>
             {MIGRATION_TIERS.map((t) => (
               <div key={t.tier} className={`border rounded-xl p-5 ${t.bg} ${t.border}`}>
                 <div className="flex items-center gap-3 mb-3">
@@ -349,7 +349,7 @@ export default function BackendSummary() {
                 </div>
                 <ul className="space-y-2">
                   {t.items.map((item) => (
-                    <li key={item} className="text-xs text-gray-300 flex items-start gap-2">
+                    <li key={item} className="text-xs text-foreground flex items-start gap-2">
                       <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1 ${t.color.replace("text-", "bg-")}`} />
                       {item}
                     </li>
@@ -357,8 +357,8 @@ export default function BackendSummary() {
                 </ul>
               </div>
             ))}
-            <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-5">
-              <p className="text-xs font-bold text-gray-300 mb-3">Remaining (to wire when real data exists)</p>
+            <div className="bg-card-2/40 border border-line rounded-xl p-5">
+              <p className="text-xs font-bold text-foreground mb-3">Remaining (to wire when real data exists)</p>
               <ul className="space-y-2">
                 {[
                   "platform_transactions write side → api.transactions.create() (full Paystack callback wiring)",
@@ -366,7 +366,7 @@ export default function BackendSummary() {
                   "SecurityTab password update → real hash comparison via API (currently UI-only password check)",
                   "sm_global_stock → api.depots bulk update (admin SectionProducts 'Apply to all depots')",
                 ].map((item) => (
-                  <li key={item} className="text-xs text-gray-400 flex items-start gap-2">
+                  <li key={item} className="text-xs text-muted flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-600 shrink-0 mt-1" />
                     {item}
                   </li>
@@ -379,23 +379,23 @@ export default function BackendSummary() {
         {/* ── Environment ── */}
         {tab === "Environment" && (
           <div className="space-y-4">
-            <p className="text-xs text-gray-500 mb-2">Configure these in your <code className="text-orange-300">.env.local</code> file (local dev) or in the Sliplane dashboard environment variables (production). Never commit secrets to git.</p>
+            <p className="text-xs text-muted mb-2">Configure these in your <code className="text-orange-300">.env.local</code> file (local dev) or in the Sliplane dashboard environment variables (production). Never commit secrets to git.</p>
             <div className="space-y-3">
               {ENV_VARS.map((e) => (
-                <div key={e.key} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4">
+                <div key={e.key} className="bg-card/60 border border-line rounded-xl p-4">
                   <code className="text-orange-400 font-bold text-sm">{e.key}</code>
-                  <p className="text-xs text-gray-400 mt-1">{e.desc}</p>
+                  <p className="text-xs text-muted mt-1">{e.desc}</p>
                 </div>
               ))}
             </div>
             <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4 mt-4">
               <p className="text-xs font-bold text-yellow-400 mb-2">Hosting note</p>
-              <p className="text-xs text-gray-400">This app runs on <strong className="text-gray-300">Sliplane</strong> (container-based hosting). Environment variables are set in the Sliplane dashboard — not in <code className="text-orange-300">.env.local</code> which is gitignored. The <code className="text-gray-300">NEXT_PUBLIC_*</code> prefix is NOT used — all secrets stay server-side.</p>
+              <p className="text-xs text-muted">This app runs on <strong className="text-foreground">Sliplane</strong> (container-based hosting). Environment variables are set in the Sliplane dashboard — not in <code className="text-orange-300">.env.local</code> which is gitignored. The <code className="text-foreground">NEXT_PUBLIC_*</code> prefix is NOT used — all secrets stay server-side.</p>
             </div>
           </div>
         )}
 
-        <div className="mt-12 pt-6 border-t border-gray-800 flex items-center justify-between text-xs text-gray-600">
+        <div className="mt-12 pt-6 border-t border-line flex items-center justify-between text-xs text-muted">
           <span>e-Nergy Platform · Backend built May 2026</span>
           <Link href="/admin/dashboard" className="text-orange-400 hover:text-orange-300 transition font-semibold">
             ← Back to Admin Dashboard

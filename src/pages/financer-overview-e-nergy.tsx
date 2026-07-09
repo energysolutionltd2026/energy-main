@@ -249,10 +249,10 @@ function StatusPill({ value }: { value: string }) {
     revoked: "bg-red-500/15 text-red-300 border-red-500/30",
     overdue: "bg-red-500/15 text-red-300 border-red-500/30",
     unavailable: "bg-red-500/15 text-red-300 border-red-500/30",
-    exhausted: "bg-gray-600/30 text-gray-300 border-gray-600",
+    exhausted: "bg-gray-600/30 text-foreground border-line",
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${map[value] || "bg-gray-700/40 text-gray-300 border-gray-600"}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${map[value] || "bg-card-2/40 text-foreground border-line"}`}>
       {toLabel(value)}
     </span>
   );
@@ -268,15 +268,15 @@ function Stat({ icon: Icon, label, value, sub, tone = "orange" }: {
     purple: "text-purple-400 bg-purple-500/10 border-purple-500/20",
   };
   return (
-    <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4">
+    <div className="bg-card/60 border border-line rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-gray-400">{label}</span>
+        <span className="text-xs font-medium text-muted">{label}</span>
         <span className={`w-8 h-8 rounded-lg border flex items-center justify-center ${tones[tone]}`}>
           <Icon className="w-4 h-4" />
         </span>
       </div>
-      <p className="text-2xl font-bold text-white leading-none">{value}</p>
-      {sub && <p className="text-xs text-gray-500 mt-1.5">{sub}</p>}
+      <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+      {sub && <p className="text-xs text-muted mt-1.5">{sub}</p>}
     </div>
   );
 }
@@ -284,7 +284,7 @@ function Stat({ icon: Icon, label, value, sub, tone = "orange" }: {
 function LevelBar({ level }: { level: number }) {
   const color = level < 20 ? "bg-red-500" : level < 40 ? "bg-amber-500" : "bg-emerald-500";
   return (
-    <div className="w-full h-1.5 rounded-full bg-gray-800 overflow-hidden">
+    <div className="w-full h-1.5 rounded-full bg-card-2 overflow-hidden">
       <div className={`h-full ${color}`} style={{ width: `${Math.min(100, level)}%` }} />
     </div>
   );
@@ -292,10 +292,10 @@ function LevelBar({ level }: { level: number }) {
 
 function EmptyState({ icon: Icon, label }: { icon: any; label: string }) {
   return (
-    <div className="bg-gray-900/40 border border-dashed border-gray-800 rounded-xl py-12 flex flex-col items-center justify-center text-center">
-      <Icon className="w-6 h-6 text-gray-600 mb-2" />
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-[11px] text-gray-600 mt-0.5">Records will appear here once data is available.</p>
+    <div className="bg-card/40 border border-dashed border-line rounded-xl py-12 flex flex-col items-center justify-center text-center">
+      <Icon className="w-6 h-6 text-muted mb-2" />
+      <p className="text-sm text-muted">{label}</p>
+      <p className="text-[11px] text-muted mt-0.5">Records will appear here once data is available.</p>
     </div>
   );
 }
@@ -418,18 +418,18 @@ export default function FinancerOverview() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <Head><title>Financer Overview · e-Nergy</title></Head>
 
       {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-gray-900/85 backdrop-blur border-b border-gray-800 px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-card/85 backdrop-blur border-b border-line px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-orange-500/15 border border-orange-500/30 flex items-center justify-center">
             <Gauge className="w-4.5 h-4.5 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-sm leading-tight">Financer Overview</h1>
-            <p className="text-[11px] text-gray-500 leading-tight">Restricted read-only dashboard</p>
+            <h1 className="text-foreground font-bold text-sm leading-tight">Financer Overview</h1>
+            <p className="text-[11px] text-muted leading-tight">Restricted read-only dashboard</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -438,11 +438,11 @@ export default function FinancerOverview() {
             {demo ? "Demo data" : "Live data"}
           </span>
           <button onClick={load} title="Refresh"
-            className="w-8 h-8 rounded-lg border border-gray-700 hover:border-gray-500 flex items-center justify-center text-gray-400 hover:text-white transition">
+            className="w-8 h-8 rounded-lg border border-line hover:border-line flex items-center justify-center text-muted hover:text-foreground transition">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
           <button onClick={exit}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white transition">
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-line hover:border-line text-foreground hover:text-foreground transition">
             <LogOut className="w-3.5 h-3.5" /> Exit
           </button>
         </div>
@@ -456,11 +456,11 @@ export default function FinancerOverview() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 mb-6 overflow-x-auto">
+        <div className="flex gap-1 bg-card border border-line rounded-xl p-1 mb-6 overflow-x-auto">
           {TABS.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition ${
-                tab === t.id ? "bg-orange-500 text-white" : "text-gray-400 hover:text-white"
+                tab === t.id ? "bg-orange-500 text-white" : "text-muted hover:text-foreground"
               }`}>
               <t.icon className="w-4 h-4" /> {t.id}
             </button>
@@ -482,23 +482,23 @@ export default function FinancerOverview() {
             </div>
 
             {/* Product prices */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5">
+            <div className="bg-card/60 border border-line rounded-xl p-5">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Platform Fuel Prices (₦/Litre)</p>
               <div className="grid grid-cols-3 gap-4">
                 {PRODUCTS.map((p) => (
-                  <div key={p} className="bg-gray-950/60 border border-gray-800 rounded-lg p-4 text-center">
-                    <p className="text-xs text-gray-500 mb-1">{p}</p>
-                    <p className="text-xl font-bold text-white">{perL(productPrice[p])}</p>
+                  <div key={p} className="bg-background/60 border border-line rounded-lg p-4 text-center">
+                    <p className="text-xs text-muted mb-1">{p}</p>
+                    <p className="text-xl font-bold text-foreground">{perL(productPrice[p])}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Dealer value leaderboard */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5">
+            <div className="bg-card/60 border border-line rounded-xl p-5">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Top Bulk Dealers by Completed Value</p>
               <div className="space-y-2.5">
-                {!data.dealers.length && <p className="text-xs text-gray-600">No dealer activity to rank yet.</p>}
+                {!data.dealers.length && <p className="text-xs text-muted">No dealer activity to rank yet.</p>}
                 {[...data.dealers]
                   .map((d) => ({
                     d,
@@ -510,9 +510,9 @@ export default function FinancerOverview() {
                   .slice(0, 5)
                   .map(({ d, val }, i) => (
                     <div key={d._id} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-600 w-4">{i + 1}</span>
-                      <span className="text-sm text-white font-medium flex-1 truncate">{d.companyName}</span>
-                      <span className="text-xs text-gray-500 hidden sm:block">{d.state}</span>
+                      <span className="text-xs text-muted w-4">{i + 1}</span>
+                      <span className="text-sm text-foreground font-medium flex-1 truncate">{d.companyName}</span>
+                      <span className="text-xs text-muted hidden sm:block">{d.state}</span>
                       <span className="text-sm font-bold text-emerald-400">{naira(val)}</span>
                     </div>
                   ))}
@@ -524,7 +524,7 @@ export default function FinancerOverview() {
         {/* ── BULK DEALERS ── */}
         {tab === "Bulk Dealers" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-muted mb-2">
               {data.dealers.length} registered bulk dealers — their business identity, location, storage capacity, set prices, allocations and transaction activity. Click a dealer to expand.
             </p>
             {!data.dealers.length && <EmptyState icon={Building2} label="No bulk dealers registered yet." />}
@@ -536,16 +536,16 @@ export default function FinancerOverview() {
               const allocated = dealerAlloc.reduce((s, a) => s + (a.volumeLitres || 0), 0);
               const open = openDealer === d._id;
               return (
-                <div key={d._id} className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden">
+                <div key={d._id} className="bg-card/60 border border-line rounded-xl overflow-hidden">
                   <button onClick={() => setOpenDealer(open ? null : d._id)}
-                    className="w-full text-left p-4 hover:bg-gray-900 transition flex items-start justify-between gap-4">
+                    className="w-full text-left p-4 hover:bg-card transition flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-sm font-bold text-white truncate">{d.companyName}</span>
+                        <span className="text-sm font-bold text-foreground truncate">{d.companyName}</span>
                         <StatusPill value={d.status} />
                         {d.dealerCode && <code className="text-[11px] text-orange-300 bg-orange-500/10 px-1.5 py-0.5 rounded">{d.dealerCode}</code>}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
+                      <div className="flex items-center gap-3 text-xs text-muted flex-wrap">
                         <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{d.state}{d.lga ? `, ${d.lga}` : ""}</span>
                         <span>{d.name}</span>
                         <span className="hidden sm:inline">{d.email}</span>
@@ -553,12 +553,12 @@ export default function FinancerOverview() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-sm font-bold text-emerald-400">{naira(dealerValue)}</p>
-                      <p className="text-[11px] text-gray-500">{dealerTx.length} txns</p>
+                      <p className="text-[11px] text-muted">{dealerTx.length} txns</p>
                     </div>
                   </button>
 
                   {open && (
-                    <div className="border-t border-gray-800 p-4 space-y-5 bg-gray-950/40">
+                    <div className="border-t border-line p-4 space-y-5 bg-background/40">
                       {/* Identity + location */}
                       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                         <Field label="Contact" value={d.name} sub={d.phone} />
@@ -569,23 +569,23 @@ export default function FinancerOverview() {
 
                       {/* Set prices + storage */}
                       <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="bg-gray-900/60 border border-gray-800 rounded-lg p-4">
+                        <div className="bg-card/60 border border-line rounded-lg p-4">
                           <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-3">Dealer Set Prices (₦/L)</p>
                           <div className="grid grid-cols-3 gap-2">
                             {PRODUCTS.map((p) => (
                               <div key={p} className="text-center">
-                                <p className="text-[11px] text-gray-500">{p}</p>
-                                <p className="text-sm font-bold text-white">{d.prices?.[p] ? perL(d.prices[p]) : "—"}</p>
+                                <p className="text-[11px] text-muted">{p}</p>
+                                <p className="text-sm font-bold text-foreground">{d.prices?.[p] ? perL(d.prices[p]) : "—"}</p>
                               </div>
                             ))}
                           </div>
                         </div>
-                        <div className="bg-gray-900/60 border border-gray-800 rounded-lg p-4">
+                        <div className="bg-card/60 border border-line rounded-lg p-4">
                           <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-3">Tank Storage (Mega-Litres)</p>
                           <div className="grid grid-cols-3 gap-2">
-                            <div className="text-center"><p className="text-[11px] text-gray-500">PMS</p><p className="text-sm font-bold text-white">{d.pmsTankMaxML ?? "—"} ML</p></div>
-                            <div className="text-center"><p className="text-[11px] text-gray-500">AGO</p><p className="text-sm font-bold text-white">{d.agoTankMaxML ?? "—"} ML</p></div>
-                            <div className="text-center"><p className="text-[11px] text-gray-500">ATK</p><p className="text-sm font-bold text-white">{d.atkTankMaxML ?? "—"} ML</p></div>
+                            <div className="text-center"><p className="text-[11px] text-muted">PMS</p><p className="text-sm font-bold text-foreground">{d.pmsTankMaxML ?? "—"} ML</p></div>
+                            <div className="text-center"><p className="text-[11px] text-muted">AGO</p><p className="text-sm font-bold text-foreground">{d.agoTankMaxML ?? "—"} ML</p></div>
+                            <div className="text-center"><p className="text-[11px] text-muted">ATK</p><p className="text-sm font-bold text-foreground">{d.atkTankMaxML ?? "—"} ML</p></div>
                           </div>
                         </div>
                       </div>
@@ -594,18 +594,18 @@ export default function FinancerOverview() {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider">Depot Allocations</p>
-                          <p className="text-[11px] text-gray-500">{num(lifted)} / {num(allocated)} L lifted</p>
+                          <p className="text-[11px] text-muted">{num(lifted)} / {num(allocated)} L lifted</p>
                         </div>
                         {dealerAlloc.length ? (
                           <div className="overflow-x-auto">
                             <table className="w-full text-xs">
-                              <thead className="text-gray-500 text-left">
+                              <thead className="text-muted text-left">
                                 <tr><th className="py-1.5 pr-3 font-medium">Product</th><th className="py-1.5 pr-3 font-medium">Depot</th><th className="py-1.5 pr-3 font-medium">Volume</th><th className="py-1.5 pr-3 font-medium">Used</th><th className="py-1.5 pr-3 font-medium">Valid To</th><th className="py-1.5 font-medium">Status</th></tr>
                               </thead>
-                              <tbody className="text-gray-300">
+                              <tbody className="text-foreground">
                                 {dealerAlloc.map((a) => (
-                                  <tr key={a._id} className="border-t border-gray-800">
-                                    <td className="py-2 pr-3 font-semibold text-white">{a.product}</td>
+                                  <tr key={a._id} className="border-t border-line">
+                                    <td className="py-2 pr-3 font-semibold text-foreground">{a.product}</td>
                                     <td className="py-2 pr-3">{a.depot}</td>
                                     <td className="py-2 pr-3">{num(a.volumeLitres)} L</td>
                                     <td className="py-2 pr-3">{num(a.usedLitres)} L</td>
@@ -616,7 +616,7 @@ export default function FinancerOverview() {
                               </tbody>
                             </table>
                           </div>
-                        ) : <p className="text-xs text-gray-600">No allocations on record.</p>}
+                        ) : <p className="text-xs text-muted">No allocations on record.</p>}
                       </div>
 
                       {/* Recent transactions */}
@@ -625,15 +625,15 @@ export default function FinancerOverview() {
                         {dealerTx.length ? (
                           <div className="overflow-x-auto">
                             <table className="w-full text-xs">
-                              <thead className="text-gray-500 text-left">
+                              <thead className="text-muted text-left">
                                 <tr><th className="py-1.5 pr-3 font-medium">Ref</th><th className="py-1.5 pr-3 font-medium">Type</th><th className="py-1.5 pr-3 font-medium">Amount</th><th className="py-1.5 pr-3 font-medium">Method</th><th className="py-1.5 font-medium">Status</th></tr>
                               </thead>
-                              <tbody className="text-gray-300">
+                              <tbody className="text-foreground">
                                 {dealerTx.slice(0, 6).map((t) => (
-                                  <tr key={t._id} className="border-t border-gray-800">
-                                    <td className="py-2 pr-3 font-mono text-gray-400">{t.txnId}</td>
+                                  <tr key={t._id} className="border-t border-line">
+                                    <td className="py-2 pr-3 font-mono text-muted">{t.txnId}</td>
                                     <td className="py-2 pr-3">{toLabel(t.type)}</td>
-                                    <td className="py-2 pr-3 font-semibold text-white">{naira(t.totalAmount)}</td>
+                                    <td className="py-2 pr-3 font-semibold text-foreground">{naira(t.totalAmount)}</td>
                                     <td className="py-2 pr-3">{t.paymentMethod ? toLabel(t.paymentMethod) : "—"}</td>
                                     <td className="py-2"><StatusPill value={t.status} /></td>
                                   </tr>
@@ -641,7 +641,7 @@ export default function FinancerOverview() {
                               </tbody>
                             </table>
                           </div>
-                        ) : <p className="text-xs text-gray-600">No transactions on record.</p>}
+                        ) : <p className="text-xs text-muted">No transactions on record.</p>}
                       </div>
                     </div>
                   )}
@@ -654,7 +654,7 @@ export default function FinancerOverview() {
         {/* ── OPERATIONS FLOW ── */}
         {tab === "Operations Flow" && (
           <div className="space-y-6">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted">
               End-to-end platform flow — from onboarding to delivery and settlement. Counts reflect current records.
             </p>
             <div className="grid gap-3">
@@ -668,13 +668,13 @@ export default function FinancerOverview() {
                 { icon: Banknote, title: "7. Payments & Settlement", desc: "Payments are processed through GlobalPay and flow into a unified transaction ledger.", stat: `${naira(m.totalValue)} settled` },
                 { icon: ShieldCheck, title: "8. Union Dues & Compliance", desc: "Members pay annual dues and custom levies; AI anomaly detection flags irregular transactions.", stat: `${data.unionDues.length} dues records · ${m.flagged} flagged txns` },
               ].map((step, i) => (
-                <div key={i} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex items-start gap-4">
+                <div key={i} className="bg-card/60 border border-line rounded-xl p-4 flex items-start gap-4">
                   <div className="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
                     <step.icon className="w-5 h-5 text-orange-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white">{step.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{step.desc}</p>
+                    <p className="text-sm font-bold text-foreground">{step.title}</p>
+                    <p className="text-xs text-muted mt-0.5 leading-relaxed">{step.desc}</p>
                   </div>
                   <span className="text-[11px] font-semibold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1 shrink-0 hidden sm:block">
                     {step.stat}
@@ -688,13 +688,13 @@ export default function FinancerOverview() {
         {/* ── TRANSACTIONS ── */}
         {tab === "Transactions" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-2">{data.transactions.length} transactions across all roles and payment methods.</p>
+            <p className="text-xs text-muted mb-2">{data.transactions.length} transactions across all roles and payment methods.</p>
             {!data.transactions.length && <EmptyState icon={Receipt} label="No transactions recorded yet." />}
             {!!data.transactions.length && (
-            <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden">
+            <div className="bg-card/60 border border-line rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead className="text-gray-500 text-left bg-gray-900/80">
+                  <thead className="text-muted text-left bg-card/80">
                     <tr>
                       <th className="py-2.5 px-3 font-medium">Ref</th>
                       <th className="py-2.5 px-3 font-medium">Party</th>
@@ -707,22 +707,22 @@ export default function FinancerOverview() {
                       <th className="py-2.5 px-3 font-medium">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="text-gray-300">
+                  <tbody className="text-foreground">
                     {data.transactions.map((t) => (
-                      <tr key={t._id || t.txnId} className="border-t border-gray-800 hover:bg-gray-900/50">
-                        <td className="py-2.5 px-3 font-mono text-gray-400">{t.txnId}</td>
+                      <tr key={t._id || t.txnId} className="border-t border-line hover:bg-card/50">
+                        <td className="py-2.5 px-3 font-mono text-muted">{t.txnId}</td>
                         <td className="py-2.5 px-3">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-white truncate max-w-[160px]">{t.user}</span>
+                            <span className="text-foreground truncate max-w-[160px]">{t.user}</span>
                             {t.aiFlagged && <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />}
                           </div>
                         </td>
                         <td className="py-2.5 px-3">{toLabel(t.type)}</td>
                         <td className="py-2.5 px-3">{t.product || "—"}</td>
-                        <td className="py-2.5 px-3 font-semibold text-white">{naira(t.totalAmount)}</td>
+                        <td className="py-2.5 px-3 font-semibold text-foreground">{naira(t.totalAmount)}</td>
                         <td className="py-2.5 px-3">{t.paymentMethod ? toLabel(t.paymentMethod) : "—"}</td>
-                        <td className="py-2.5 px-3 text-gray-400">{t.depot || "—"}</td>
-                        <td className="py-2.5 px-3 text-gray-500">{timeAgo(t.timestamp)}</td>
+                        <td className="py-2.5 px-3 text-muted">{t.depot || "—"}</td>
+                        <td className="py-2.5 px-3 text-muted">{timeAgo(t.timestamp)}</td>
                         <td className="py-2.5 px-3"><StatusPill value={t.status} /></td>
                       </tr>
                     ))}
@@ -737,18 +737,18 @@ export default function FinancerOverview() {
         {/* ── DEPOTS & PRICING ── */}
         {tab === "Depots & Pricing" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-2">{data.depots.length} depots — live stock level and per-litre price by product.</p>
+            <p className="text-xs text-muted mb-2">{data.depots.length} depots — live stock level and per-litre price by product.</p>
             {!data.depots.length && <EmptyState icon={Fuel} label="No depots configured yet." />}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {data.depots.map((dp) => (
-                <div key={dp.name} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4">
+                <div key={dp.name} className="bg-card/60 border border-line rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
                       <Fuel className="w-4 h-4 text-orange-400" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-white truncate">{dp.name}</p>
-                      {dp.state && <p className="text-[11px] text-gray-500 inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{dp.state}</p>}
+                      <p className="text-sm font-bold text-foreground truncate">{dp.name}</p>
+                      {dp.state && <p className="text-[11px] text-muted inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{dp.state}</p>}
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -757,15 +757,15 @@ export default function FinancerOverview() {
                       return (
                         <div key={p}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-gray-300">{p}</span>
+                            <span className="text-xs font-semibold text-foreground">{p}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-[11px] text-gray-400">{pd.price ? perL(pd.price) : "—"}</span>
+                              <span className="text-[11px] text-muted">{pd.price ? perL(pd.price) : "—"}</span>
                               {pd.status && <StatusPill value={pd.status} />}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <LevelBar level={pd.level ?? 0} />
-                            <span className="text-[11px] text-gray-500 w-8 text-right">{pd.level ?? 0}%</span>
+                            <span className="text-[11px] text-muted w-8 text-right">{pd.level ?? 0}%</span>
                           </div>
                         </div>
                       );
@@ -777,7 +777,7 @@ export default function FinancerOverview() {
           </div>
         )}
 
-        <div className="mt-10 pt-5 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-600">
+        <div className="mt-10 pt-5 border-t border-line flex items-center justify-between text-[11px] text-muted">
           <span>e-Nergy · Read-only platform overview</span>
           <span>{demo ? "Showing demo data (development)" : "Connected to live data"}</span>
         </div>
@@ -789,9 +789,9 @@ export default function FinancerOverview() {
 function Field({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
-      <p className="text-[11px] text-gray-500 mb-0.5">{label}</p>
-      <p className="text-sm text-white break-words">{value}</p>
-      {sub && <p className="text-[11px] text-gray-500 mt-0.5">{sub}</p>}
+      <p className="text-[11px] text-muted mb-0.5">{label}</p>
+      <p className="text-sm text-foreground break-words">{value}</p>
+      {sub && <p className="text-[11px] text-muted mt-0.5">{sub}</p>}
     </div>
   );
 }
