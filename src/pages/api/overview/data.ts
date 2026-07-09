@@ -19,6 +19,7 @@ import { getSessionUser } from "@/lib/auth";
 import { isOverviewAllowed } from "@/lib/overviewAccess";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
+import { Financer } from "@/lib/models/Financer";
 import { Allocation } from "@/lib/models/Allocation";
 import { Transaction } from "@/lib/models/Transaction";
 import { SupplyRequest } from "@/lib/models/SupplyRequest";
@@ -47,13 +48,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await connectDB();
 
-    // Gate 2: access requires EITHER the env allowlist (super-admin bootstrap)
-    // OR a super-admin-granted `financerAccess` flag on the user record. Fail
-    // closed for everyone else.
-    let allowed = isOverviewAllowed(user.email);
-    if (!allowed) {
-      const grantee = await User.findById(user.userId).select("financerAccess").lean();
-      allowed = Boolean((grantee as { financerAccess?: boolean } | null)?.financerAccess);
+    // Gate 2: access requires ONE of:
+    //   - a dedicated financer account session (role "financer"), still active;
+    //   - the env allowlist (super-admin bootstrap);
+    //   - a super-admin-granted `financerAccess` flag on the user record.
+    // Fail closed for everyone else.
+    let allowed = false;
+    if (user.role === "financer") {
+      const fin = await Financer.findById(user.userId).select("status").lean();
+      allowed = Boolean(fin && (fin as { status?: string }).status !== "suspended");
+    } else {
+      allowed = isOverviewAllowed(user.email);
+      if (!allowed) {
+        const grantee = await User.findById(user.userId).select("financerAccess").lean();
+        allowed = Boolean((grantee as { financerAccess?: boolean } | null)?.financerAccess);
+      }
     }
     if (!allowed) {
       return res.status(403).json({ error: "Forbidden" });

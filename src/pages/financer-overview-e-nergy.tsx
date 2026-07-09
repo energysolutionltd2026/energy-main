@@ -50,7 +50,24 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
     const email = typeof payload?.email === "string" ? payload.email : null;
     const userId = typeof payload?.userId === "string" ? payload.userId : null;
+    const role = typeof payload?.role === "string" ? payload.role : null;
 
+    // Path 1 (primary): a dedicated financer account. The session must still map
+    // to an existing, active Financer record — a deleted/suspended account is
+    // rejected even if the JWT hasn't expired yet.
+    if (role === "financer" && userId) {
+      const { connectDB } = await import("@/lib/db");
+      const { Financer } = await import("@/lib/models/Financer");
+      await connectDB();
+      const fin = await Financer.findById(userId).select("status").lean();
+      if (fin && (fin as { status?: string }).status !== "suspended") {
+        return { props: {} };
+      }
+      return { notFound: true };
+    }
+
+    // Path 2 (legacy/back-compat): the env allowlist, or a super-admin-granted
+    // `financerAccess` flag on a normal user account.
     let allowed = isOverviewAllowed(email);
     if (!allowed && userId) {
       const { connectDB } = await import("@/lib/db");
@@ -384,9 +401,10 @@ export default function FinancerOverview() {
   ];
 
   function exit() {
-    // Access is tied to the platform session; "Exit" just leaves the dashboard.
-    // It does not end the platform session (use the app's own logout for that).
-    window.location.href = "/";
+    // End the session, then return to the financer login page.
+    fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" })
+      .catch(() => null)
+      .finally(() => { window.location.href = "/financer/login"; });
   }
 
   return (

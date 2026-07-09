@@ -12,6 +12,7 @@ const ROLE_HOME: Record<string, string> = {
   bulk_dealer:     "/bulk-dealer/dashboard",
   truck_owner:     "/truck-owner/dashboard",
   station_manager: "/station-manager/dashboard",
+  financer:        "/financer-overview-e-nergy",
 };
 
 // Route prefixes and which roles are allowed

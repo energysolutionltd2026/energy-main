@@ -437,6 +437,142 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
   );
 }
 
+// ─── Financer login accounts (dedicated, admin-managed, capped) ──────────────
+
+interface FinAccount {
+  _id: string;
+  name: string;
+  email: string;
+  status: "active" | "suspended";
+  lastLogin?: string;
+  createdAt?: string;
+}
+
+function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) {
+  const [accounts, setAccounts] = useState<FinAccount[]>([]);
+  const [max, setMax] = useState(2);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [busy, setBusy] = useState(false);
+
+  const load = async () => {
+    const { api } = await import("@/lib/db-client");
+    const res = await api.financerAccounts.list();
+    if (res) { setAccounts(res.data as FinAccount[]); setMax(res.max); }
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const capReached = accounts.length >= max;
+
+  const create = async () => {
+    if (!form.name.trim() || !form.email.trim() || form.password.length < 8) {
+      setToast("Enter a name, email, and password (min 8 characters)."); return;
+    }
+    setBusy(true);
+    const { api } = await import("@/lib/db-client");
+    const res = await api.financerAccounts.create({ name: form.name.trim(), email: form.email.trim(), password: form.password });
+    setBusy(false);
+    if (!res) { setToast("Could not create account — the limit may be reached or the email is taken."); return; }
+    setForm({ name: "", email: "", password: "" });
+    setOpen(false);
+    setToast(`Financer account created for ${res.email}`);
+    load();
+  };
+
+  const remove = async (a: FinAccount) => {
+    const { api } = await import("@/lib/db-client");
+    const res = await api.financerAccounts.delete(a._id);
+    if (!res) { setToast("Could not delete account."); return; }
+    setToast(`Financer account ${a.email} removed`);
+    load();
+  };
+
+  const toggleStatus = async (a: FinAccount) => {
+    const next = a.status === "active" ? "suspended" : "active";
+    const { api } = await import("@/lib/db-client");
+    const res = await api.financerAccounts.update(a._id, { status: next });
+    if (!res) { setToast("Could not update account."); return; }
+    setToast(`Financer account ${next === "suspended" ? "suspended" : "reactivated"}`);
+    load();
+  };
+
+  const resetPassword = async (a: FinAccount) => {
+    const pw = window.prompt(`New password for ${a.email} (min 8 characters):`);
+    if (pw == null) return;
+    if (pw.length < 8) { setToast("Password must be at least 8 characters."); return; }
+    const { api } = await import("@/lib/db-client");
+    const res = await api.financerAccounts.update(a._id, { password: pw });
+    if (!res) { setToast("Could not reset password."); return; }
+    setToast(`Password reset for ${a.email}`);
+  };
+
+  return (
+    <div className="bg-black/40 backdrop-blur-md border border-orange-500/20 rounded-xl p-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <p className="text-white font-semibold text-sm">Financer Login Accounts</p>
+          <p className="text-gray-500 text-xs mt-0.5">
+            Dedicated logins for the read-only financer dashboard · {accounts.length}/{max} used
+          </p>
+        </div>
+        <button
+          onClick={() => setOpen(o => !o)}
+          disabled={capReached && !open}
+          title={capReached ? `Limit of ${max} reached — delete one first` : undefined}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold text-white ${capReached && !open ? "bg-gray-700 opacity-50 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-600"}`}
+        >
+          {open ? "Cancel" : "+ New account"}
+        </button>
+      </div>
+
+      {open && !capReached && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Full name"
+            className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
+          <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Email" type="email"
+            className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
+          <div className="flex gap-2">
+            <input value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Password (min 8)" type="text"
+              className="flex-1 min-w-0 bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
+            <button onClick={create} disabled={busy}
+              className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold shrink-0">
+              {busy ? "…" : "Create"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!loading && accounts.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {accounts.map(a => (
+            <div key={a._id} className="flex items-center justify-between gap-3 bg-white/5 rounded-lg px-3 py-2 flex-wrap">
+              <div className="min-w-0">
+                <p className="text-white text-sm font-medium">
+                  {a.name}
+                  <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${a.status === "active" ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"}`}>{a.status}</span>
+                </p>
+                <p className="text-gray-500 text-xs truncate">
+                  {a.email}{a.lastLogin ? ` · last login ${new Date(a.lastLogin).toLocaleDateString()}` : " · never logged in"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => resetPassword(a)} className="text-xs text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg px-2 py-1">Reset password</button>
+                <button onClick={() => toggleStatus(a)} className="text-xs text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg px-2 py-1">{a.status === "active" ? "Suspend" : "Reactivate"}</button>
+                <button onClick={() => remove(a)} className="text-xs text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 rounded-lg px-2 py-1">Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {!loading && accounts.length === 0 && (
+        <p className="text-gray-600 text-xs mt-3">No financer accounts yet. Create one to grant dashboard access.</p>
+      )}
+    </div>
+  );
+}
+
 // ─── Section: Users ───────────────────────────────────────────────────────────
 
 function SectionUsers({ users, setUsers, setToast }: {
@@ -562,6 +698,8 @@ function SectionUsers({ users, setUsers, setToast }: {
 
   return (
     <div className="space-y-4">
+      <FinancerAccountsPanel setToast={setToast} />
+
       <div className="flex flex-wrap gap-3">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or email..."
           className="flex-1 min-w-48 bg-black/40 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />

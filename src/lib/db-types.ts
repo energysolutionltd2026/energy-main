@@ -15,7 +15,7 @@ export interface PaginatedResponse<T> {
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-export type UserRole       = "customer" | "bulk_dealer" | "truck_owner" | "admin" | "station_manager";
+export type UserRole       = "customer" | "bulk_dealer" | "truck_owner" | "admin" | "station_manager" | "financer";
 export type UserStatus     = "active" | "suspended" | "pending";
 export type Product        = "PMS" | "AGO" | "ATK";
 export type SupplyPriority = "normal" | "urgent" | "emergency";

@@ -439,6 +439,40 @@ const allocations = {
     safe(() => apiFetch<{ deleted: boolean }>(`/api/db/allocations/${id}`, { method: "DELETE" })),
 };
 
+// ─── Financer accounts (admin-managed, dedicated logins) ──────────────────────
+
+export interface FinancerAccount {
+  _id: string;
+  name: string;
+  email: string;
+  status: "active" | "suspended";
+  lastLogin?: string;
+  createdBy?: string;
+  createdAt?: string;
+}
+
+const financerAccounts = {
+  list: () =>
+    safe(() => apiFetch<{ data: FinancerAccount[]; total: number; max: number }>("/api/financer/accounts")),
+
+  create: (body: { name: string; email: string; password: string }) =>
+    safe(() => apiFetch<FinancerAccount>("/api/financer/accounts", {
+      method: "POST",
+      body: JSON.stringify(body),
+    })),
+
+  update: (id: string, body: { status?: "active" | "suspended"; password?: string }) =>
+    safe(() => apiFetch<FinancerAccount>(`/api/financer/accounts/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    })),
+
+  delete: (id: string) =>
+    safe(() => apiFetch<{ deleted: boolean }>(`/api/financer/accounts/${id}`, {
+      method: "DELETE",
+    })),
+};
+
 // ─── Seed helpers ─────────────────────────────────────────────────────────────
 
 const seed = {
@@ -475,6 +509,7 @@ export const api = {
   sessions: sessionsMod,
   aiFeedback,
   allocations,
+  financerAccounts,
   ai,
   seed,
 };

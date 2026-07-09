@@ -7,7 +7,7 @@ const SessionSchema = new Schema(
     token:        { type: String, required: true, unique: true }, // hashed JWT / session token
     role:         {
       type: String,
-      enum: ["customer", "bulk_dealer", "truck_owner", "admin", "station_manager"],
+      enum: ["customer", "bulk_dealer", "truck_owner", "admin", "station_manager", "financer"],
       required: true,
     },
     ipAddress:    { type: String },
