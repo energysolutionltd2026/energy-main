@@ -314,6 +314,22 @@ type Data = {
    below collapses to an empty array in the production build. */
 const DEV = process.env.NODE_ENV !== "production";
 
+/* Presentations sometimes need the populated demo data on the live/production
+   deployment (where DEV is false and the DB may be empty). To keep the safe
+   default intact (production shows clean empty states, never fabricated
+   figures) demo data in production is OPT-IN only, enabled either by:
+     • visiting the page with `?demo=1` in the URL, or
+     • building with NEXT_PUBLIC_DEMO_MODE=true.
+   This is read at runtime so it never affects the default production behaviour. */
+const ENV_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+function demoRequested(): boolean {
+  if (DEV || ENV_DEMO) return true;
+  if (typeof window !== "undefined") {
+    return new URLSearchParams(window.location.search).get("demo") === "1";
+  }
+  return false;
+}
+
 const EMPTY: Data = {
   settings: null, dealers: [], allocations: [], transactions: [],
   supplyRequests: [], purchaseOrders: [], trucks: [],
@@ -332,21 +348,23 @@ const INITIAL: Data = DEV
 export default function FinancerOverview() {
   const [tab, setTab] = useState("Overview");
   const [loading, setLoading] = useState(true);
-  const [demo, setDemo] = useState(DEV); // true only while showing dev mock data
+  const [demo, setDemo] = useState(DEV); // true only while showing mock data
   const [data, setData] = useState<Data>(INITIAL);
   const [openDealer, setOpenDealer] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
+    // Demo fallback is on in dev, or opt-in via ?demo=1 / NEXT_PUBLIC_DEMO_MODE.
+    const useMock = demoRequested();
     // Single allow-list-guarded endpoint. It returns already-projected, safe
     // fields for every dataset (no admin-only /api/db/* calls needed).
     const res = await tryGet<Partial<Data>>("/api/overview/data");
 
-    // In production the fallback is empty (no fabricated data); in dev it's MOCK.
+    // Without demo mode the fallback is empty (no fabricated data); otherwise MOCK.
     const pick = <T,>(rows: any, fallback: T[]): { rows: T[]; live: boolean } =>
       Array.isArray(rows) && rows.length
         ? { rows, live: true }
-        : { rows: DEV ? fallback : [], live: false };
+        : { rows: useMock ? fallback : [], live: false };
 
     const d = pick(res?.dealers, MOCK.dealers);
     const a = pick(res?.allocations, MOCK.allocations);
@@ -359,10 +377,10 @@ export default function FinancerOverview() {
     const u = pick(res?.unionDues, MOCK.unionDues);
 
     const hadLive = [d, a, t, s, p, k, r, dp, u].some((x) => x.live) || !!res?.settings;
-    // "Demo" only applies in dev when we fell back to mock. Production is never demo.
-    setDemo(DEV && !hadLive);
+    // "Demo" applies whenever we fell back to mock data (dev, or opt-in demo mode).
+    setDemo(useMock && !hadLive);
     setData({
-      settings: res?.settings || (DEV ? MOCK.settings : null),
+      settings: res?.settings || (useMock ? MOCK.settings : null),
       dealers: d.rows, allocations: a.rows, transactions: t.rows,
       supplyRequests: s.rows, purchaseOrders: p.rows, trucks: k.rows,
       truckRentals: r.rows, depots: dp.rows, unionDues: u.rows,
@@ -779,7 +797,7 @@ export default function FinancerOverview() {
 
         <div className="mt-10 pt-5 border-t border-line flex items-center justify-between text-[11px] text-muted">
           <span>e-Nergy · Read-only platform overview</span>
-          <span>{demo ? "Showing demo data (development)" : "Connected to live data"}</span>
+          <span>{demo ? "Showing demo data" : "Connected to live data"}</span>
         </div>
       </div>
     </div>
