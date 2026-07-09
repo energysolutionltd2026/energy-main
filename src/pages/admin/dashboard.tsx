@@ -22,8 +22,9 @@ interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: "customer" | "bulk_dealer" | "truck_owner";
+  role: "customer" | "bulk_dealer" | "truck_owner" | "financer";
   status: "active" | "suspended";
+  previousRole?: string;
   joinedAt: string;
   lastLogin: string;
   companyName?: string;
@@ -689,8 +690,17 @@ function SectionUsers({ users, setUsers, setToast }: {
           : "Could not update financer access. Please try again.");
         return;
       }
+      // The server also converts the role (→ "financer" / back). Sync it so the
+      // badge and login behaviour reflect the change without a reload.
+      const newRole = (result as { role?: AdminUser["role"] }).role;
+      if (newRole) {
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: newRole } : u));
+        setSelected(prev => prev && prev.id === user.id ? { ...prev, role: newRole } : prev);
+      }
     }
-    setToast(`Financer dashboard access ${next ? "granted to" : "revoked from"} ${user.name}`);
+    setToast(next
+      ? `${user.name} is now a financer — every login opens the read-only dashboard.`
+      : `Financer access revoked — ${user.name}'s previous role has been restored.`);
   };
 
   const rc = (role: string) => role === "customer" ? "orange" : role === "bulk_dealer" ? "green" : "blue";
@@ -850,8 +860,9 @@ function SectionUsers({ users, setUsers, setToast }: {
                       Financer Dashboard Access
                     </p>
                     <p className="text-[11px] text-gray-600 mt-1 max-w-[16rem]">
-                      Grants read-only access to the financer overview dashboard. The user keeps
-                      their normal role and login. Limited to {FINANCER_ACCESS_LIMIT} users.
+                      Converts the user to a financer: their role becomes financer and every
+                      login opens the read-only overview dashboard. Revoking restores their
+                      previous role. Limited to {FINANCER_ACCESS_LIMIT} users.
                     </p>
                   </div>
                   <button

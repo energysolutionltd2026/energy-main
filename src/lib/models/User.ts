@@ -9,13 +9,17 @@ const UserSchema = new Schema(
     name:          { type: String, required: true, trim: true },
     email:         { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone:         { type: String, trim: true },
-    role:          { type: String, enum: ["customer", "bulk_dealer", "truck_owner", "admin"], required: true },
+    role:          { type: String, enum: ["customer", "bulk_dealer", "truck_owner", "admin", "financer"], required: true },
     status:        { type: String, enum: ["active", "suspended", "pending"], default: "active" },
 
-    // Grants read-only access to the restricted financer overview dashboard.
-    // Set by the super admin from the admin UI (in addition to the
-    // OVERVIEW_ALLOWED_EMAILS env bootstrap). Never self-serviceable.
+    // Grants access to the restricted financer overview dashboard. When an admin
+    // turns this on, the account is CONVERTED to a financer-only identity: `role`
+    // becomes "financer" (their prior role is saved in `previousRole`) so every
+    // login lands on the read-only overview. Turning it off restores the prior
+    // role. Never self-serviceable.
     financerAccess: { type: Boolean, default: false },
+    // The role held before financer conversion, restored when access is revoked.
+    previousRole:   { type: String },
 
     // ── Auth ──────────────────────────────────────────────────────────────────
     passwordHash:    { type: String },                   // bcrypt hash — never returned to client

@@ -52,15 +52,25 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const userId = typeof payload?.userId === "string" ? payload.userId : null;
     const role = typeof payload?.role === "string" ? payload.role : null;
 
-    // Path 1 (primary): a dedicated financer account. The session must still map
-    // to an existing, active Financer record — a deleted/suspended account is
-    // rejected even if the JWT hasn't expired yet.
+    // Path 1 (primary): a financer session. This is either a dedicated Financer
+    // account OR a normal user converted to financer-only via the admin toggle.
+    // Either way the backing record must still authorize access (Financer not
+    // suspended, or User still carrying the financerAccess flag).
     if (role === "financer" && userId) {
       const { connectDB } = await import("@/lib/db");
-      const { Financer } = await import("@/lib/models/Financer");
       await connectDB();
+      const { Financer } = await import("@/lib/models/Financer");
       const fin = await Financer.findById(userId).select("status").lean();
-      if (fin && (fin as { status?: string }).status !== "suspended") {
+      if (fin) {
+        if ((fin as { status?: string }).status !== "suspended") {
+          return { props: {} };
+        }
+        return { notFound: true };
+      }
+      // Not a dedicated account — check for a toggle-converted user.
+      const { User } = await import("@/lib/models/User");
+      const grantee = await User.findById(userId).select("financerAccess").lean();
+      if ((grantee as { financerAccess?: boolean } | null)?.financerAccess) {
         return { props: {} };
       }
       return { notFound: true };

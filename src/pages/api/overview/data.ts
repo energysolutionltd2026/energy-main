@@ -55,8 +55,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Fail closed for everyone else.
     let allowed = false;
     if (user.role === "financer") {
+      // Dedicated Financer account, or a normal user converted to financer-only
+      // via the admin toggle (backed by the financerAccess flag).
       const fin = await Financer.findById(user.userId).select("status").lean();
-      allowed = Boolean(fin && (fin as { status?: string }).status !== "suspended");
+      if (fin) {
+        allowed = (fin as { status?: string }).status !== "suspended";
+      } else {
+        const grantee = await User.findById(user.userId).select("financerAccess").lean();
+        allowed = Boolean((grantee as { financerAccess?: boolean } | null)?.financerAccess);
+      }
     } else {
       allowed = isOverviewAllowed(user.email);
       if (!allowed) {
