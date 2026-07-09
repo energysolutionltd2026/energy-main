@@ -4,6 +4,7 @@ import { HiMenu, HiX } from "react-icons/hi";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
   { label: "Home",      path: "/home"       },
@@ -125,6 +126,7 @@ function NavBar() {
               className={`px-4 py-1.5 rounded font-bold text-sm bg-orange-500 hover:bg-orange-600 transition ${isActive("/auth/signup") ? "opacity-90" : ""}`}>
               Sign Up
             </Link>
+            <ThemeToggle className="ml-1" />
           </div>
         </div>
 
@@ -162,12 +164,12 @@ function NavBar() {
                 </button>
 
                 {dropdownOpen === item.label && (
-                  <div className="absolute left-0 mt-2 w-44 bg-white rounded shadow-lg z-50">
+                  <div className="absolute left-0 mt-2 w-44 bg-card border border-line rounded shadow-lg z-50">
                     {item.dropdown.map((sub) => (
                       <Link
                         key={sub.path}
                         href={sub.path}
-                        className={`block w-full text-left px-4 py-2 text-black hover:bg-primary hover:text-white transition ${
+                        className={`block w-full text-left px-4 py-2 text-foreground hover:bg-primary hover:text-white transition ${
                           isActive(sub.path) ? "bg-primary text-white" : ""
                         }`}
                         onClick={() => setDropdownOpen(null)}
@@ -193,7 +195,8 @@ function NavBar() {
         </div>
 
         {/* Mobile Burger */}
-        <div className="lg:hidden flex items-center">
+        <div className="lg:hidden flex items-center gap-2">
+          <ThemeToggle />
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Open menu"
@@ -207,11 +210,11 @@ function NavBar() {
       {menuOpen && (
         <div
           ref={mobileMenuRef}
-          className="fixed top-0 right-0 w-2/3 h-full max-h-screen overflow-y-auto bg-white shadow-lg flex flex-col p-6 z-[60] lg:hidden"
+          className="fixed top-0 right-0 w-2/3 h-full max-h-screen overflow-y-auto bg-card text-foreground shadow-lg flex flex-col p-6 z-[60] lg:hidden"
         >
           <button
             onClick={() => setMenuOpen(false)}
-            className="self-end mb-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors"
+            className="self-end mb-4 p-2 rounded-full bg-card-2 hover:bg-line text-foreground transition-colors"
             aria-label="Close menu"
           >
             <HiX size={24} />
@@ -224,7 +227,7 @@ function NavBar() {
                 className={`flex-1 text-center px-4 py-2.5 rounded font-bold text-sm transition ${
                   item.label === "Sign Up"
                     ? "bg-orange-500 text-white hover:bg-orange-600"
-                    : "border border-gray-300 text-gray-800 hover:bg-gray-100"
+                    : "border border-line text-foreground hover:bg-card-2"
                 }`}>
                 {item.label}
               </Link>
@@ -240,7 +243,7 @@ function NavBar() {
                       prev === item.label ? null : item.label
                     )
                   }
-                  className="w-full text-left px-4 py-3 rounded mb-2 text-black font-medium flex items-center justify-between"
+                  className="w-full text-left px-4 py-3 rounded mb-2 text-foreground font-medium flex items-center justify-between"
                 >
                   {item.label}
                   <svg
@@ -264,7 +267,7 @@ function NavBar() {
                       <Link
                         key={sub.path}
                         href={sub.path}
-                        className="block w-full text-left px-4 py-2 text-black hover:bg-primary hover:text-white rounded transition"
+                        className="block w-full text-left px-4 py-2 text-foreground hover:bg-primary hover:text-white rounded transition"
                         onClick={() => {
                           setDropdownOpen(null);
                           setMenuOpen(false);
@@ -280,7 +283,7 @@ function NavBar() {
               <Link
                 key={item.label}
                 href={item.path}
-                className={`w-full text-left px-4 py-3 rounded mb-2 text-black font-medium ${
+                className={`w-full text-left px-4 py-3 rounded mb-2 text-foreground font-medium ${
                   isActive(item.path) ? "bg-primary text-white" : ""
                 }`}
                 onClick={() => setMenuOpen(false)}
@@ -291,8 +294,8 @@ function NavBar() {
           )}
 
           {/* Legal links */}
-          <div className="mt-auto pt-4 border-t border-gray-100">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Legal</p>
+          <div className="mt-auto pt-4 border-t border-line">
+            <p className="text-[10px] font-bold text-muted uppercase tracking-widest px-4 mb-2">Legal</p>
             {[
               { label: "Contact",             path: "/contact"              },
               { label: "About Us",            path: "/about"                },
@@ -303,7 +306,7 @@ function NavBar() {
               <Link
                 key={item.path}
                 href={item.path}
-                className="w-full text-left px-4 py-2.5 rounded mb-1 text-gray-500 text-sm hover:text-orange-500 hover:bg-orange-50 transition flex items-center gap-2"
+                className="w-full text-left px-4 py-2.5 rounded mb-1 text-muted text-sm hover:text-orange-500 hover:bg-orange-500/10 transition flex items-center gap-2"
                 onClick={() => setMenuOpen(false)}
               >
                 <svg className="w-3.5 h-3.5 text-orange-400 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

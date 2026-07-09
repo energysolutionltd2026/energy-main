@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import Head from "next/head";
 import { NavBar, Footer } from "@/components";
 import { DepotProvider } from "@/context/DepotContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
     pathname === "/landingPage";
 
   return (
+    <ThemeProvider>
     <DepotProvider>
       <Head>
         <meta name="application-name" content="e-Nergy" />
@@ -50,5 +52,6 @@ export default function App({ Component, pageProps }: AppProps) {
         {!hideLayout && <Footer />}
       </div>
     </DepotProvider>
+    </ThemeProvider>
   );
 }

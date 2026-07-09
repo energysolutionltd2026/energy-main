@@ -1,9 +1,54 @@
 @import "tailwindcss";
-  
 
-@theme { 
-  --color-neutral: #E8FFEA;
-  --color-primary: #FF9D00;
-  --color-primary-dark: #FF9D00;
-  --color-secondary: #919191;
+/* Enable class-based dark mode: utilities prefixed `dark:` apply when a `.dark`
+   class is present on (or above) the element. The switcher toggles `.dark` on
+   <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Runtime theme variables ─────────────────────────────────────────────────
+   These change between light and dark. Semantic Tailwind utilities below read
+   them, so `bg-card`, `text-foreground`, etc. re-theme automatically. */
+:root {
+  color-scheme: light;
+  --background: #ffffff;   /* page background            */
+  --foreground: #111827;   /* primary text (gray-900)    */
+  --card:       #ffffff;   /* raised surfaces / panels   */
+  --card-2:     #f9fafb;   /* subtle inset surface       */
+  --muted:      #6b7280;   /* secondary text (gray-500)  */
+  --line:       #e5e7eb;   /* borders / dividers         */
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0b0f19;
+  --foreground: #f9fafb;
+  --card:       #111827;   /* gray-900 */
+  --card-2:     #1f2937;   /* gray-800 */
+  --muted:      #9ca3af;   /* gray-400 */
+  --line:       #1f2937;   /* gray-800 */
+}
+
+/* ── Design tokens ───────────────────────────────────────────────────────────
+   `inline` makes each utility compile to the raw var() reference, so it resolves
+   per-theme at runtime. Brand colours are static (identical in both themes). */
+@theme inline {
+  --color-neutral:      #E8FFEA;
+  --color-primary:      #FF9D00;
+  --color-primary-dark: #CC7E00;
+  --color-secondary:    #919191;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card:       var(--card);
+  --color-card-2:     var(--card-2);
+  --color-muted:      var(--muted);
+  --color-line:       var(--line);
+}
+
+/* Default page surface follows the theme. Pages that set their own background
+   (e.g. the hardcoded-dark dashboards) still override this locally. */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

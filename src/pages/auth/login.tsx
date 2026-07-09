@@ -6,6 +6,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import NavBar from "@/components/NavBar";
 import BottomNavbar from "@/components/ButtomNavbar";
+import ThemeToggle from "@/components/ThemeToggle";
 import tower from "@/../public/tower.jpg";
 import { HoneypotField, useHoneypot } from "@/lib/security/honeypot";
 import { useRateLimit } from "@/hooks/useRateLimit";
@@ -84,8 +85,13 @@ export default function Login() {
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/40"></div>
 
+        {/* Theme toggle (NavBar is hidden on /auth routes) */}
+        <div className="absolute top-4 right-4 z-20 text-white">
+          <ThemeToggle />
+        </div>
+
       {/* Login Container */}
-      <div className="relative flex w-[90%] max-w-6xl h-[70vh] bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl overflow-hidden border-4 border-orange-500 z-10 mt-10">
+      <div className="relative flex w-[90%] max-w-6xl h-[70vh] bg-card/95 backdrop-blur-sm rounded-lg shadow-2xl overflow-hidden border-4 border-orange-500 z-10 mt-10">
 
         {/* Left Image Section */}
         <div className="relative w-1/2 hidden md:flex flex-col">
@@ -103,10 +109,10 @@ export default function Login() {
 
         {/* Right Form Section */}
         <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-10 md:p-16">
-          <h2 className="text-4xl font-bold mb-4 text-center text-gray-800">
+          <h2 className="text-4xl font-bold mb-4 text-center text-foreground">
             Sign In
           </h2>
-          <p className="text-sm text-gray-600 mb-8 text-center">
+          <p className="text-sm text-muted mb-8 text-center">
             Access your e-Nergy account
           </p>
 
@@ -128,7 +134,7 @@ export default function Login() {
             <input
               type="email"
               placeholder="Enter email"
-              className="w-full rounded-full bg-gray-200 py-3 px-5 text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full rounded-full bg-gray-200 dark:bg-gray-800 text-foreground placeholder:text-muted py-3 px-5 text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -137,7 +143,7 @@ export default function Login() {
             <input
               type="password"
               placeholder="Enter password"
-              className="w-full rounded-full bg-gray-200 py-3 px-5 text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full rounded-full bg-gray-200 dark:bg-gray-800 text-foreground placeholder:text-muted py-3 px-5 text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -163,7 +169,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="mt-6 text-sm text-center text-gray-700">
+          <p className="mt-6 text-sm text-center text-muted">
             Don&apos;t have an account?{" "}
             <Link href="/auth/signup" className="font-semibold text-orange-500 hover:underline">
               sign up
