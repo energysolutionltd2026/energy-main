@@ -7,6 +7,7 @@ import {
   AlertTriangle, ArrowRight, Banknote, Gauge, ShieldCheck,
 } from "lucide-react";
 import { toLabel } from "@/utils/toLabel";
+import ThemeToggle from "@/components/ThemeToggle";
 
 /* Silent read-only fetch — returns null on any error (401, network, non-JSON)
    so the page falls back to demo data without surfacing dev error overlays. */
@@ -348,7 +349,7 @@ const INITIAL: Data = DEV
 export default function FinancerOverview() {
   const [tab, setTab] = useState("Overview");
   const [loading, setLoading] = useState(true);
-  const [demo, setDemo] = useState(DEV); // true only while showing mock data
+  const [demo, setDemo] = useState(DEV || ENV_DEMO); // true while showing mock data
   const [data, setData] = useState<Data>(INITIAL);
   const [openDealer, setOpenDealer] = useState<string | null>(null);
 
@@ -376,7 +377,10 @@ export default function FinancerOverview() {
     const dp = pick(res?.depots, MOCK.depots);
     const u = pick(res?.unionDues, MOCK.unionDues);
 
-    const hadLive = [d, a, t, s, p, k, r, dp, u].some((x) => x.live) || !!res?.settings;
+    // Base "live" on real operational datasets only — platform settings (prices)
+    // almost always exist even on an otherwise-empty DB, so they must not by
+    // themselves flip the badge to "Live" while every table is showing mock rows.
+    const hadLive = [d, a, t, s, p, k, r, dp, u].some((x) => x.live);
     // "Demo" applies whenever we fell back to mock data (dev, or opt-in demo mode).
     setDemo(useMock && !hadLive);
     setData({
@@ -455,6 +459,7 @@ export default function FinancerOverview() {
             <span className={`w-1.5 h-1.5 rounded-full ${demo ? "bg-amber-400" : "bg-emerald-400"}`} />
             {demo ? "Demo data" : "Live data"}
           </span>
+          <ThemeToggle className="!w-8 !h-8 !rounded-lg border-line text-muted hover:text-foreground hover:bg-card-2" />
           <button onClick={load} title="Refresh"
             className="w-8 h-8 rounded-lg border border-line hover:border-line flex items-center justify-center text-muted hover:text-foreground transition">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
