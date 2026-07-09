@@ -11,6 +11,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { StationManager } from "@/lib/models/StationManager";
+import { Financer } from "@/lib/models/Financer";
 import { Session } from "@/lib/models/Session";
 import { signToken, setTokenCookie } from "@/lib/auth";
 
@@ -47,6 +48,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await connectDB();
 
   const normalizedEmail = email.toLowerCase().trim();
+
+  // ── 0. Financer accounts take precedence ───────────────────────────────────
+  // A financer is a "financer only" identity: once an admin creates a financer
+  // account for an email, that person can ONLY log in as a financer — even if a
+  // legacy customer/bulk_dealer User record with the same email still exists.
+  // We therefore check (and fully resolve) the Financer collection BEFORE the
+  // User collection and never fall through to the old role.
+  const financer = await Financer.findOne({ email: normalizedEmail });
+
+  if (financer) {
+    if (!financer.passwordHash) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const valid = await bcrypt.compare(password, financer.passwordHash);
+    if (!valid) return res.status(401).json({ error: "Invalid email or password" });
+
+    if (financer.status === "suspended") {
+      return res.status(403).json({ error: "Your account has been suspended. Contact the administrator." });
+    }
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const session = await Session.create({
+      userEmail: financer.email,
+      userId: financer._id,
+      token: "pending",
+      role: "financer",
+      ipAddress: req.headers["x-forwarded-for"] as string || req.socket.remoteAddress,
+      userAgent: req.headers["user-agent"],
+      expiresAt,
+      isValid: true,
+    });
+
+    const token = signToken({
+      userId: String(financer._id),
+      email: financer.email,
+      role: "financer" as any,
+      sessionId: String(session._id),
+    });
+
+    await Promise.all([
+      Session.findByIdAndUpdate(session._id, { token }),
+      Financer.findByIdAndUpdate(financer._id, { lastLogin: new Date() }),
+    ]);
+
+    setTokenCookie(res, token);
+
+    return res.status(200).json({
+      token,
+      user: {
+        _id: String(financer._id),
+        name: financer.name,
+        email: financer.email,
+        role: "financer",
+      },
+    });
+  }
 
   // ── 1. Check regular users ─────────────────────────────────────────────────
   const user = await User.findOne({ email: normalizedEmail });

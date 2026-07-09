@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { Financer } from "@/lib/models/Financer";
+import { Session } from "@/lib/models/Session";
 
 export const MAX_FINANCER_ACCOUNTS = 2;
 
@@ -68,6 +69,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         status: "active",
         createdBy: user.email,
       });
+      // "Financer only": if this email previously belonged to a customer /
+      // bulk_dealer (or any other account), that identity is superseded. Kill
+      // every existing session for the email so they're logged out of their old
+      // role immediately and must sign back in as a financer.
+      await Session.updateMany(
+        { userEmail: normalizedEmail, isValid: true },
+        { isValid: false }
+      );
+
       const { passwordHash: _omit, ...safe } = doc.toObject();
       return res.status(201).json(safe);
     } catch (err: unknown) {

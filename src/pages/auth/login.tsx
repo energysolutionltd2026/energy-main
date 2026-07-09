@@ -20,6 +20,7 @@ const ROLE_DISPLAY: Record<string, string> = {
   admin: "Admin",
   truck_owner: "Truck Owner",
   station_manager: "Station Manager",
+  financer: "Financer",
 };
 
 function roleToRoute(role: string): string {
@@ -27,6 +28,7 @@ function roleToRoute(role: string): string {
   if (r === "bulk_dealer" || r === "bulk dealer") return "/bulk-dealer/dashboard";
   if (r === "admin") return "/admin/dashboard";
   if (r === "station_manager" || r === "station manager") return "/station-manager/dashboard";
+  if (r === "financer") return "/financer-overview-e-nergy";
   return "/customer";
 }
 
