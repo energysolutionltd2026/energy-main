@@ -97,11 +97,11 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
       {/* ── Top Navbar ──
           Mobile : left-0 → right-0 (full width)
           Desktop: left-64 → right-0 (content area only, sidebar owns the left 256 px) */}
-      <header className="fixed top-0 left-0 md:left-64 right-0 z-30 h-16 flex items-center px-4 md:px-6 bg-gray-950/90 backdrop-blur-md border-b border-gray-800">
+      <header className="fixed top-0 left-0 md:left-64 right-0 z-30 h-16 flex items-center px-4 md:px-6 bg-background/90 backdrop-blur-md border-b border-line">
 
         {/* Hamburger – mobile only */}
         <button
-          className="md:hidden p-2 mr-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition"
+          className="md:hidden p-2 mr-2 rounded-lg text-muted hover:text-foreground hover:bg-card-2 transition"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open menu"
         >
@@ -128,12 +128,12 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
 
           <Link
             href="/customer/profile"
-            className="hidden sm:flex items-center gap-2 text-sm text-gray-300 bg-gray-800/60 hover:bg-gray-700/80 hover:border-orange-500/40 border border-transparent px-3 py-1.5 rounded-full transition cursor-pointer"
+            className="hidden sm:flex items-center gap-2 text-sm text-foreground bg-card-2/60 hover:bg-card-2/80 hover:border-orange-500/40 border border-transparent px-3 py-1.5 rounded-full transition cursor-pointer"
           >
             <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
               {user.name.charAt(0).toUpperCase()}
             </div>
-            <span>Hi, <span className="font-semibold text-white">{user.name}</span></span>
+            <span>Hi, <span className="font-semibold text-foreground">{user.name}</span></span>
           </Link>
 
           <button
@@ -162,7 +162,7 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
       <aside
         className={`
           fixed top-16 md:top-0 left-0 bottom-0 z-40 w-64
-          bg-gray-950/95 backdrop-blur-md border-r border-gray-800
+          bg-background/95 backdrop-blur-md border-r border-line
           flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -170,7 +170,7 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
         `}
       >
         {/* Logo header – desktop only, same h-16 as the topbar so they align */}
-        <div className="hidden md:flex items-center px-4 h-16 border-b border-gray-800 shrink-0">
+        <div className="hidden md:flex items-center px-4 h-16 border-b border-line shrink-0">
           <Link href="/" className="flex items-center">
             <Image
               src="/eNnergy Logo.png"
@@ -184,11 +184,11 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
         </div>
 
         {/* Mobile close button */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 md:hidden">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</span>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-line md:hidden">
+          <span className="text-xs font-semibold text-muted uppercase tracking-wider">Menu</span>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition"
+            className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-card-2 transition"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -200,23 +200,23 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
         <Link
           href="/customer/profile"
           onClick={() => setSidebarOpen(false)}
-          className="px-4 py-4 border-b border-gray-800 flex items-center gap-3 hover:bg-gray-800/50 transition group"
+          className="px-4 py-4 border-b border-line flex items-center gap-3 hover:bg-card-2/50 transition group"
         >
           <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-orange-500/40 transition">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+            <p className="text-xs text-muted truncate">{user.email}</p>
           </div>
-          <svg className="w-4 h-4 text-gray-600 group-hover:text-orange-400 transition shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-muted group-hover:text-orange-400 transition shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </Link>
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Navigation</p>
+          <p className="px-3 mb-2 text-xs font-semibold text-muted uppercase tracking-wider">Navigation</p>
           {navigationLinks.map((link) => {
             const isActive = router.pathname === link.href;
             return (
@@ -228,7 +228,7 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
                   flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
                   ${isActive
                     ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/70"
+                    : "text-muted hover:text-foreground hover:bg-card-2/70"
                   }
                 `}
               >
@@ -243,7 +243,7 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
         </nav>
 
         {/* Footer links */}
-        <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+        <div className="px-3 py-4 border-t border-line space-y-1">
           {[
             { href: "/contact",              label: "Contact"            },
             { href: "/terms-and-conditions", label: "Terms & Conditions" },
@@ -254,7 +254,7 @@ export default function CustomerNavigation({ user }: CustomerNavigationProps) {
             <Link
               key={link.href}
               href={link.href}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-gray-300 hover:bg-gray-800/50 transition"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted hover:text-foreground hover:bg-card-2/50 transition"
             >
               {link.label}
             </Link>

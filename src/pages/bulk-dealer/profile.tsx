@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import tower from "@/../public/tower.jpg";
 
 interface DealerProfile {
   name: string; email: string; phone: string; role: string;
@@ -56,10 +55,10 @@ const NIGERIAN_BANKS = [
   "Wema Bank","Zenith Bank",
 ];
 
-const inputCls = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-sm";
-const selectCls = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-green-500 transition text-sm";
-const labelCls  = "block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1";
-const sectionHd = "text-base font-bold text-white mb-4 pb-2 border-b border-gray-800";
+const inputCls = "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground placeholder-muted focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-sm";
+const selectCls = "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:border-green-500 transition text-sm";
+const labelCls  = "block text-xs font-semibold text-muted uppercase tracking-wider mb-1";
+const sectionHd = "text-base font-bold text-foreground mb-4 pb-2 border-b border-line";
 
 // ─── Security Tab ─────────────────────────────────────────────────────────────
 function SecurityTab({ setToast }: { setToast: (msg: string) => void }) {
@@ -91,7 +90,7 @@ function SecurityTab({ setToast }: { setToast: (msg: string) => void }) {
 
   return (
     <div className="max-w-md space-y-5">
-      <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-sm text-gray-400">
+      <div className="bg-card/40 border border-line rounded-xl p-4 text-sm text-muted">
         Password changes take effect on your next login.
       </div>
       {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">{error}</div>}
@@ -172,10 +171,10 @@ export default function BulkDealerProfile() {
   const TABS = ["Business", "Address", "Identity", "Bank Details", "Security"];
 
   return (
-    <div className="min-h-screen text-white relative"
-      style={{ backgroundImage: `url(${tower.src})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}>
+    <div className="min-h-screen text-foreground relative"
+>
       <Head><title>Dealer Profile | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top bar */}
@@ -185,7 +184,7 @@ export default function BulkDealerProfile() {
               className="object-contain drop-shadow-[0_0_10px_rgba(34,197,94,0.4)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/bulk-dealer/dashboard" className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 px-4 py-2 rounded-lg transition">
+            <Link href="/bulk-dealer/dashboard" className="text-sm text-muted hover:text-foreground border border-line hover:border-line px-4 py-2 rounded-lg transition">
               ← Dashboard
             </Link>
             <button onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"))}
@@ -202,14 +201,14 @@ export default function BulkDealerProfile() {
           {toast && <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-semibold shadow-lg">{toast}</div>}
 
           {/* Profile header card */}
-          <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-2xl p-6 mb-6 flex items-center gap-5">
+          <div className="bg-card backdrop-blur-md border border-line rounded-2xl p-6 mb-6 flex items-center gap-5">
             <div className="w-16 h-16 rounded-full bg-green-600 flex items-center justify-center text-white text-2xl font-bold shrink-0">
               {profile.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xl font-bold text-white truncate">{profile.name}</p>
-              <p className="text-sm text-gray-400 truncate">{profile.email}</p>
-              <p className="text-xs text-gray-500 mt-1">{profile.companyName} · {profile.dprLicence}</p>
+              <p className="text-xl font-bold text-foreground truncate">{profile.name}</p>
+              <p className="text-sm text-muted truncate">{profile.email}</p>
+              <p className="text-xs text-muted mt-1">{profile.companyName} · {profile.dprLicence}</p>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/40 shrink-0">Bulk Dealer</span>
           </div>
@@ -218,20 +217,20 @@ export default function BulkDealerProfile() {
           <div className="flex gap-2 flex-wrap mb-6">
             {TABS.map((t) => (
               <button key={t} onClick={() => setActiveTab(t)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === t ? "bg-green-600 text-white" : "bg-gray-800/60 text-gray-400 hover:text-white"}`}>
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === t ? "bg-green-600 text-white" : "bg-card-2/60 text-muted hover:text-white"}`}>
                 {t}
               </button>
             ))}
           </div>
 
-          <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-2xl p-6">
+          <div className="bg-card backdrop-blur-md border border-line rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <p className={sectionHd.replace("mb-4 pb-2 border-b border-gray-800", "")}>{activeTab} Information</p>
+              <p className={sectionHd.replace("mb-4 pb-2 border-b border-line", "")}>{activeTab} Information</p>
               {!editing
                 ? <button onClick={startEdit} className="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Edit</button>
                 : <div className="flex gap-2">
                     <button onClick={save}   className="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Save</button>
-                    <button onClick={cancel} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white border border-gray-700 transition">Cancel</button>
+                    <button onClick={cancel} className="px-4 py-2 rounded-lg text-sm text-muted hover:text-foreground border border-line transition">Cancel</button>
                   </div>
               }
             </div>
@@ -252,7 +251,7 @@ export default function BulkDealerProfile() {
                     <label className={labelCls}>{label}</label>
                     {editing
                       ? <input value={draft[key]} onChange={set(key)} className={inputCls} />
-                      : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile[key] || "—"}</p>
+                      : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile[key] || "—"}</p>
                     }
                   </div>
                 ))}
@@ -266,7 +265,7 @@ export default function BulkDealerProfile() {
                   <label className={labelCls}>Head Office Address</label>
                   {editing
                     ? <input value={draft.headOfficeAddress} onChange={set("headOfficeAddress")} className={inputCls} />
-                    : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.headOfficeAddress || "—"}</p>
+                    : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.headOfficeAddress || "—"}</p>
                   }
                 </div>
                 <div>
@@ -276,14 +275,14 @@ export default function BulkDealerProfile() {
                         <option value="">Select state…</option>
                         {NIGERIAN_STATES.map((s) => <option key={s}>{s}</option>)}
                       </select>
-                    : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.state || "—"}</p>
+                    : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.state || "—"}</p>
                   }
                 </div>
                 <div>
                   <label className={labelCls}>LGA</label>
                   {editing
                     ? <input value={draft.lga} onChange={set("lga")} className={inputCls} />
-                    : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.lga || "—"}</p>
+                    : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.lga || "—"}</p>
                   }
                 </div>
               </div>
@@ -302,11 +301,11 @@ export default function BulkDealerProfile() {
                     <div className="flex-1">
                       <p className="text-green-400 font-bold text-sm mb-2">Verified Identity on File</p>
                       <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-                        <span className="text-gray-500">ID Type</span><span className="text-white">{ID_TYPE_LABELS[profile.officialIdType] ?? profile.officialIdType}</span>
-                        <span className="text-gray-500">ID Number</span><span className="text-white font-mono">{profile.idNumber}</span>
-                        <span className="text-gray-500">Issue Date</span><span className="text-white">{profile.idIssueDate}</span>
-                        <span className="text-gray-500">Expiry Date</span><span className="text-white">{profile.idExpiryDate}</span>
-                        <span className="text-gray-500">Issuing Authority</span><span className="text-white">{profile.idIssuingAuthority}</span>
+                        <span className="text-muted">ID Type</span><span className="text-foreground">{ID_TYPE_LABELS[profile.officialIdType] ?? profile.officialIdType}</span>
+                        <span className="text-muted">ID Number</span><span className="text-foreground font-mono">{profile.idNumber}</span>
+                        <span className="text-muted">Issue Date</span><span className="text-foreground">{profile.idIssueDate}</span>
+                        <span className="text-muted">Expiry Date</span><span className="text-foreground">{profile.idExpiryDate}</span>
+                        <span className="text-muted">Issuing Authority</span><span className="text-foreground">{profile.idIssuingAuthority}</span>
                       </div>
                     </div>
                   </div>
@@ -319,30 +318,30 @@ export default function BulkDealerProfile() {
                           <option value="">Select ID type…</option>
                           {Object.entries(ID_TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                         </select>
-                      : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{ID_TYPE_LABELS[profile.officialIdType] ?? (profile.officialIdType || "—")}</p>
+                      : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{ID_TYPE_LABELS[profile.officialIdType] ?? (profile.officialIdType || "—")}</p>
                     }
                   </div>
                   <div>
                     <label className={labelCls}>ID Number</label>
                     {editing
                       ? <input value={draft.idNumber} onChange={set("idNumber")} className={inputCls} />
-                      : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800 font-mono">{profile.idNumber || "—"}</p>
+                      : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line font-mono">{profile.idNumber || "—"}</p>
                     }
                   </div>
                   <div>
                     <label className={labelCls}>Issue Date</label>
                     {editing ? <input type="date" value={draft.idIssueDate} onChange={set("idIssueDate")} className={inputCls} />
-                      : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.idIssueDate || "—"}</p>}
+                      : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.idIssueDate || "—"}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Expiry Date</label>
                     {editing ? <input type="date" value={draft.idExpiryDate} onChange={set("idExpiryDate")} className={inputCls} />
-                      : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.idExpiryDate || "—"}</p>}
+                      : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.idExpiryDate || "—"}</p>}
                   </div>
                   <div className="md:col-span-2">
                     <label className={labelCls}>Issuing Authority</label>
                     {editing ? <input value={draft.idIssuingAuthority} onChange={set("idIssuingAuthority")} className={inputCls} />
-                      : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.idIssuingAuthority || "—"}</p>}
+                      : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.idIssuingAuthority || "—"}</p>}
                   </div>
                 </div>
               </div>
@@ -358,25 +357,25 @@ export default function BulkDealerProfile() {
                         <option value="">Select bank…</option>
                         {NIGERIAN_BANKS.map((b) => <option key={b}>{b}</option>)}
                       </select>
-                    : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.bankName || "—"}</p>
+                    : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.bankName || "—"}</p>
                   }
                 </div>
                 <div>
                   <label className={labelCls}>Account Number (NUBAN)</label>
                   {editing
                     ? <input value={draft.accountNumber} onChange={(e) => { if (e.target.value.length <= 10) set("accountNumber")(e); }} maxLength={10} inputMode="numeric" className={inputCls} />
-                    : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800 font-mono">{profile.accountNumber || "—"}</p>
+                    : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line font-mono">{profile.accountNumber || "—"}</p>
                   }
                 </div>
                 <div>
                   <label className={labelCls}>Account Name</label>
                   {editing ? <input value={draft.accountName} onChange={set("accountName")} className={inputCls} />
-                    : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.accountName || "—"}</p>}
+                    : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.accountName || "—"}</p>}
                 </div>
                 <div>
                   <label className={labelCls}>Bank Branch</label>
                   {editing ? <input value={draft.bankBranch} onChange={set("bankBranch")} className={inputCls} />
-                    : <p className="text-white text-sm py-2.5 px-4 bg-gray-900/30 rounded-lg border border-gray-800">{profile.bankBranch || "—"}</p>}
+                    : <p className="text-foreground text-sm py-2.5 px-4 bg-card/30 rounded-lg border border-line">{profile.bankBranch || "—"}</p>}
                 </div>
               </div>
             )}
@@ -388,16 +387,16 @@ export default function BulkDealerProfile() {
           </div>
         </main>
 
-        <footer className="px-6 py-4 border-t border-gray-800/60 flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 hidden md:flex">
-          <Link href="/contact"              className="hover:text-gray-300 transition">Contact</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/terms-and-conditions" className="hover:text-gray-300 transition">Terms &amp; Conditions</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/refund-policy"        className="hover:text-gray-300 transition">Refund Policy</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/privacy-policy"       className="hover:text-gray-300 transition">Privacy Policy</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/about"                className="hover:text-gray-300 transition">About Us</Link>
+        <footer className="px-6 py-4 border-t border-line/60 flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted hidden md:flex">
+          <Link href="/contact"              className="hover:text-foreground transition">Contact</Link>
+          <span className="text-muted">|</span>
+          <Link href="/terms-and-conditions" className="hover:text-foreground transition">Terms &amp; Conditions</Link>
+          <span className="text-muted">|</span>
+          <Link href="/refund-policy"        className="hover:text-foreground transition">Refund Policy</Link>
+          <span className="text-muted">|</span>
+          <Link href="/privacy-policy"       className="hover:text-foreground transition">Privacy Policy</Link>
+          <span className="text-muted">|</span>
+          <Link href="/about"                className="hover:text-foreground transition">About Us</Link>
         </footer>
       </div>
     </div>

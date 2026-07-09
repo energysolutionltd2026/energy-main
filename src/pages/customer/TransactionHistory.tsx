@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 
 type TransactionType = "purchase_order" | "truck_rental" | "union_dues";
 
@@ -139,12 +138,12 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-card border border-line rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line sticky top-0 bg-card z-10">
           <div>
-            <h2 className="text-lg font-bold text-white">Invoice</h2>
-            <p className="text-xs text-gray-400 font-mono">{invoice.invoiceNumber}</p>
+            <h2 className="text-lg font-bold text-foreground">Invoice</h2>
+            <p className="text-xs text-muted font-mono">{invoice.invoiceNumber}</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition">
@@ -153,7 +152,7 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
               </svg>
               Print Invoice
             </button>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">
+            <button onClick={onClose} className="p-2 text-muted hover:text-foreground hover:bg-card-2 rounded-lg transition">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -167,29 +166,29 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-2xl font-extrabold text-orange-500">e-Nergy</h1>
-              <p className="text-xs text-gray-400">Oil &amp; Gas Platform · Nigeria</p>
+              <p className="text-xs text-muted">Oil &amp; Gas Platform · Nigeria</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest">Invoice</p>
-              <p className="text-sm font-mono font-semibold text-white mt-0.5">{invoice.invoiceNumber}</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-[10px] text-muted uppercase tracking-widest">Invoice</p>
+              <p className="text-sm font-mono font-semibold text-foreground mt-0.5">{invoice.invoiceNumber}</p>
+              <p className="text-xs text-muted mt-1">
                 {new Date(invoice.issuedDate).toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}
               </p>
             </div>
           </div>
 
           {/* Bill to + details */}
-          <div className="grid grid-cols-2 gap-4 bg-gray-800/50 rounded-xl p-4">
+          <div className="grid grid-cols-2 gap-4 bg-card-2/50 rounded-xl p-4">
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Bill To</p>
-              <p className="text-sm font-semibold text-white">{invoice.customerName}</p>
-              <p className="text-xs text-gray-400">{invoice.customerEmail}</p>
+              <p className="text-[10px] text-muted uppercase tracking-widest mb-2">Bill To</p>
+              <p className="text-sm font-semibold text-foreground">{invoice.customerName}</p>
+              <p className="text-xs text-muted">{invoice.customerEmail}</p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Payment Details</p>
-              <p className="text-xs text-gray-300"><span className="text-gray-500">Method: </span>{invoice.paymentMethod}</p>
-              <p className="text-xs text-gray-300 mt-1">
-                <span className="text-gray-500">Status: </span>
+              <p className="text-[10px] text-muted uppercase tracking-widest mb-2">Payment Details</p>
+              <p className="text-xs text-foreground"><span className="text-muted">Method: </span>{invoice.paymentMethod}</p>
+              <p className="text-xs text-foreground mt-1">
+                <span className="text-muted">Status: </span>
                 <span className={`font-semibold ${invoice.status === "completed" ? "text-green-400" : invoice.status === "pending" ? "text-yellow-400" : "text-red-400"}`}>
                   {invoice.status}
                 </span>
@@ -200,20 +199,20 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
           {/* Line items */}
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left pb-2 text-[10px] text-gray-500 uppercase tracking-wide font-semibold w-[44%]">Description</th>
-                <th className="text-left pb-2 text-[10px] text-gray-500 uppercase tracking-wide font-semibold w-[18%]">Qty</th>
-                <th className="text-left pb-2 text-[10px] text-gray-500 uppercase tracking-wide font-semibold w-[20%]">Unit Price</th>
-                <th className="text-right pb-2 text-[10px] text-gray-500 uppercase tracking-wide font-semibold w-[18%]">Amount</th>
+              <tr className="border-b border-line">
+                <th className="text-left pb-2 text-[10px] text-muted uppercase tracking-wide font-semibold w-[44%]">Description</th>
+                <th className="text-left pb-2 text-[10px] text-muted uppercase tracking-wide font-semibold w-[18%]">Qty</th>
+                <th className="text-left pb-2 text-[10px] text-muted uppercase tracking-wide font-semibold w-[20%]">Unit Price</th>
+                <th className="text-right pb-2 text-[10px] text-muted uppercase tracking-wide font-semibold w-[18%]">Amount</th>
               </tr>
             </thead>
             <tbody>
               {invoice.items.map((item, i) => (
-                <tr key={i} className="border-b border-gray-800/60">
-                  <td className="py-3 text-gray-200">{item.description}</td>
-                  <td className="py-3 text-gray-400">{item.qty}</td>
-                  <td className="py-3 text-gray-400">{item.unitPrice}</td>
-                  <td className="py-3 text-right font-semibold text-white">{item.amount}</td>
+                <tr key={i} className="border-b border-line/60">
+                  <td className="py-3 text-foreground">{item.description}</td>
+                  <td className="py-3 text-muted">{item.qty}</td>
+                  <td className="py-3 text-muted">{item.unitPrice}</td>
+                  <td className="py-3 text-right font-semibold text-foreground">{item.amount}</td>
                 </tr>
               ))}
             </tbody>
@@ -222,7 +221,7 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
           {/* Total */}
           <div className="flex justify-end">
             <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-6 py-4 text-right">
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">Total Amount</p>
+              <p className="text-[10px] text-muted uppercase tracking-widest">Total Amount</p>
               <p className="text-2xl font-extrabold text-orange-400 mt-1">{invoice.total}</p>
             </div>
           </div>
@@ -234,7 +233,7 @@ function InvoiceModal({ invoice, onClose }: { invoice: InvoiceData; onClose: () 
             </div>
           )}
 
-          <p className="text-xs text-gray-600 text-center border-t border-gray-800 pt-4">
+          <p className="text-xs text-muted text-center border-t border-line pt-4">
             Thank you for using the e-Nergy platform. · Generated {new Date().toLocaleString("en-NG")}
           </p>
         </div>
@@ -285,7 +284,7 @@ export default function TransactionHistory() {
 
   if (!user) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-950">
+      <div className="h-screen flex items-center justify-center bg-background">
         <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -317,7 +316,7 @@ export default function TransactionHistory() {
       case "failed":
         return "bg-red-500/20 text-red-400 border-red-500/50";
       default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+        return "bg-gray-500/20 text-muted border-line/50";
     }
   };
 
@@ -337,17 +336,17 @@ export default function TransactionHistory() {
         case "ATK": return "bg-green-500/20 text-green-400 border-green-500/50";
       }
     }
-    return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+    return "bg-gray-500/20 text-muted border-line/50";
   };
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-      style={{ backgroundImage: `url(${tower.src})` }}
+      className="min-h-screen text-foreground"
+
     >
       <Head><title>Transaction History | e-Nergy</title></Head>
       {/* Dark overlay */}
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
 
       {/* Customer Navigation (fixed topbar + fixed sidebar) */}
       <CustomerNavigation user={user} />
@@ -358,22 +357,22 @@ export default function TransactionHistory() {
         <div className="max-w-7xl">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Transaction History</h1>
-            <p className="text-gray-400 text-sm">View and manage all your petroleum purchase transactions</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Transaction History</h1>
+            <p className="text-muted text-sm">View and manage all your petroleum purchase transactions</p>
           </div>
 
           {/* Filters and Search */}
-          <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-lg p-6 mb-6">
+          <div className="bg-card backdrop-blur-md border border-line rounded-lg p-6 mb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div className="sm:col-span-2 lg:col-span-2">
-                <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
+                <label className="block text-xs font-semibold text-muted uppercase mb-2">
                   Search Transactions
                 </label>
                 <input
                   type="text"
                   placeholder="Search by ID, Depot, Product or Truck"
-                  className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
+                  className="w-full bg-card/50 border border-line rounded-lg px-4 py-2 text-foreground placeholder-muted focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -381,11 +380,11 @@ export default function TransactionHistory() {
 
               {/* Type Filter */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
+                <label className="block text-xs font-semibold text-muted uppercase mb-2">
                   Type
                 </label>
                 <select
-                  className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
+                  className="w-full bg-card/50 border border-line rounded-lg px-4 py-2 text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                 >
@@ -398,11 +397,11 @@ export default function TransactionHistory() {
 
               {/* Status Filter */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
+                <label className="block text-xs font-semibold text-muted uppercase mb-2">
                   Status
                 </label>
                 <select
-                  className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
+                  className="w-full bg-card/50 border border-line rounded-lg px-4 py-2 text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
@@ -415,11 +414,11 @@ export default function TransactionHistory() {
 
               {/* Fuel Product Filter */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
+                <label className="block text-xs font-semibold text-muted uppercase mb-2">
                   Fuel Product
                 </label>
                 <select
-                  className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
+                  className="w-full bg-card/50 border border-line rounded-lg px-4 py-2 text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
                   value={filterProduct}
                   onChange={(e) => setFilterProduct(e.target.value)}
                 >
@@ -432,17 +431,17 @@ export default function TransactionHistory() {
             </div>
 
             {/* Results Count */}
-            <div className="mt-4 text-sm text-gray-400">
+            <div className="mt-4 text-sm text-muted">
               Showing {filteredTransactions.length} of {transactions.length} transactions
             </div>
           </div>
 
           {/* Transactions Table */}
-          <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-lg overflow-hidden">
+          <div className="bg-card backdrop-blur-md border border-line rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-orange-500/10 border-b border-gray-800">
+                  <tr className="bg-orange-500/10 border-b border-line">
                     <th className="px-3 py-3 text-left text-xs font-bold text-orange-500 uppercase tracking-wider">Order ID</th>
                     <th className="px-3 py-3 text-left text-xs font-bold text-orange-500 uppercase tracking-wider">Date</th>
                     <th className="px-3 py-3 text-left text-xs font-bold text-orange-500 uppercase tracking-wider">Type</th>
@@ -456,11 +455,11 @@ export default function TransactionHistory() {
                     <th className="px-3 py-3 text-left text-xs font-bold text-orange-500 uppercase tracking-wider">Invoice</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-line">
                   {filteredTransactions.length === 0 ? (
                     <tr>
                       <td colSpan={12} className="px-3 py-12 text-center">
-                        <div className="text-gray-500">
+                        <div className="text-muted">
                           <svg
                             className="w-12 h-12 mx-auto mb-4 opacity-50"
                             fill="none"
@@ -483,14 +482,14 @@ export default function TransactionHistory() {
                     filteredTransactions.map((transaction) => (
                       <tr
                         key={transaction.id}
-                        className="hover:bg-white/5 transition-colors cursor-pointer"
+                        className="hover:bg-card-2 transition-colors cursor-pointer"
                       >
                         <td className="px-3 py-2.5 whitespace-nowrap">
                           <span className="font-mono text-xs font-semibold text-orange-400">
                             {transaction.id}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-gray-300">
+                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-foreground">
                           {new Date(transaction.date).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
@@ -502,7 +501,7 @@ export default function TransactionHistory() {
                             {transaction.type === "purchase_order" ? "Fuel" : transaction.type === "truck_rental" ? "Truck" : "Dues"}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-xs text-gray-300 hidden lg:table-cell max-w-[140px] truncate">
+                        <td className="px-3 py-2.5 text-xs text-foreground hidden lg:table-cell max-w-[140px] truncate">
                           {transaction.depot}
                         </td>
                         <td className="px-3 py-2.5 whitespace-nowrap max-w-[140px]">
@@ -510,16 +509,16 @@ export default function TransactionHistory() {
                             {transaction.product.length > 18 ? transaction.product.slice(0, 17) + "…" : transaction.product}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-gray-300 font-semibold hidden xl:table-cell">
+                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-foreground font-semibold hidden xl:table-cell">
                           {transaction.quantity}
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-gray-300 hidden xl:table-cell">
+                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-foreground hidden xl:table-cell">
                           {transaction.unitPrice}
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap text-xs font-bold text-white">
+                        <td className="px-3 py-2.5 whitespace-nowrap text-xs font-bold text-foreground">
                           {transaction.totalAmount}
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-gray-400 hidden lg:table-cell">
+                        <td className="px-3 py-2.5 whitespace-nowrap text-xs text-muted hidden lg:table-cell">
                           {transaction.paymentMethod}
                         </td>
                         <td className="px-3 py-2.5 whitespace-nowrap">
@@ -530,7 +529,7 @@ export default function TransactionHistory() {
                         <td className="px-3 py-2.5 whitespace-nowrap">
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedTxn(transaction); }}
-                            className="flex items-center gap-1 px-2 py-1 bg-gray-800 hover:bg-orange-500/20 hover:border-orange-500/50 border border-gray-700 text-gray-300 hover:text-orange-400 text-xs font-semibold rounded-lg transition"
+                            className="flex items-center gap-1 px-2 py-1 bg-card-2 hover:bg-orange-500/20 hover:border-orange-500/50 border border-line text-foreground hover:text-orange-400 text-xs font-semibold rounded-lg transition"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -548,43 +547,43 @@ export default function TransactionHistory() {
 
           {/* Summary Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 mb-20">
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-lg p-4">
-              <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Total</p>
-              <p className="text-2xl font-bold text-white">{transactions.length}</p>
+            <div className="bg-card backdrop-blur-md border border-line rounded-lg p-4">
+              <p className="text-xs text-muted uppercase font-semibold mb-1">Total</p>
+              <p className="text-2xl font-bold text-foreground">{transactions.length}</p>
             </div>
-            <div className="bg-black/40 backdrop-blur-md border border-blue-800/50 rounded-lg p-4">
-              <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Fuel Purchases</p>
+            <div className="bg-card backdrop-blur-md border border-blue-800/50 rounded-lg p-4">
+              <p className="text-xs text-muted uppercase font-semibold mb-1">Fuel Purchases</p>
               <p className="text-2xl font-bold text-blue-400">
                 {transactions.filter((t) => t.type === "purchase_order").length}
               </p>
             </div>
-            <div className="bg-black/40 backdrop-blur-md border border-purple-800/50 rounded-lg p-4">
-              <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Truck Rentals</p>
+            <div className="bg-card backdrop-blur-md border border-purple-800/50 rounded-lg p-4">
+              <p className="text-xs text-muted uppercase font-semibold mb-1">Truck Rentals</p>
               <p className="text-2xl font-bold text-purple-400">
                 {transactions.filter((t) => t.type === "truck_rental").length}
               </p>
             </div>
-            <div className="bg-black/40 backdrop-blur-md border border-amber-800/50 rounded-lg p-4">
-              <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Union Dues</p>
+            <div className="bg-card backdrop-blur-md border border-amber-800/50 rounded-lg p-4">
+              <p className="text-xs text-muted uppercase font-semibold mb-1">Union Dues</p>
               <p className="text-2xl font-bold text-amber-400">
                 {transactions.filter((t) => t.type === "union_dues").length}
               </p>
             </div>
             <div className="col-span-2 lg:col-span-4 grid grid-cols-3 gap-4">
-              <div className="bg-black/40 backdrop-blur-md border border-green-800/50 rounded-lg p-4">
-                <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Completed</p>
+              <div className="bg-card backdrop-blur-md border border-green-800/50 rounded-lg p-4">
+                <p className="text-xs text-muted uppercase font-semibold mb-1">Completed</p>
                 <p className="text-2xl font-bold text-green-400">
                   {transactions.filter((t) => t.status === "completed").length}
                 </p>
               </div>
-              <div className="bg-black/40 backdrop-blur-md border border-yellow-800/50 rounded-lg p-4">
-                <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Pending</p>
+              <div className="bg-card backdrop-blur-md border border-yellow-800/50 rounded-lg p-4">
+                <p className="text-xs text-muted uppercase font-semibold mb-1">Pending</p>
                 <p className="text-2xl font-bold text-yellow-400">
                   {transactions.filter((t) => t.status === "pending").length}
                 </p>
               </div>
-              <div className="bg-black/40 backdrop-blur-md border border-red-800/50 rounded-lg p-4">
-                <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Failed</p>
+              <div className="bg-card backdrop-blur-md border border-red-800/50 rounded-lg p-4">
+                <p className="text-xs text-muted uppercase font-semibold mb-1">Failed</p>
                 <p className="text-2xl font-bold text-red-400">
                   {transactions.filter((t) => t.status === "failed").length}
                 </p>

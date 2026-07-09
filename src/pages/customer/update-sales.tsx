@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 import { useDepot, ProductKey } from "../../context/DepotContext";
 import { toLabel } from "@/utils/toLabel";
 
@@ -44,8 +43,8 @@ function makeProducts(tanks: { product: string; currentLitres: number }[], price
   ];
 }
 
-const inputCls  = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
-const selectCls = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
+const inputCls  = "w-full bg-card/60 border border-line rounded-lg px-3 py-2.5 text-foreground placeholder-muted focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
+const selectCls = "w-full bg-card/60 border border-line rounded-lg px-3 py-2.5 text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -115,7 +114,7 @@ export default function UpdateSales() {
   }, [router]);
 
   if (!user) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
     </div>
   );
@@ -247,20 +246,20 @@ export default function UpdateSales() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white" style={{ backgroundImage: `url(${tower.src})` }}>
-        <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="min-h-screen text-foreground">
+        <div className="fixed inset-0 bg-background z-0" />
         <CustomerNavigation user={user} />
         <div className="relative z-10 pt-16 md:pl-64 min-h-screen flex items-center justify-center px-4">
           <div className="w-full max-w-lg">
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-2xl p-8 space-y-5">
+            <div className="bg-card backdrop-blur-md border border-line rounded-2xl p-8 space-y-5">
               <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center mx-auto">
                 <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-white">Sales Updated!</h2>
-                <p className="text-gray-400 text-sm mt-1">Daily sales record has been saved successfully.</p>
+                <h2 className="text-2xl font-bold text-foreground">Sales Updated!</h2>
+                <p className="text-muted text-sm mt-1">Daily sales record has been saved successfully.</p>
               </div>
 
               {/* Summary */}
@@ -276,8 +275,8 @@ export default function UpdateSales() {
                   { label: "Cash / POS",      value: `₦${totalCash.toLocaleString()} / ₦${totalPOS.toLocaleString()}` },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-sm border-b border-green-500/10 pb-1.5 last:border-0 last:pb-0">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="text-white font-semibold text-right">{value}</span>
+                    <span className="text-muted">{label}</span>
+                    <span className="text-foreground font-semibold text-right">{value}</span>
                   </div>
                 ))}
               </div>
@@ -291,7 +290,7 @@ export default function UpdateSales() {
                     const found = stationsList.find((x: any) => x._id === form.stationId);
                     setForm({ stationId: form.stationId, stationName: form.stationName, date: todayStr, shift: "full-day", staffOnDuty: "", pumpsActive: "", incidents: "", products: makeProducts(found?.tanks ?? [], prices) });
                   }}
-                  className="flex-1 py-2.5 border border-gray-700 text-gray-300 hover:text-white text-sm font-semibold rounded-lg transition"
+                  className="flex-1 py-2.5 border border-line text-foreground hover:text-foreground text-sm font-semibold rounded-lg transition"
                 >
                   New Entry
                 </button>
@@ -311,9 +310,9 @@ export default function UpdateSales() {
   // ── Form ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white" style={{ backgroundImage: `url(${tower.src})` }}>
+    <div className="min-h-screen text-foreground">
       <Head><title>Update Sales | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
       <CustomerNavigation user={user} />
 
       <div className="relative z-10 pt-16 md:pl-64 min-h-screen">
@@ -322,7 +321,7 @@ export default function UpdateSales() {
           {/* Back link */}
           <div className="mb-6">
             <Link href="/customer/station-manager"
-              className="inline-flex items-center gap-1.5 text-gray-400 hover:text-orange-400 text-sm font-semibold transition"
+              className="inline-flex items-center gap-1.5 text-muted hover:text-orange-400 text-sm font-semibold transition"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -332,21 +331,21 @@ export default function UpdateSales() {
           </div>
 
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-1">Update Daily Sales</h1>
-            <p className="text-gray-400 text-sm">Record sales figures, stock movement, and transactions for the day</p>
+            <h1 className="text-3xl font-bold text-foreground mb-1">Update Daily Sales</h1>
+            <p className="text-muted text-sm">Record sales figures, stock movement, and transactions for the day</p>
           </div>
 
           <div className="space-y-5">
 
             {/* ── Session Info ── */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line bg-orange-500/5">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Session Information</p>
               </div>
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Station <span className="text-red-400">*</span>
                   </label>
                   <select className={selectCls} value={form.stationId} onChange={(e) => setField("stationId", e.target.value)}>
@@ -359,7 +358,7 @@ export default function UpdateSales() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Sales Date <span className="text-red-400">*</span>
                   </label>
                   <input type="date" className={inputCls} value={form.date}
@@ -369,7 +368,7 @@ export default function UpdateSales() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Shift</label>
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Shift</label>
                   <select className={selectCls} value={form.shift} onChange={(e) => setField("shift", e.target.value)}>
                     <option value="full-day">Full Day</option>
                     <option value="morning">Morning (6am – 2pm)</option>
@@ -379,7 +378,7 @@ export default function UpdateSales() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Staff on Duty <span className="text-red-400">*</span>
                   </label>
                   <input type="number" min="1" className={inputCls} placeholder="e.g. 6"
@@ -388,7 +387,7 @@ export default function UpdateSales() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Active Pumps</label>
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Active Pumps</label>
                   <input type="number" min="0" className={inputCls} placeholder="Number of pumps operational"
                     value={form.pumpsActive} onChange={(e) => setField("pumpsActive", e.target.value)} />
                 </div>
@@ -397,21 +396,21 @@ export default function UpdateSales() {
             </div>
 
             {/* ── Depot Reference (from DepotContext) ── */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5 flex items-center justify-between flex-wrap gap-2">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line bg-orange-500/5 flex items-center justify-between flex-wrap gap-2">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Depot Reference — Live Stock Levels</p>
                 <select
-                  className="bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-orange-500 transition"
+                  className="bg-card/60 border border-line rounded-lg px-3 py-1.5 text-foreground text-xs focus:outline-none focus:border-orange-500 transition"
                   value={selectedDepot}
                   onChange={(e) => setSelectedDepot(e.target.value)}
                 >
                   {depots.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
-              <div className="grid grid-cols-3 divide-x divide-gray-700/40">
+              <div className="grid grid-cols-3 divide-x divide-line/40">
                 {(["PMS", "AGO", "ATK"] as ProductKey[]).map((pk) => {
                   const d = depotProducts[selectedDepot]?.[pk];
-                  if (!d) return <div key={pk} className="p-4 text-xs text-gray-600">—</div>;
+                  if (!d) return <div key={pk} className="p-4 text-xs text-muted">—</div>;
                   const barColor = d.level > 50 ? "bg-green-500" : d.level > 20 ? "bg-yellow-500" : "bg-red-500";
                   const statusColor =
                     d.status === "available"   ? "text-green-400 border-green-500/40 bg-green-500/10" :
@@ -424,12 +423,12 @@ export default function UpdateSales() {
                         <span className={`text-sm font-extrabold ${prodColor}`}>{pk}</span>
                         <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${statusColor}`}>{toLabel(d.status)}</span>
                       </div>
-                      <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-2 bg-card-2 rounded-full overflow-hidden">
                         <div className={`h-full ${barColor} rounded-full`} style={{ width: `${d.level}%` }} />
                       </div>
-                      <div className="flex justify-between text-xs text-gray-400">
+                      <div className="flex justify-between text-xs text-muted">
                         <span>{d.level}% available</span>
-                        <span className="text-white font-semibold">{d.price}/L</span>
+                        <span className="text-foreground font-semibold">{d.price}/L</span>
                       </div>
                     </div>
                   );
@@ -445,15 +444,15 @@ export default function UpdateSales() {
               const barCol  = pctLeft > 50 ? "bg-green-500" : pctLeft > 20 ? "bg-yellow-500" : "bg-red-500";
 
               return (
-                <div key={p.product} className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-                  <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5 flex items-center justify-between">
+                <div key={p.product} className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-line bg-orange-500/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className={`text-lg font-extrabold ${p.color}`}>{p.product}</span>
-                      <span className="text-xs text-gray-500">{p.label}</span>
+                      <span className="text-xs text-muted">{p.label}</span>
                     </div>
                     {form.stationId && (
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <span>Opening: <span className="text-white font-semibold">{p.openingStock.toLocaleString()} L</span></span>
+                      <div className="flex items-center gap-3 text-xs text-muted">
+                        <span>Opening: <span className="text-foreground font-semibold">{p.openingStock.toLocaleString()} L</span></span>
                         {p.quantitySold && !isNaN(Number(p.quantitySold)) && (
                           <span className="text-green-400 font-semibold">
                             → Closing: {cstock.toLocaleString()} L
@@ -467,7 +466,7 @@ export default function UpdateSales() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
 
                       <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Qty Sold (L)</label>
+                        <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Qty Sold (L)</label>
                         <input type="number" min="0" className={inputCls} placeholder="0"
                           value={p.quantitySold} onChange={(e) => setProd(idx, "quantitySold", e.target.value)} />
                         {errors[`prod_${idx}_quantitySold`] && (
@@ -476,31 +475,31 @@ export default function UpdateSales() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Unit Price (₦/L)</label>
+                        <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Unit Price (₦/L)</label>
                         <input type="number" min="0" className={inputCls}
                           value={p.unitPrice} onChange={(e) => setProd(idx, "unitPrice", e.target.value)} />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">No. of Transactions</label>
+                        <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">No. of Transactions</label>
                         <input type="number" min="0" className={inputCls} placeholder="0"
                           value={p.transactions} onChange={(e) => setProd(idx, "transactions", e.target.value)} />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Cash Sales (₦)</label>
+                        <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Cash Sales (₦)</label>
                         <input type="number" min="0" className={inputCls} placeholder="0"
                           value={p.cashSales} onChange={(e) => setProd(idx, "cashSales", e.target.value)} />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">POS / Transfer (₦)</label>
+                        <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">POS / Transfer (₦)</label>
                         <input type="number" min="0" className={inputCls} placeholder="0"
                           value={p.posSales} onChange={(e) => setProd(idx, "posSales", e.target.value)} />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Pumps Used</label>
+                        <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Pumps Used</label>
                         <input type="number" min="0" className={inputCls} placeholder="e.g. 3"
                           value={p.pumpsUsed} onChange={(e) => setProd(idx, "pumpsUsed", e.target.value)} />
                       </div>
@@ -509,23 +508,23 @@ export default function UpdateSales() {
 
                     {/* Live revenue + closing stock bar */}
                     {p.quantitySold && !isNaN(Number(p.quantitySold)) && Number(p.quantitySold) > 0 && (
-                      <div className="bg-black/30 border border-gray-700/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="bg-card border border-line/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3">
                         <div className="flex gap-4 text-sm flex-wrap">
                           <div>
-                            <p className="text-xs text-gray-500">Revenue</p>
+                            <p className="text-xs text-muted">Revenue</p>
                             <p className="font-bold text-green-400">₦{rev.toLocaleString()}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Closing Stock</p>
-                            <p className="font-bold text-white">{cstock.toLocaleString()} L</p>
+                            <p className="text-xs text-muted">Closing Stock</p>
+                            <p className="font-bold text-foreground">{cstock.toLocaleString()} L</p>
                           </div>
                         </div>
                         <div className="sm:ml-auto sm:w-40">
-                          <div className="flex justify-between text-xs text-gray-500 mb-1">
+                          <div className="flex justify-between text-xs text-muted mb-1">
                             <span>Remaining</span>
                             <span className={pctLeft > 50 ? "text-green-400" : pctLeft > 20 ? "text-yellow-400" : "text-red-400"}>{pctLeft}%</span>
                           </div>
-                          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-2 bg-card-2 rounded-full overflow-hidden">
                             <div className={`h-full ${barCol} rounded-full transition-all`} style={{ width: `${pctLeft}%` }} />
                           </div>
                         </div>
@@ -533,7 +532,7 @@ export default function UpdateSales() {
                     )}
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Product Notes</label>
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Product Notes</label>
                       <input className={inputCls} placeholder="e.g. pump #2 offline, price adjustment..."
                         value={p.notes} onChange={(e) => setProd(idx, "notes", e.target.value)} />
                     </div>
@@ -543,8 +542,8 @@ export default function UpdateSales() {
             })}
 
             {/* ── Incidents & Notes ── */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line bg-orange-500/5">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Incidents & General Notes</p>
               </div>
               <div className="p-5">
@@ -566,7 +565,7 @@ export default function UpdateSales() {
                     { label: "Cash / POS",    value: `₦${totalCash.toLocaleString()} / ₦${totalPOS.toLocaleString()}`, color: "text-purple-400" },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="text-center">
-                      <p className="text-xs text-gray-500 mb-1">{label}</p>
+                      <p className="text-xs text-muted mb-1">{label}</p>
                       <p className={`text-lg font-extrabold ${color}`}>{value}</p>
                     </div>
                   ))}
@@ -577,10 +576,10 @@ export default function UpdateSales() {
                   {form.products.map((p) => {
                     if (!p.quantitySold || Number(p.quantitySold) === 0) return null;
                     return (
-                      <div key={p.product} className="bg-black/30 border border-gray-700/50 rounded-lg p-3 flex justify-between items-center">
+                      <div key={p.product} className="bg-card border border-line/50 rounded-lg p-3 flex justify-between items-center">
                         <div>
                           <span className={`text-sm font-extrabold ${p.color}`}>{p.product}</span>
-                          <p className="text-xs text-gray-500">{Number(p.quantitySold).toLocaleString()} L sold</p>
+                          <p className="text-xs text-muted">{Number(p.quantitySold).toLocaleString()} L sold</p>
                         </div>
                         <p className="text-sm font-bold text-green-400">₦{revenue(p).toLocaleString()}</p>
                       </div>
@@ -593,7 +592,7 @@ export default function UpdateSales() {
             {/* ── Actions ── */}
             <div className="flex gap-3">
               <Link href="/customer/station-manager"
-                className="px-5 py-3 border border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 text-sm font-semibold rounded-lg transition text-center"
+                className="px-5 py-3 border border-line text-muted hover:text-foreground hover:border-line text-sm font-semibold rounded-lg transition text-center"
               >
                 Cancel
               </Link>

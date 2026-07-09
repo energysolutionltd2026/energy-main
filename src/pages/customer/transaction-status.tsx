@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 import { toLabel } from "@/utils/toLabel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -152,7 +151,7 @@ export default function TransactionStatus() {
   }, [router]);
 
   if (!user) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
     </div>
   );
@@ -192,7 +191,7 @@ export default function TransactionStatus() {
     if (state === "done")    return <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></div>;
     if (state === "active")  return <div className="w-8 h-8 rounded-full bg-orange-500 ring-4 ring-orange-500/30 flex items-center justify-center shrink-0 animate-pulse"><div className="w-3 h-3 rounded-full bg-white" /></div>;
     if (state === "failed")  return <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center shrink-0"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></div>;
-    return <div className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center shrink-0"><div className="w-2 h-2 rounded-full bg-gray-500" /></div>;
+    return <div className="w-8 h-8 rounded-full bg-card-2 border-2 border-line flex items-center justify-center shrink-0"><div className="w-2 h-2 rounded-full bg-gray-500" /></div>;
   };
 
   const timeline = selected ? buildTimeline(selected) : [];
@@ -201,21 +200,21 @@ export default function TransactionStatus() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-      style={{ backgroundImage: `url(${tower.src})` }}
+      className="min-h-screen text-foreground"
+
     >
       <Head><title>Transaction Status | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
       <CustomerNavigation user={user} />
 
       {/* ── Raise Dispute Modal ── */}
       {disputeOpen && selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { setDisputeOpen(false); setDisputeSent(false); setDisputeMsg(""); }} />
-          <div className="relative z-10 w-full max-w-md bg-gray-950 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-red-500/5">
+          <div className="relative z-10 w-full max-w-md bg-background border border-line rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-red-500/5">
               <p className="text-sm font-bold text-red-400 uppercase tracking-wider">Raise a Dispute</p>
-              <button onClick={() => { setDisputeOpen(false); setDisputeSent(false); setDisputeMsg(""); }} className="text-gray-500 hover:text-white transition">
+              <button onClick={() => { setDisputeOpen(false); setDisputeSent(false); setDisputeMsg(""); }} className="text-muted hover:text-foreground transition">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -224,31 +223,31 @@ export default function TransactionStatus() {
                 <div className="w-14 h-14 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center mx-auto">
                   <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                 </div>
-                <p className="text-white font-bold text-lg">Dispute Submitted</p>
-                <p className="text-gray-400 text-sm">Our support team will review your dispute for transaction <span className="text-orange-400 font-mono font-semibold">{selected.id}</span> and respond within 24–48 hours.</p>
+                <p className="text-foreground font-bold text-lg">Dispute Submitted</p>
+                <p className="text-muted text-sm">Our support team will review your dispute for transaction <span className="text-orange-400 font-mono font-semibold">{selected.id}</span> and respond within 24–48 hours.</p>
                 <button onClick={() => { setDisputeOpen(false); setDisputeSent(false); setDisputeMsg(""); }} className="mt-2 px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition">
                   Done
                 </button>
               </div>
             ) : (
               <div className="p-6 space-y-4">
-                <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-3 space-y-1">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Transaction</p>
+                <div className="bg-card/60 border border-line rounded-lg px-4 py-3 space-y-1">
+                  <p className="text-xs text-muted uppercase tracking-wide">Transaction</p>
                   <p className="text-sm font-mono font-bold text-orange-400">{selected.id}</p>
-                  <p className="text-xs text-gray-400">{selected.type} · {selected.totalAmount}</p>
+                  <p className="text-xs text-muted">{selected.type} · {selected.totalAmount}</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Describe the issue</label>
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Describe the issue</label>
                   <textarea
                     rows={4}
                     value={disputeMsg}
                     onChange={(e) => setDisputeMsg(e.target.value)}
                     placeholder="Explain what went wrong with this transaction…"
-                    className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition text-sm resize-none"
+                    className="w-full bg-card/60 border border-line rounded-lg px-3 py-2 text-foreground placeholder-muted focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition text-sm resize-none"
                   />
                 </div>
                 <div className="flex justify-end gap-3 pt-1">
-                  <button onClick={() => { setDisputeOpen(false); setDisputeMsg(""); }} className="px-4 py-2 border border-gray-700 text-gray-400 hover:text-white text-sm font-semibold rounded-lg transition">
+                  <button onClick={() => { setDisputeOpen(false); setDisputeMsg(""); }} className="px-4 py-2 border border-line text-muted hover:text-foreground text-sm font-semibold rounded-lg transition">
                     Cancel
                   </button>
                   <button
@@ -270,8 +269,8 @@ export default function TransactionStatus() {
 
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-1">Transaction Status</h1>
-            <p className="text-gray-400 text-sm">Track the real-time status and delivery progress of your transactions</p>
+            <h1 className="text-3xl font-bold text-foreground mb-1">Transaction Status</h1>
+            <p className="text-muted text-sm">Track the real-time status and delivery progress of your transactions</p>
           </div>
 
           {/* Mobile back button */}
@@ -293,19 +292,19 @@ export default function TransactionStatus() {
             <div className={`w-full md:w-80 lg:w-96 flex-shrink-0 space-y-3 ${showDetail ? "hidden md:block" : "block"}`}>
 
               {/* Search + filters */}
-              <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-4 space-y-3">
+              <div className="bg-card backdrop-blur-md border border-line rounded-xl p-4 space-y-3">
                 <input
                   type="text"
                   placeholder="Search by ID, product, depot…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm"
+                  className="w-full bg-card/60 border border-line rounded-lg px-3 py-2 text-foreground placeholder-muted focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500 transition text-xs"
+                    className="w-full bg-card/60 border border-line rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-orange-500 transition text-xs"
                   >
                     <option value="All">All Types</option>
                     <option value="purchase_order">Fuel Purchase</option>
@@ -315,7 +314,7 @@ export default function TransactionStatus() {
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500 transition text-xs"
+                    className="w-full bg-card/60 border border-line rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-orange-500 transition text-xs"
                   >
                     <option value="All">All Status</option>
                     <option value="completed">Completed</option>
@@ -323,13 +322,13 @@ export default function TransactionStatus() {
                     <option value="failed">Failed</option>
                   </select>
                 </div>
-                <p className="text-xs text-gray-500">{filtered.length} transaction{filtered.length !== 1 ? "s" : ""}</p>
+                <p className="text-xs text-muted">{filtered.length} transaction{filtered.length !== 1 ? "s" : ""}</p>
               </div>
 
               {/* Transaction cards */}
               <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
                 {filtered.length === 0 ? (
-                  <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-8 text-center text-gray-500">
+                  <div className="bg-card backdrop-blur-md border border-line rounded-xl p-8 text-center text-muted">
                     <p className="text-sm">No transactions match your filters</p>
                   </div>
                 ) : (
@@ -339,8 +338,8 @@ export default function TransactionStatus() {
                       <button
                         key={t.id}
                         onClick={() => handleSelect(t)}
-                        className={`w-full text-left bg-black/40 backdrop-blur-md border rounded-xl p-4 transition hover:border-orange-500/50 ${
-                          isActive ? "border-orange-500 shadow-lg shadow-orange-500/10" : "border-gray-800"
+                        className={`w-full text-left bg-card backdrop-blur-md border rounded-xl p-4 transition hover:border-orange-500/50 ${
+                          isActive ? "border-orange-500 shadow-lg shadow-orange-500/10" : "border-line"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
@@ -349,13 +348,13 @@ export default function TransactionStatus() {
                         </div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className={typeBadge(t.type)}>{typeShort(t.type)}</span>
-                          <span className="text-xs text-gray-400 truncate">{t.product}</span>
+                          <span className="text-xs text-muted truncate">{t.product}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted">
                             {new Date(t.date).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                           </span>
-                          <span className="text-sm font-bold text-white">{t.totalAmount}</span>
+                          <span className="text-sm font-bold text-foreground">{t.totalAmount}</span>
                         </div>
                       </button>
                     );
@@ -367,7 +366,7 @@ export default function TransactionStatus() {
             {/* ── RIGHT: Detail Panel ── */}
             <div className={`flex-1 min-w-0 space-y-4 ${showDetail || !selected ? "block" : "hidden md:block"}`}>
               {!selected ? (
-                <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-16 text-center text-gray-500">
+                <div className="bg-card backdrop-blur-md border border-line rounded-xl p-16 text-center text-muted">
                   <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
@@ -376,21 +375,21 @@ export default function TransactionStatus() {
               ) : (
                 <>
                   {/* Transaction overview card */}
-                  <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
+                  <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
                     {/* Card header */}
-                    <div className="bg-orange-500/10 border-b border-gray-800 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="bg-orange-500/10 border-b border-line px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className="font-mono text-base font-bold text-orange-400">{selected.id}</span>
                           <span className={statusBadge(selected.status)}>{toLabel(selected.status)}</span>
                           <span className={typeBadge(selected.type)}>{toLabel(selected.type)}</span>
                         </div>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted">
                           {new Date(selected.date).toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total Amount</p>
+                        <p className="text-xs text-muted uppercase tracking-wide">Total Amount</p>
                         <p className="text-2xl font-extrabold text-orange-400">{selected.totalAmount}</p>
                       </div>
                     </div>
@@ -406,16 +405,16 @@ export default function TransactionStatus() {
                         { label: "Ref / Truck",     value: selected.truckNumber    },
                       ].map(({ label, value }) => (
                         <div key={label}>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">{label}</p>
-                          <p className="text-sm text-white font-semibold">{value || "—"}</p>
+                          <p className="text-xs text-muted uppercase tracking-wide mb-0.5">{label}</p>
+                          <p className="text-sm text-foreground font-semibold">{value || "—"}</p>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Status Timeline */}
-                  <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">Delivery Timeline</p>
+                  <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+                    <p className="text-xs font-bold text-muted uppercase tracking-wider mb-6">Delivery Timeline</p>
 
                     <div className="space-y-0">
                       {timeline.map((step, idx) => {
@@ -424,12 +423,12 @@ export default function TransactionStatus() {
                           step.state === "done"   ? "bg-green-500" :
                           step.state === "active" ? "bg-orange-500/60" :
                           step.state === "failed" ? "bg-red-500/60" :
-                          "bg-gray-700";
+                          "bg-card-2";
                         const labelColor =
-                          step.state === "done"    ? "text-white"        :
+                          step.state === "done"    ? "text-foreground"        :
                           step.state === "active"  ? "text-orange-400"   :
                           step.state === "failed"  ? "text-red-400"      :
-                          "text-gray-500";
+                          "text-muted";
 
                         return (
                           <div key={idx} className="flex gap-4">
@@ -446,10 +445,10 @@ export default function TransactionStatus() {
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 mb-0.5">
                                 <p className={`text-sm font-semibold ${labelColor}`}>{step.label}</p>
                                 {step.time && (
-                                  <span className="text-xs text-gray-500">{step.time}</span>
+                                  <span className="text-xs text-muted">{step.time}</span>
                                 )}
                               </div>
-                              <p className={`text-xs ${step.state === "pending" ? "text-gray-600" : "text-gray-400"}`}>
+                              <p className={`text-xs ${step.state === "pending" ? "text-muted" : "text-muted"}`}>
                                 {step.description}
                               </p>
                               {step.state === "failed" && (
@@ -474,7 +473,7 @@ export default function TransactionStatus() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <button
                       onClick={() => router.push("/customer/TransactionHistory")}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-black/40 hover:bg-gray-800/60 border border-gray-700 hover:border-orange-500/50 text-gray-300 hover:text-orange-400 text-xs font-semibold rounded-xl transition"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-card hover:bg-card-2/60 border border-line hover:border-orange-500/50 text-foreground hover:text-orange-400 text-xs font-semibold rounded-xl transition"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -484,7 +483,7 @@ export default function TransactionStatus() {
 
                     <button
                       onClick={() => router.push("/contact")}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-black/40 hover:bg-gray-800/60 border border-gray-700 hover:border-blue-500/50 text-gray-300 hover:text-blue-400 text-xs font-semibold rounded-xl transition"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-card hover:bg-card-2/60 border border-line hover:border-blue-500/50 text-foreground hover:text-blue-400 text-xs font-semibold rounded-xl transition"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />

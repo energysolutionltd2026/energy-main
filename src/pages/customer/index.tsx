@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 import { startTracking } from "@/utils/onlineTracker";
 import { toLabel } from "@/utils/toLabel";
 
@@ -40,7 +39,7 @@ function statusBadge(s: string) {
     processing: "bg-orange-500/20 text-orange-400 border-orange-500/40",
     cancelled:  "bg-red-500/20 text-red-400 border-red-500/40",
   };
-  return (map[s] ?? "bg-gray-500/20 text-gray-400 border-gray-500/40") +
+  return (map[s] ?? "bg-gray-500/20 text-muted border-line/40") +
     " px-2 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap";
 }
 
@@ -114,7 +113,7 @@ export default function CustomerDashboard() {
   }, [router]);
 
   if (!user) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
     </div>
   );
@@ -155,45 +154,45 @@ export default function CustomerDashboard() {
       value: criticalStock,
       sub: "low or empty products",
       icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
-      border: criticalStock > 0 ? "border-red-800/50" : "border-gray-800",
-      text: criticalStock > 0 ? "text-red-400" : "text-gray-400",
-      bg: criticalStock > 0 ? "bg-red-500/10" : "bg-gray-800/20",
+      border: criticalStock > 0 ? "border-red-800/50" : "border-line",
+      text: criticalStock > 0 ? "text-red-400" : "text-muted",
+      bg: criticalStock > 0 ? "bg-red-500/10" : "bg-card-2/20",
     },
   ];
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-      style={{ backgroundImage: `url(${tower.src})` }}
+      className="min-h-screen text-foreground"
+
     >
       <Head><title>Customer Dashboard | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
       <CustomerNavigation user={user} />
 
       <div className="relative z-10 pt-16 md:pl-64 min-h-screen">
         <div className="px-4 sm:px-6 py-6">
 
           {/* ── Welcome banner ── */}
-          <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="bg-card backdrop-blur-md border border-line rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl font-extrabold shrink-0 shadow-lg shadow-orange-500/30">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-400">{greeting},</p>
-              <h1 className="text-2xl font-extrabold text-white truncate">{user.name}</h1>
-              <p className="text-xs text-gray-500 mt-0.5">{today}</p>
+              <p className="text-sm text-muted">{greeting},</p>
+              <h1 className="text-2xl font-extrabold text-foreground truncate">{user.name}</h1>
+              <p className="text-xs text-muted mt-0.5">{today}</p>
             </div>
             <div className="flex flex-wrap gap-2 shrink-0">
               <span className="px-3 py-1 rounded-full text-xs font-bold border bg-orange-500/20 text-orange-400 border-orange-500/40">
                 {user.role}
               </span>
               {user.memberId && (
-                <span className="px-3 py-1 rounded-full text-xs font-mono border bg-gray-800/60 text-gray-400 border-gray-700">
+                <span className="px-3 py-1 rounded-full text-xs font-mono border bg-card-2/60 text-muted border-line">
                   ID: {user.memberId}
                 </span>
               )}
               {user.companyName && (
-                <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-gray-800/60 text-gray-300 border-gray-700 max-w-[200px] truncate">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-card-2/60 text-foreground border-line max-w-[200px] truncate">
                   {user.companyName}
                 </span>
               )}
@@ -203,7 +202,7 @@ export default function CustomerDashboard() {
           {/* ── Stats ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {STATS.map((s) => (
-              <div key={s.label} className={`bg-black/40 backdrop-blur-md border ${s.border} rounded-xl p-4 flex gap-3 items-start`}>
+              <div key={s.label} className={`bg-card backdrop-blur-md border ${s.border} rounded-xl p-4 flex gap-3 items-start`}>
                 <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center shrink-0 mt-0.5`}>
                   <svg className={`w-5 h-5 ${s.text}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
@@ -211,8 +210,8 @@ export default function CustomerDashboard() {
                 </div>
                 <div className="min-w-0">
                   <p className={`text-2xl font-extrabold ${s.text}`}>{s.value}</p>
-                  <p className="text-xs font-semibold text-white leading-tight mt-0.5">{s.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{s.sub}</p>
+                  <p className="text-xs font-semibold text-foreground leading-tight mt-0.5">{s.label}</p>
+                  <p className="text-xs text-muted mt-0.5">{s.sub}</p>
                 </div>
               </div>
             ))}
@@ -222,34 +221,34 @@ export default function CustomerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
             {/* Recent Transactions */}
-            <div className="lg:col-span-2 bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 flex items-center justify-between">
+            <div className="lg:col-span-2 bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line flex items-center justify-between">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Recent Transactions</p>
                 <Link href="/customer/TransactionHistory"
-                  className="text-xs text-gray-400 hover:text-orange-400 font-semibold transition">
+                  className="text-xs text-muted hover:text-orange-400 font-semibold transition">
                   View all →
                 </Link>
               </div>
               {transactions.length === 0 ? (
                 <div className="px-5 py-10 text-center">
-                  <svg className="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 text-muted mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <p className="text-sm text-gray-500">No transactions yet.</p>
+                  <p className="text-sm text-muted">No transactions yet.</p>
                   <Link href="/buynow" className="mt-3 inline-block text-xs text-orange-400 hover:underline font-semibold">
                     Make your first order →
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-800/60">
+                <div className="divide-y divide-line/60">
                   {transactions.map((txn: any, i: number) => (
-                    <div key={txn.id ?? i} className="flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition">
+                    <div key={txn.id ?? i} className="flex items-center gap-3 px-5 py-3 hover:bg-card-2 transition">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-extrabold border ${txnTypeColor(txn.type)}`}>
                         {txnTypeLabel(txn.type).charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{txn.product || txn.description || "—"}</p>
-                        <p className="text-xs text-gray-500 truncate">{txn.depot || txn.date || "—"}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{txn.product || txn.description || "—"}</p>
+                        <p className="text-xs text-muted truncate">{txn.depot || txn.date || "—"}</p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-orange-400">{txn.amount || txn.total || "—"}</p>
@@ -262,8 +261,8 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Quick Actions</p>
               </div>
               <div className="p-3 grid grid-cols-2 gap-2">
@@ -285,20 +284,20 @@ export default function CustomerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Station Stock Overview */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 flex items-center justify-between">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line flex items-center justify-between">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Station Stock Overview</p>
                 <Link href="/customer/station-manager"
-                  className="text-xs text-gray-400 hover:text-orange-400 font-semibold transition">
+                  className="text-xs text-muted hover:text-orange-400 font-semibold transition">
                   Manage →
                 </Link>
               </div>
               {stationStock.length === 0 ? (
                 <div className="px-5 py-10 text-center">
-                  <svg className="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 text-muted mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
-                  <p className="text-sm text-gray-500">No stations under management.</p>
+                  <p className="text-sm text-muted">No stations under management.</p>
                   <Link href="/customer/station-manager" className="mt-3 inline-block text-xs text-orange-400 hover:underline font-semibold">
                     Set up a station →
                   </Link>
@@ -308,8 +307,8 @@ export default function CustomerDashboard() {
                 {stationStock.map((station) => (
                   <div key={station.id} className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-white">{station.name}</p>
-                      <span className="text-xs text-gray-500 font-mono">{station.id}</span>
+                      <p className="text-sm font-semibold text-foreground">{station.name}</p>
+                      <span className="text-xs text-muted font-mono">{station.id}</span>
                     </div>
                     <div className="space-y-1.5">
                       {station.stock.map((s: any) => {
@@ -317,10 +316,10 @@ export default function CustomerDashboard() {
                         return (
                           <div key={s.product} className="flex items-center gap-3">
                             <span className={`text-xs font-extrabold w-8 shrink-0 ${prodColor(s.product)}`}>{s.product}</span>
-                            <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="flex-1 h-2 bg-card-2 rounded-full overflow-hidden">
                               <div className={`h-full ${barColor(p)} rounded-full transition-all`} style={{ width: `${p}%` }} />
                             </div>
-                            <span className="text-xs text-gray-400 w-8 text-right shrink-0">{p}%</span>
+                            <span className="text-xs text-muted w-8 text-right shrink-0">{p}%</span>
                             <span className={`${statusBadge(s.status)} shrink-0`}>{s.status}</span>
                           </div>
                         );
@@ -333,8 +332,8 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Pending Supply Requests */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 flex items-center justify-between">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line flex items-center justify-between">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Supply Requests</p>
                 <Link href="/customer/request-supply"
                   className="text-xs text-orange-400 hover:text-orange-300 font-semibold transition">
@@ -343,18 +342,18 @@ export default function CustomerDashboard() {
               </div>
               {supplyRequests.length === 0 ? (
                 <div className="px-5 py-10 text-center">
-                  <svg className="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 text-muted mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
-                  <p className="text-sm text-gray-500">No supply requests yet.</p>
+                  <p className="text-sm text-muted">No supply requests yet.</p>
                   <Link href="/customer/request-supply" className="mt-3 inline-block text-xs text-orange-400 hover:underline font-semibold">
                     Request fuel supply →
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-800/60">
+                <div className="divide-y divide-line/60">
                   {supplyRequests.map((req: any, i: number) => (
-                    <div key={req.id ?? i} className="flex items-start gap-3 px-5 py-3 hover:bg-white/5 transition">
+                    <div key={req.id ?? i} className="flex items-start gap-3 px-5 py-3 hover:bg-card-2 transition">
                       <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5">
                         <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -362,16 +361,16 @@ export default function CustomerDashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold text-white">{req.product} — {req.quantity}</p>
+                          <p className="text-sm font-semibold text-foreground">{req.product} — {req.quantity}</p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5 truncate">{req.depot} → {req.stationName || req.stationId}</p>
-                        <p className="text-xs text-gray-600 font-mono mt-0.5">{req.id}</p>
+                        <p className="text-xs text-muted mt-0.5 truncate">{req.depot} → {req.stationName || req.stationId}</p>
+                        <p className="text-xs text-muted font-mono mt-0.5">{req.id}</p>
                       </div>
                       <div className="shrink-0 flex flex-col items-end gap-1">
                         <span className={statusBadge(req.status)}>{toLabel(req.status)}</span>
                         <span className={`text-xs font-semibold ${
                           req.priority === "emergency" ? "text-red-400" :
-                          req.priority === "urgent"    ? "text-yellow-400" : "text-gray-500"
+                          req.priority === "urgent"    ? "text-yellow-400" : "text-muted"
                         }`}>{req.priority}</span>
                       </div>
                     </div>

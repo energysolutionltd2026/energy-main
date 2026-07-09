@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -81,14 +80,14 @@ const NIGERIAN_STATES = [
 ];
 
 const inputClass =
-  "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm disabled:opacity-40 disabled:cursor-not-allowed";
+  "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground placeholder-muted focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm disabled:opacity-40 disabled:cursor-not-allowed";
 const selectClass =
-  "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm disabled:opacity-40 disabled:cursor-not-allowed";
+  "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm disabled:opacity-40 disabled:cursor-not-allowed";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-      <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5">
+    <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+      <div className="px-5 py-3 border-b border-line bg-orange-500/5">
         <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">{title}</p>
       </div>
       <div className="p-5 space-y-4">{children}</div>
@@ -99,7 +98,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, children, half }: { label: string; children: React.ReactNode; half?: boolean }) {
   return (
     <div className={half ? "" : "col-span-2 sm:col-span-1"}>
-      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">{label}</label>
       {children}
     </div>
   );
@@ -170,7 +169,7 @@ export default function CustomerProfilePage() {
   }, [router]);
 
   if (!user) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
     </div>
   );
@@ -244,7 +243,7 @@ export default function CustomerProfilePage() {
     onToggle: () => void; onChange: (v: string) => void; placeholder?: string;
   }) => (
     <div>
-      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">{label}</label>
       <div className="relative">
         <input
           type={show ? "text" : "password"}
@@ -256,7 +255,7 @@ export default function CustomerProfilePage() {
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition"
         >
           <EyeIcon show={show} />
         </button>
@@ -266,11 +265,11 @@ export default function CustomerProfilePage() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-      style={{ backgroundImage: `url(${tower.src})` }}
+      className="min-h-screen text-foreground"
+
     >
       <Head><title>My Profile | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
       <CustomerNavigation user={user} />
 
       <div className="relative z-10 pt-16 md:pl-64 min-h-screen">
@@ -279,8 +278,8 @@ export default function CustomerProfilePage() {
           {/* Header */}
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-1">My Profile</h1>
-              <p className="text-gray-400 text-sm">View and update your account details</p>
+              <h1 className="text-3xl font-bold text-foreground mb-1">My Profile</h1>
+              <p className="text-muted text-sm">View and update your account details</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {saved && (
@@ -294,7 +293,7 @@ export default function CustomerProfilePage() {
               {editing ? (
                 <>
                   <button onClick={handleCancel}
-                    className="px-4 py-2 border border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 text-sm font-semibold rounded-lg transition">
+                    className="px-4 py-2 border border-line text-muted hover:text-foreground hover:border-line text-sm font-semibold rounded-lg transition">
                     Cancel
                   </button>
                   <button onClick={handleSave}
@@ -315,19 +314,19 @@ export default function CustomerProfilePage() {
           </div>
 
           {/* Avatar + name hero */}
-          <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-6 mb-6 flex items-center gap-5">
+          <div className="bg-card backdrop-blur-md border border-line rounded-xl p-6 mb-6 flex items-center gap-5">
             <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl font-extrabold shrink-0 shadow-lg shadow-orange-500/30">
               {profile.name.charAt(0).toUpperCase() || "?"}
             </div>
             <div className="min-w-0">
-              <h2 className="text-xl font-bold text-white truncate">{profile.name || "—"}</h2>
-              <p className="text-sm text-gray-400 truncate">{profile.email}</p>
+              <h2 className="text-xl font-bold text-foreground truncate">{profile.name || "—"}</h2>
+              <p className="text-sm text-muted truncate">{profile.email}</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="px-2 py-0.5 rounded-full text-xs font-bold border bg-orange-500/20 text-orange-400 border-orange-500/40">
                   {profile.role}
                 </span>
                 {profile.memberId && (
-                  <span className="text-xs text-gray-500 font-mono">ID: {profile.memberId}</span>
+                  <span className="text-xs text-muted font-mono">ID: {profile.memberId}</span>
                 )}
               </div>
             </div>
@@ -412,29 +411,29 @@ export default function CustomerProfilePage() {
                   </div>
                   <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ID Type</p>
-                      <p className="text-sm font-semibold text-white">{ID_TYPE_LABELS[profile.officialIdType] || profile.officialIdType || "—"}</p>
+                      <p className="text-xs text-muted uppercase tracking-wider mb-0.5">ID Type</p>
+                      <p className="text-sm font-semibold text-foreground">{ID_TYPE_LABELS[profile.officialIdType] || profile.officialIdType || "—"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">ID Number</p>
-                      <p className="text-sm font-semibold text-white font-mono tracking-widest">{profile.idNumber || "—"}</p>
+                      <p className="text-xs text-muted uppercase tracking-wider mb-0.5">ID Number</p>
+                      <p className="text-sm font-semibold text-foreground font-mono tracking-widest">{profile.idNumber || "—"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Date of Issue</p>
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-xs text-muted uppercase tracking-wider mb-0.5">Date of Issue</p>
+                      <p className="text-sm font-semibold text-foreground">
                         {profile.idIssueDate ? new Date(profile.idIssueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }) : "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Expiry Date</p>
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-xs text-muted uppercase tracking-wider mb-0.5">Expiry Date</p>
+                      <p className="text-sm font-semibold text-foreground">
                         {profile.idExpiryDate ? new Date(profile.idExpiryDate).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }) : "—"}
                       </p>
                     </div>
                     {profile.idIssuingAuthority && (
                       <div className="col-span-1 sm:col-span-2">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Issuing Authority</p>
-                        <p className="text-sm font-semibold text-white">{profile.idIssuingAuthority}</p>
+                        <p className="text-xs text-muted uppercase tracking-wider mb-0.5">Issuing Authority</p>
+                        <p className="text-sm font-semibold text-foreground">{profile.idIssuingAuthority}</p>
                       </div>
                     )}
                   </div>
@@ -531,19 +530,19 @@ export default function CustomerProfilePage() {
             <Section title="Security">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white">Password</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Change your account password</p>
+                  <p className="text-sm font-semibold text-foreground">Password</p>
+                  <p className="text-xs text-muted mt-0.5">Change your account password</p>
                 </div>
                 <button
                   onClick={() => { setShowChangePw((v) => !v); setPwError(""); setPwSuccess(false); setPwForm({ current: "", next: "", confirm: "" }); }}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-orange-500/50 text-gray-300 hover:text-orange-400 text-xs font-semibold rounded-lg transition"
+                  className="px-4 py-2 bg-card-2 hover:bg-card-2 border border-line hover:border-orange-500/50 text-foreground hover:text-orange-400 text-xs font-semibold rounded-lg transition"
                 >
                   {showChangePw ? "Cancel" : "Change Password"}
                 </button>
               </div>
 
               {showChangePw && (
-                <div className="mt-4 space-y-4 bg-gray-900/40 border border-gray-700 rounded-xl p-5">
+                <div className="mt-4 space-y-4 bg-card/40 border border-line rounded-xl p-5">
                   <PwInput label="Current Password" value={pwForm.current} show={showPwCurrent}
                     onToggle={() => setShowPwCurrent((v) => !v)} onChange={(v) => setPwForm((f) => ({ ...f, current: v }))} />
                   <PwInput label="New Password" value={pwForm.next} show={showPwNext}
@@ -562,15 +561,15 @@ export default function CustomerProfilePage() {
             </Section>
 
             {/* Danger Zone */}
-            <div className="bg-black/40 backdrop-blur-md border border-red-900/50 rounded-xl overflow-hidden">
+            <div className="bg-card backdrop-blur-md border border-red-900/50 rounded-xl overflow-hidden">
               <div className="px-5 py-3 border-b border-red-900/40 bg-red-500/5">
                 <p className="text-xs font-bold text-red-400 uppercase tracking-wider">Danger Zone</p>
               </div>
               <div className="p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-white">Delete Account</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-sm font-semibold text-foreground">Delete Account</p>
+                    <p className="text-xs text-muted mt-0.5">
                       Permanently delete your account and all associated data. This cannot be undone.
                     </p>
                   </div>
@@ -600,7 +599,7 @@ export default function CustomerProfilePage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                         Confirm Password
                       </label>
                       <div className="relative">
@@ -609,12 +608,12 @@ export default function CustomerProfilePage() {
                           value={deletePass}
                           onChange={(e) => setDeletePass(e.target.value)}
                           placeholder="Enter your password to confirm"
-                          className="w-full bg-gray-900/60 border border-red-900/60 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition text-sm pr-10"
+                          className="w-full bg-card/60 border border-red-900/60 rounded-lg px-4 py-2.5 text-foreground placeholder-muted focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition text-sm pr-10"
                         />
                         <button
                           type="button"
                           onClick={() => setShowDeletePw((v) => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             {showDeletePw

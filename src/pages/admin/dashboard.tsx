@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
-import tower from "@/../public/tower.jpg";
 import { getOnlineUsers, type OnlineUser } from "@/utils/onlineTracker";
 import { toLabel } from "@/utils/toLabel";
 
@@ -160,7 +159,7 @@ function Badge({ label, color }: { label: string; color: string }) {
     blue: "bg-blue-500/20 text-blue-400 border-blue-500/40",
     purple: "bg-purple-500/20 text-purple-400 border-purple-500/40",
     orange: "bg-orange-500/20 text-orange-400 border-orange-500/40",
-    gray: "bg-gray-500/20 text-gray-400 border-gray-500/40",
+    gray: "bg-gray-500/20 text-muted border-line/40",
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs border ${map[color] || map.gray}`}>
@@ -171,10 +170,10 @@ function Badge({ label, color }: { label: string; color: string }) {
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
-    <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-      <p className="text-gray-400 text-xs mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${color || "text-white"}`}>{value}</p>
-      {sub && <p className="text-gray-500 text-xs mt-1">{sub}</p>}
+    <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+      <p className="text-muted text-xs mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${color || "text-foreground"}`}>{value}</p>
+      {sub && <p className="text-muted text-xs mt-1">{sub}</p>}
     </div>
   );
 }
@@ -184,7 +183,7 @@ function FilterBar({ options, active, counts, onChange }: { options: string[]; a
     <div className="flex gap-2 flex-wrap">
       {options.map(o => (
         <button key={o} onClick={() => onChange(o)}
-          className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${active === o ? "bg-purple-600 border-purple-500 text-white" : "bg-black/40 border-gray-700 text-gray-300 hover:border-purple-500"}`}>
+          className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${active === o ? "bg-purple-600 border-purple-500 text-white" : "bg-card border-line text-foreground hover:border-purple-500"}`}>
           {o}{counts ? ` (${counts[o] ?? 0})` : ""}
         </button>
       ))}
@@ -195,13 +194,13 @@ function FilterBar({ options, active, counts, onChange }: { options: string[]; a
 function Modal({ onClose, title, subtitle, children, wide }: { onClose: () => void; title: string; subtitle?: string; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
-      <div className={`bg-gray-900 border border-gray-700 rounded-xl p-6 w-full ${wide ? "max-w-3xl" : "max-w-lg"} max-h-[90vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
+      <div className={`bg-card border border-line rounded-xl p-6 w-full ${wide ? "max-w-3xl" : "max-w-lg"} max-h-[90vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-5">
           <div>
-            <h3 className="text-white font-bold text-base">{title}</h3>
-            {subtitle && <p className="text-gray-400 text-sm mt-0.5">{subtitle}</p>}
+            <h3 className="text-foreground font-bold text-base">{title}</h3>
+            {subtitle && <p className="text-muted text-sm mt-0.5">{subtitle}</p>}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl leading-none ml-4">✕</button>
+          <button onClick={onClose} className="text-muted hover:text-foreground text-xl leading-none ml-4">✕</button>
         </div>
         {children}
       </div>
@@ -338,16 +337,16 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
       </div>
 
       {/* Online Users */}
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <h3 className="text-white font-semibold">Online Now</h3>
+            <h3 className="text-foreground font-semibold">Online Now</h3>
           </div>
-          <span className="text-xs text-gray-400">{onlineUsers.length} user{onlineUsers.length !== 1 ? "s" : ""} active</span>
+          <span className="text-xs text-muted">{onlineUsers.length} user{onlineUsers.length !== 1 ? "s" : ""} active</span>
         </div>
         {onlineUsers.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-4">No users currently online</p>
+          <p className="text-muted text-sm text-center py-4">No users currently online</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {onlineUsers.map(u => {
@@ -370,20 +369,20 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
+        <div className="col-span-2 bg-card backdrop-blur-md border border-line rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-semibold">Recent Transactions</h3>
+            <h3 className="text-foreground font-semibold">Recent Transactions</h3>
             <button onClick={() => setActive("Transactions")} className="text-xs text-purple-400 hover:text-purple-300">View all →</button>
           </div>
           <div className="space-y-2">
             {allTransactions.slice(0, 8).map((t) => (
               <button key={t.id} onClick={() => setActive("Transactions")}
-                className="w-full flex items-start gap-3 text-left hover:bg-white/5 rounded-lg px-2 py-1.5 transition-colors group">
-                <span className="text-gray-500 text-xs mt-1 w-24 shrink-0 font-mono">{t.date}</span>
+                className="w-full flex items-start gap-3 text-left hover:bg-card-2 rounded-lg px-2 py-1.5 transition-colors group">
+                <span className="text-muted text-xs mt-1 w-24 shrink-0 font-mono">{t.date}</span>
                 <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${txnDotColor(t.type, t.status)}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm group-hover:text-purple-300 transition-colors truncate">{toLabel(t.type)}</p>
-                  <p className="text-gray-400 text-xs truncate">{txnDetail(t)}</p>
+                  <p className="text-foreground text-sm group-hover:text-purple-300 transition-colors truncate">{toLabel(t.type)}</p>
+                  <p className="text-muted text-xs truncate">{txnDetail(t)}</p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-green-400 text-xs font-medium">{t.totalAmount}</p>
@@ -394,8 +393,8 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
           </div>
         </div>
 
-        <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-          <h3 className="text-white font-semibold mb-4">Users by Role</h3>
+        <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+          <h3 className="text-foreground font-semibold mb-4">Users by Role</h3>
           {(["customer", "bulk_dealer", "truck_owner"] as const).map(role => {
             const count = users.filter(u => u.role === role).length;
             const pct = Math.round((count / users.length) * 100);
@@ -403,10 +402,10 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
             return (
               <div key={role} className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-300">{role}</span>
-                  <span className="text-white font-medium">{count}</span>
+                  <span className="text-foreground">{role}</span>
+                  <span className="text-foreground font-medium">{count}</span>
                 </div>
-                <div className="h-2 bg-gray-700 rounded-full">
+                <div className="h-2 bg-card-2 rounded-full">
                   <div className={`h-2 ${bar} rounded-full`} style={{ width: `${pct}%` }} />
                 </div>
               </div>
@@ -414,15 +413,15 @@ function SectionOverview({ users, setActive }: { users: AdminUser[]; setActive: 
           })}
 
           {depotAlerts.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-gray-700">
+            <div className="mt-5 pt-4 border-t border-line">
               <div className="flex justify-between items-center mb-3">
-                <p className="text-gray-400 text-xs uppercase tracking-wide">Depot Stock Alerts</p>
+                <p className="text-muted text-xs uppercase tracking-wide">Depot Stock Alerts</p>
                 <button onClick={() => setActive("Depots")} className="text-xs text-purple-400 hover:text-purple-300">View all →</button>
               </div>
               {depotAlerts.map(d => (
                 <button key={d.name} onClick={() => setActive("Depots")}
-                  className="w-full flex justify-between text-xs mb-2 items-center hover:bg-white/5 rounded px-1 py-0.5 transition-colors">
-                  <span className="text-gray-300 truncate mr-2">{d.name.split(" ")[0]}</span>
+                  className="w-full flex justify-between text-xs mb-2 items-center hover:bg-card-2 rounded px-1 py-0.5 transition-colors">
+                  <span className="text-foreground truncate mr-2">{d.name.split(" ")[0]}</span>
                   <div className="flex gap-1 shrink-0">
                     {d.PMS.level < 20 && <Badge label={`PMS ${d.PMS.level}%`} color="red" />}
                     {d.AGO.level < 20 && <Badge label={`AGO ${d.AGO.level}%`} color="red" />}
@@ -510,11 +509,11 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
   };
 
   return (
-    <div className="bg-black/40 backdrop-blur-md border border-orange-500/20 rounded-xl p-4">
+    <div className="bg-card backdrop-blur-md border border-orange-500/20 rounded-xl p-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-white font-semibold text-sm">Financer Login Accounts</p>
-          <p className="text-gray-500 text-xs mt-0.5">
+          <p className="text-foreground font-semibold text-sm">Financer Login Accounts</p>
+          <p className="text-muted text-xs mt-0.5">
             Dedicated logins for the read-only financer dashboard · {accounts.length}/{max} used
           </p>
         </div>
@@ -522,7 +521,7 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
           onClick={() => setOpen(o => !o)}
           disabled={capReached && !open}
           title={capReached ? `Limit of ${max} reached — delete one first` : undefined}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold text-white ${capReached && !open ? "bg-gray-700 opacity-50 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-600"}`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold text-white ${capReached && !open ? "bg-card-2 opacity-50 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-600"}`}
         >
           {open ? "Cancel" : "+ New account"}
         </button>
@@ -531,12 +530,12 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
       {open && !capReached && (
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Full name"
-            className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
+            className="bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-orange-500" />
           <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Email" type="email"
-            className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
+            className="bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-orange-500" />
           <div className="flex gap-2">
             <input value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Password (min 8)" type="text"
-              className="flex-1 min-w-0 bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
+              className="flex-1 min-w-0 bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-orange-500" />
             <button onClick={create} disabled={busy}
               className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold shrink-0">
               {busy ? "…" : "Create"}
@@ -548,19 +547,19 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
       {!loading && accounts.length > 0 && (
         <div className="mt-3 space-y-2">
           {accounts.map(a => (
-            <div key={a._id} className="flex items-center justify-between gap-3 bg-white/5 rounded-lg px-3 py-2 flex-wrap">
+            <div key={a._id} className="flex items-center justify-between gap-3 bg-card rounded-lg px-3 py-2 flex-wrap">
               <div className="min-w-0">
-                <p className="text-white text-sm font-medium">
+                <p className="text-foreground text-sm font-medium">
                   {a.name}
                   <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${a.status === "active" ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"}`}>{a.status}</span>
                 </p>
-                <p className="text-gray-500 text-xs truncate">
+                <p className="text-muted text-xs truncate">
                   {a.email}{a.lastLogin ? ` · last login ${new Date(a.lastLogin).toLocaleDateString()}` : " · never logged in"}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => resetPassword(a)} className="text-xs text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg px-2 py-1">Reset password</button>
-                <button onClick={() => toggleStatus(a)} className="text-xs text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg px-2 py-1">{a.status === "active" ? "Suspend" : "Reactivate"}</button>
+                <button onClick={() => resetPassword(a)} className="text-xs text-foreground hover:text-foreground border border-line hover:border-line rounded-lg px-2 py-1">Reset password</button>
+                <button onClick={() => toggleStatus(a)} className="text-xs text-foreground hover:text-foreground border border-line hover:border-line rounded-lg px-2 py-1">{a.status === "active" ? "Suspend" : "Reactivate"}</button>
                 <button onClick={() => remove(a)} className="text-xs text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 rounded-lg px-2 py-1">Delete</button>
               </div>
             </div>
@@ -568,7 +567,7 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
         </div>
       )}
       {!loading && accounts.length === 0 && (
-        <p className="text-gray-600 text-xs mt-3">No financer accounts yet. Create one to grant dashboard access.</p>
+        <p className="text-muted text-xs mt-3">No financer accounts yet. Create one to grant dashboard access.</p>
       )}
     </div>
   );
@@ -712,27 +711,27 @@ function SectionUsers({ users, setUsers, setToast }: {
 
       <div className="flex flex-wrap gap-3">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or email..."
-          className="flex-1 min-w-48 bg-black/40 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />
+          className="flex-1 min-w-48 bg-card border border-line rounded-lg px-4 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500" />
         <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
-          className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+          className="bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500">
           {["All", "customer", "bulk_dealer", "truck_owner"].map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+          className="bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500">
           {["All", "active", "suspended"].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
       {/* Online count summary */}
       {onlineEmails.size > 0 && (
-        <div className="flex items-center gap-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2 text-xs text-muted">
           <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse shrink-0" />
           <span><span className="text-blue-400 font-semibold">{onlineEmails.size}</span> user{onlineEmails.size !== 1 ? "s" : ""} online right now</span>
         </div>
       )}
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line text-xs text-muted uppercase tracking-wide">
           <span className="col-span-3">Name</span>
           <span className="col-span-3">Email</span>
           <span className="col-span-2">Role</span>
@@ -740,29 +739,29 @@ function SectionUsers({ users, setUsers, setToast }: {
           <span className="col-span-1">Status</span>
           <span className="col-span-2 text-right">Actions</span>
         </div>
-        {filtered.length === 0 && <p className="text-center text-gray-500 py-10">No users match your filters</p>}
+        {filtered.length === 0 && <p className="text-center text-muted py-10">No users match your filters</p>}
         {filtered.map(user => {
           const isOnline = onlineEmails.has(user.email);
           return (
-            <div key={user.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800/50 hover:bg-white/5 items-center">
+            <div key={user.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line/50 hover:bg-card-2 items-center">
               <div className="col-span-3 flex items-start gap-2">
                 <div className="relative mt-0.5 shrink-0">
-                  <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-white text-[10px] font-bold">
+                  <div className="w-6 h-6 rounded-full bg-card-2 flex items-center justify-center text-foreground text-[10px] font-bold">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   {isOnline && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-400 rounded-full border-2 border-gray-900" title="Online now" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-400 rounded-full border-2 border-line" title="Online now" />
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white text-sm font-medium leading-tight">{user.name}</p>
-                  {user.companyName && <p className="text-gray-500 text-xs truncate">{user.companyName}</p>}
+                  <p className="text-foreground text-sm font-medium leading-tight">{user.name}</p>
+                  {user.companyName && <p className="text-muted text-xs truncate">{user.companyName}</p>}
                   {isOnline && <p className="text-blue-400 text-[10px] font-semibold">● Online</p>}
                 </div>
               </div>
-              <span className="col-span-3 text-gray-300 text-sm truncate">{user.email}</span>
+              <span className="col-span-3 text-foreground text-sm truncate">{user.email}</span>
               <span className="col-span-2"><Badge label={user.role} color={rc(user.role)} /></span>
-              <span className="col-span-1 text-gray-400 text-sm">{user.state || "—"}</span>
+              <span className="col-span-1 text-muted text-sm">{user.state || "—"}</span>
               <span className="col-span-1"><Badge label={user.status} color={sc(user.status)} /></span>
               <div className="col-span-2 flex justify-end gap-2">
                 <button onClick={() => openUser(user)} className="text-xs text-purple-400 border border-purple-500/40 px-2 py-1 rounded hover:text-purple-300">View</button>
@@ -788,54 +787,54 @@ function SectionUsers({ users, setUsers, setToast }: {
               ["Last Login", selected.lastLogin],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between">
-                <span className="text-gray-400">{k}</span>
-                <span className="text-white text-right">{v}</span>
+                <span className="text-muted">{k}</span>
+                <span className="text-foreground text-right">{v}</span>
               </div>
             ))}
             <div className="flex justify-between">
-              <span className="text-gray-400">Role</span>
+              <span className="text-muted">Role</span>
               <Badge label={selected.role} color={rc(selected.role)} />
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Status</span>
+              <span className="text-muted">Status</span>
               <Badge label={selected.status} color={sc(selected.status)} />
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Online</span>
+              <span className="text-muted">Online</span>
               {onlineEmails.has(selected.email) ? (
                 <span className="flex items-center gap-1.5 text-blue-400 font-semibold text-xs">
                   <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
                   Online now
                 </span>
               ) : (
-                <span className="text-gray-500 text-xs">Offline</span>
+                <span className="text-muted text-xs">Offline</span>
               )}
             </div>
           </div>
 
           {/* ── Tank Storage Volumes — Bulk Dealer only ────────────────────── */}
           {selected.role === "bulk_dealer" && tankEdit && (
-            <div className="mt-5 border-t border-gray-700 pt-4">
-              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-3">
+            <div className="mt-5 border-t border-line pt-4">
+              <p className="text-xs text-muted font-semibold uppercase tracking-wider mb-3">
                 Tank Storage Volumes
-                <span className="ml-2 text-gray-600 normal-case font-normal">(mega-litres · default 5 ML)</span>
+                <span className="ml-2 text-muted normal-case font-normal">(mega-litres · default 5 ML)</span>
               </p>
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {(["PMS", "AGO", "ATK"] as const).map(p => (
                   <div key={p}>
-                    <label className="block text-[10px] text-gray-500 mb-1">{p} Max (ML)</label>
+                    <label className="block text-[10px] text-muted mb-1">{p} Max (ML)</label>
                     <input
                       type="number"
                       min="0"
                       step="0.5"
                       value={tankEdit[p]}
                       onChange={e => setTankEdit(prev => prev ? { ...prev, [p]: e.target.value } : prev)}
-                      className="w-full bg-black/50 border border-gray-700 rounded px-2 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500"
+                      className="w-full bg-card border border-line rounded px-2 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500"
                     />
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-gray-600 mb-3">
+              <p className="text-[10px] text-muted mb-3">
                 5 ML = 5,000,000 litres &nbsp;·&nbsp; Only super admins can increase tank volume.
               </p>
               <button
@@ -853,13 +852,13 @@ function SectionUsers({ users, setUsers, setToast }: {
             const capReached = financerGrantedCount >= FINANCER_ACCESS_LIMIT;
             const lockedOut = !selected.financerAccess && capReached;
             return (
-              <div className="mt-5 border-t border-gray-700 pt-4">
+              <div className="mt-5 border-t border-line pt-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                    <p className="text-xs text-muted font-semibold uppercase tracking-wider">
                       Financer Dashboard Access
                     </p>
-                    <p className="text-[11px] text-gray-600 mt-1 max-w-[16rem]">
+                    <p className="text-[11px] text-muted mt-1 max-w-[16rem]">
                       Converts the user to a financer: their role becomes financer and every
                       login opens the read-only overview dashboard. Revoking restores their
                       previous role. Limited to {FINANCER_ACCESS_LIMIT} users.
@@ -878,9 +877,9 @@ function SectionUsers({ users, setUsers, setToast }: {
                     />
                   </button>
                 </div>
-                <p className={`text-[11px] mt-2 font-medium ${selected.financerAccess ? "text-orange-400" : "text-gray-500"}`}>
+                <p className={`text-[11px] mt-2 font-medium ${selected.financerAccess ? "text-orange-400" : "text-muted"}`}>
                   {selected.financerAccess ? "Access granted" : lockedOut ? `Limit reached (${financerGrantedCount}/${FINANCER_ACCESS_LIMIT})` : "No access"}
-                  <span className="ml-2 text-gray-600 font-normal">· {financerGrantedCount}/{FINANCER_ACCESS_LIMIT} granted</span>
+                  <span className="ml-2 text-muted font-normal">· {financerGrantedCount}/{FINANCER_ACCESS_LIMIT} granted</span>
                 </p>
               </div>
             );
@@ -897,13 +896,13 @@ function SectionUsers({ users, setUsers, setToast }: {
 
       {confirm && (
         <Modal onClose={() => setConfirm(null)} title={confirm.status === "active" ? "Suspend Account?" : "Reactivate Account?"}>
-          <p className="text-gray-400 text-sm mb-6">
+          <p className="text-muted text-sm mb-6">
             {confirm.status === "active"
               ? `Suspending ${confirm.name} will immediately block their access to the platform.`
               : `Reactivating ${confirm.name} will restore their full access to the platform.`}
           </p>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setConfirm(null)} className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 text-sm hover:bg-gray-800">Cancel</button>
+            <button onClick={() => setConfirm(null)} className="px-4 py-2 rounded-lg border border-line text-foreground text-sm hover:bg-card-2">Cancel</button>
             <button onClick={() => toggleSuspend(confirm)}
               className={`px-4 py-2 rounded-lg text-sm font-medium text-white ${confirm.status === "active" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}>
               Confirm
@@ -977,8 +976,8 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
     <div className="space-y-4">
       <FilterBar options={["All", "pending", "processing", "delivered", "cancelled"]} active={filter} counts={counts} onChange={setFilter} />
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line text-xs text-muted uppercase tracking-wide">
           <span className="col-span-2">ID</span>
           <span className="col-span-2">Company</span>
           <span className="col-span-1">Product</span>
@@ -988,17 +987,17 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
           <span className="col-span-1">Priority</span>
           <span className="col-span-2 text-right">Actions</span>
         </div>
-        {filtered.length === 0 && <p className="text-center text-gray-500 py-10">No requests found</p>}
+        {filtered.length === 0 && <p className="text-center text-muted py-10">No requests found</p>}
         {filtered.map(req => (
-          <div key={req.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800/50 hover:bg-white/5 items-center">
+          <div key={req.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line/50 hover:bg-card-2 items-center">
             <span className="col-span-2 text-purple-400 font-mono text-xs">{req.id}</span>
             <div className="col-span-2">
-              <p className="text-white text-xs truncate">{req.stationName.split(" - ")[0]}</p>
-              <p className="text-gray-500 text-xs">{req.requestedBy}</p>
+              <p className="text-foreground text-xs truncate">{req.stationName.split(" - ")[0]}</p>
+              <p className="text-muted text-xs">{req.requestedBy}</p>
             </div>
             <span className="col-span-1"><Badge label={req.product} color={prc(req.product)} /></span>
-            <span className="col-span-2 text-gray-400 text-xs truncate">{req.depot}</span>
-            <span className="col-span-1 text-gray-300 text-xs">{req.quantity}</span>
+            <span className="col-span-2 text-muted text-xs truncate">{req.depot}</span>
+            <span className="col-span-1 text-foreground text-xs">{req.quantity}</span>
             <span className="col-span-1"><Badge label={req.status} color={sc(req.status)} /></span>
             <span className="col-span-1"><Badge label={req.priority} color={pc(req.priority)} /></span>
             <div className="col-span-2 flex justify-end gap-1 flex-wrap">
@@ -1021,12 +1020,12 @@ function SectionSupplyRequests({ setToast }: { setToast: (m: string) => void }) 
               ["Delivery Date", selected.deliveryDate],
               ["Requested At", new Date(selected.requestedAt).toLocaleString("en-NG")],
             ].map(([k, v]) => (
-              <div key={k} className="flex justify-between"><span className="text-gray-400">{k}</span><span className="text-white text-right">{v}</span></div>
+              <div key={k} className="flex justify-between"><span className="text-muted">{k}</span><span className="text-foreground text-right">{v}</span></div>
             ))}
-            <div className="flex justify-between"><span className="text-gray-400">Product</span><Badge label={selected.product} color={prc(selected.product)} /></div>
-            <div className="flex justify-between"><span className="text-gray-400">Priority</span><Badge label={selected.priority} color={pc(selected.priority)} /></div>
-            <div className="flex justify-between"><span className="text-gray-400">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
-            {selected.notes && <div><span className="text-gray-400 block mb-1">Notes</span><p className="text-white bg-black/30 rounded p-2 text-xs">{selected.notes}</p></div>}
+            <div className="flex justify-between"><span className="text-muted">Product</span><Badge label={selected.product} color={prc(selected.product)} /></div>
+            <div className="flex justify-between"><span className="text-muted">Priority</span><Badge label={selected.priority} color={pc(selected.priority)} /></div>
+            <div className="flex justify-between"><span className="text-muted">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
+            {selected.notes && <div><span className="text-muted block mb-1">Notes</span><p className="text-foreground bg-card rounded p-2 text-xs">{selected.notes}</p></div>}
           </div>
           {selected.status !== "delivered" && selected.status !== "cancelled" && (
             <div className="flex justify-end gap-2">
@@ -1128,8 +1127,8 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-white font-semibold">Product Catalog</h2>
-          <p className="text-gray-400 text-sm mt-1">Manage products and global stock levels</p>
+          <h2 className="text-foreground font-semibold">Product Catalog</h2>
+          <p className="text-muted text-sm mt-1">Manage products and global stock levels</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setDraft(JSON.parse(JSON.stringify(globalStock))); setEditing(true); }}
@@ -1145,24 +1144,24 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
 
       <div className="grid grid-cols-3 gap-4">
         {allProducts.map(p => (
-          <div key={p} className="bg-black/40 border border-gray-800 rounded-xl p-4">
+          <div key={p} className="bg-card border border-line rounded-xl p-4">
             <div className="flex justify-between items-center mb-2">
               <span className={`text-sm font-bold ${pColor(p)}`}>{p}</span>
               <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColor(globalStock[p]?.status || "unavailable")}`}>
                 {toLabel(globalStock[p]?.status || "unavailable")}
               </span>
             </div>
-            <p className="text-2xl font-black text-white mb-1">{globalStock[p]?.level ?? 0}%</p>
-            <div className="h-2 bg-gray-700 rounded-full mb-2">
+            <p className="text-2xl font-black text-foreground mb-1">{globalStock[p]?.level ?? 0}%</p>
+            <div className="h-2 bg-card-2 rounded-full mb-2">
               <div className={`h-2 rounded-full ${levelBar(globalStock[p]?.level ?? 0)}`} style={{ width: `${globalStock[p]?.level ?? 0}%` }} />
             </div>
-            <p className="text-xs text-gray-400">{globalStock[p]?.price || "N/A"}</p>
+            <p className="text-xs text-muted">{globalStock[p]?.price || "N/A"}</p>
           </div>
         ))}
       </div>
 
       {allProducts.length === 0 && (
-        <div className="text-center py-10 text-gray-500">
+        <div className="text-center py-10 text-muted">
           <p>No products configured</p>
           <button onClick={() => setAddProductOpen(true)} className="mt-2 text-purple-400 hover:text-purple-300">Add your first product</button>
         </div>
@@ -1172,28 +1171,28 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
         <Modal onClose={() => setEditing(false)} title="Edit Global Stock" subtitle="Affects all depots when applied">
           <div className="space-y-4 mb-5">
             {allProducts.map(p => (
-              <div key={p} className="bg-black/30 rounded-lg p-4 border border-gray-700">
+              <div key={p} className="bg-card rounded-lg p-4 border border-line">
                 <p className={`text-sm font-bold mb-3 ${pColor(p)}`}>{p}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Stock Level (%)</label>
+                    <label className="text-muted text-xs block mb-1">Stock Level (%)</label>
                     <input type="number" min={0} max={100}
                       value={draft[p]?.level ?? 0}
                       onChange={e => setDraft(prev => ({ ...prev, [p]: { ...prev[p], level: Math.min(100, Math.max(0, Number(e.target.value))) } }))}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Price</label>
+                    <label className="text-muted text-xs block mb-1">Price</label>
                     <input type="text"
                       value={draft[p]?.price || ""}
                       onChange={e => setDraft(prev => ({ ...prev, [p]: { ...prev[p], price: e.target.value } }))}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div className="col-span-2">
-                    <label className="text-gray-400 text-xs block mb-1">Status</label>
+                    <label className="text-muted text-xs block mb-1">Status</label>
                     <select value={draft[p]?.status || "available"}
                       onChange={e => setDraft(prev => ({ ...prev, [p]: { ...prev[p], status: e.target.value as "available" | "limited" | "unavailable" } }))}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500">
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500">
                       <option value="available">Available</option>
                       <option value="limited">Limited</option>
                       <option value="unavailable">Unavailable</option>
@@ -1209,7 +1208,7 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
               Save & Apply to All Depots
             </button>
             <div className="flex gap-2">
-              <button onClick={() => setEditing(false)} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+              <button onClick={() => setEditing(false)} className="px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
               <button onClick={saveGlobalStock} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg font-medium">Save</button>
             </div>
           </div>
@@ -1220,24 +1219,24 @@ function SectionProducts({ setToast }: { setToast: (m: string) => void }) {
         <Modal onClose={() => setAddProductOpen(false)} title="Add New Product" subtitle="Create a new product for the platform">
           <div className="space-y-4 mb-5">
             <div>
-              <label className="text-gray-400 text-xs block mb-1">Product Name</label>
+              <label className="text-muted text-xs block mb-1">Product Name</label>
               <input type="text"
                 value={newProductName}
                 onChange={e => setNewProductName(e.target.value)}
                 placeholder="e.g., LNG, CNG, Biofuel"
-                className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
             </div>
             <div>
-              <label className="text-gray-400 text-xs block mb-1">Price</label>
+              <label className="text-muted text-xs block mb-1">Price</label>
               <input type="text"
                 value={newProductPrice}
                 onChange={e => setNewProductPrice(e.target.value)}
                 placeholder="e.g., ₦500/L"
-                className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setAddProductOpen(false)} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+            <button onClick={() => setAddProductOpen(false)} className="px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
             <button onClick={addNewProduct}
               disabled={!newProductName.trim() || !newProductPrice.trim()}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm rounded-lg font-medium">
@@ -1308,8 +1307,8 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
     <div className="space-y-4">
       <FilterBar options={["All", "pending", "processing", "in_transit", "delivered"]} active={filter} counts={counts} onChange={setFilter} />
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line text-xs text-muted uppercase tracking-wide">
           <span className="col-span-2">PO ID</span>
           <span className="col-span-2">Dealer</span>
           <span className="col-span-1">Product</span>
@@ -1319,14 +1318,14 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
           <span className="col-span-1">Status</span>
           <span className="col-span-1 text-right">View</span>
         </div>
-        {filtered.length === 0 && <p className="text-center text-gray-500 py-10">No orders found</p>}
+        {filtered.length === 0 && <p className="text-center text-muted py-10">No orders found</p>}
         {filtered.map(po => (
-          <div key={po.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800/50 hover:bg-white/5 items-center">
+          <div key={po.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line/50 hover:bg-card-2 items-center">
             <span className="col-span-2 text-purple-400 font-mono text-xs">{po.id}</span>
-            <span className="col-span-2 text-gray-300 text-xs truncate">{po.dealer || "—"}</span>
+            <span className="col-span-2 text-foreground text-xs truncate">{po.dealer || "—"}</span>
             <span className="col-span-1"><Badge label={po.product} color={prc(po.product)} /></span>
-            <span className="col-span-2 text-gray-400 text-xs truncate">{po.depot}</span>
-            <span className="col-span-1 text-gray-300 text-xs">{po.qty}</span>
+            <span className="col-span-2 text-muted text-xs truncate">{po.depot}</span>
+            <span className="col-span-1 text-foreground text-xs">{po.qty}</span>
             <span className="col-span-2 text-green-400 text-xs font-medium">{po.amount}</span>
             <span className="col-span-1"><Badge label={po.status} color={sc(po.status)} /></span>
             <div className="col-span-1 flex justify-end">
@@ -1340,11 +1339,11 @@ function SectionPurchaseOrders({ setToast }: { setToast: (m: string) => void }) 
         <Modal onClose={() => setSelected(null)} title={selected.id} subtitle={selected.dealer}>
           <div className="space-y-3 text-sm mb-5">
             {[["Date", selected.date], ["Depot", selected.depot], ["Quantity", selected.qty]].map(([k, v]) => (
-              <div key={k} className="flex justify-between"><span className="text-gray-400">{k}</span><span className="text-white">{v}</span></div>
+              <div key={k} className="flex justify-between"><span className="text-muted">{k}</span><span className="text-foreground">{v}</span></div>
             ))}
-            <div className="flex justify-between"><span className="text-gray-400">Product</span><Badge label={selected.product} color={prc(selected.product)} /></div>
-            <div className="flex justify-between"><span className="text-gray-400">Amount</span><span className="text-green-400 font-medium">{selected.amount}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
+            <div className="flex justify-between"><span className="text-muted">Product</span><Badge label={selected.product} color={prc(selected.product)} /></div>
+            <div className="flex justify-between"><span className="text-muted">Amount</span><span className="text-green-400 font-medium">{selected.amount}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
           </div>
           <div className="flex justify-end gap-2">
             {selected.status === "pending" && <button onClick={() => update(selected.id, "processing")} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg">Mark Processing</button>}
@@ -1590,10 +1589,10 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
             </span>
           )}
           {/* Super admin: current rotating code */}
-          <div className="flex items-center gap-2 bg-black/40 border border-gray-700 rounded-lg px-3 py-1.5">
-            <span className="text-xs text-gray-500">Control Code:</span>
+          <div className="flex items-center gap-2 bg-card border border-line rounded-lg px-3 py-1.5">
+            <span className="text-xs text-muted">Control Code:</span>
             <span className="text-xs font-mono font-bold text-purple-300 tracking-widest">{currentCode}</span>
-            <span className="text-xs text-gray-600">· rotates in {getCodeExpiryLabel()}</span>
+            <span className="text-xs text-muted">· rotates in {getCodeExpiryLabel()}</span>
           </div>
         </div>
         <button
@@ -1612,11 +1611,11 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
 
       <div className="grid grid-cols-2 gap-4">
         {depots.map(depot => (
-          <div key={depot.name} className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-4">
+          <div key={depot.name} className="bg-card backdrop-blur-md border border-line rounded-xl p-4">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <h3 className="text-white font-semibold text-sm">{depot.name}</h3>
-                <p className="text-gray-500 text-xs">{depot.location}</p>
+                <h3 className="text-foreground font-semibold text-sm">{depot.name}</h3>
+                <p className="text-muted text-xs">{depot.location}</p>
               </div>
               <div className="flex items-center gap-2">
                 {(depot.PMS.level < 20 || depot.AGO.level < 20 || depot.ATK.level < 20) &&
@@ -1628,12 +1627,12 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
               <div key={p} className="mb-2.5">
                 <div className="flex justify-between text-xs mb-1">
                   <span className={pText(p)}>{p}</span>
-                  <div className="flex gap-3 text-gray-400">
+                  <div className="flex gap-3 text-muted">
                     <span>{depot[p].price}</span>
-                    <span className={depot[p].level < 20 ? "text-red-400 font-medium" : "text-white"}>{depot[p].level}%</span>
+                    <span className={depot[p].level < 20 ? "text-red-400 font-medium" : "text-foreground"}>{depot[p].level}%</span>
                   </div>
                 </div>
-                <div className="h-1.5 bg-gray-700 rounded-full">
+                <div className="h-1.5 bg-card-2 rounded-full">
                   <div className={`h-1.5 rounded-full transition-all ${levelBar(depot[p].level)}`} style={{ width: `${depot[p].level}%` }} />
                 </div>
               </div>
@@ -1649,7 +1648,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
               This action is protected. Request a Depot Control Code from your super admin. The code grants access for 3 hours.
             </div>
             <div>
-              <label className="text-gray-400 text-xs block mb-1">Depot Control Code</label>
+              <label className="text-muted text-xs block mb-1">Depot Control Code</label>
               <input
                 type="password"
                 placeholder="Enter code"
@@ -1657,13 +1656,13 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
                 onChange={e => { setCodeInput(e.target.value); setCodeError(""); }}
                 onKeyDown={e => e.key === "Enter" && submitCode()}
                 autoFocus
-                className="w-full bg-black/40 border border-gray-700 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500"
+                className="w-full bg-card border border-line rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500"
               />
               {codeError && <p className="text-red-400 text-xs mt-1">{codeError}</p>}
             </div>
           </div>
           <div className="flex justify-end gap-3">
-            <button onClick={() => { setShowCodeGate(false); setPendingAction(null); }} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+            <button onClick={() => { setShowCodeGate(false); setPendingAction(null); }} className="px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
             <button onClick={submitCode} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium">Verify Code</button>
           </div>
         </Modal>
@@ -1674,35 +1673,35 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
           <div className="space-y-4 mb-5">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-gray-400 text-xs block mb-1">Depot Name</label>
+                <label className="text-muted text-xs block mb-1">Depot Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Sokoto Fuel Terminal"
                   value={newDepot.name}
                   onChange={e => setNewDepot(p => ({ ...p, name: e.target.value }))}
-                  className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500"
+                  className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500"
                 />
               </div>
               <div>
-                <label className="text-gray-400 text-xs block mb-1">Location (State)</label>
+                <label className="text-muted text-xs block mb-1">Location (State)</label>
                 <input
                   type="text"
                   placeholder="e.g. Sokoto"
                   value={newDepot.location}
                   onChange={e => setNewDepot(p => ({ ...p, location: e.target.value }))}
-                  className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500"
+                  className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
             <div>
-              <label className="text-gray-400 text-xs block mb-1">Depot Logo</label>
+              <label className="text-muted text-xs block mb-1">Depot Logo</label>
               <div className="flex items-center gap-3">
-                <label className="flex-1 cursor-pointer bg-black/40 border border-dashed border-gray-600 hover:border-purple-500 rounded px-3 py-2 text-center transition">
-                  <span className="text-gray-400 text-xs">{newDepotLogo ? "Logo selected — click to change" : "Click to upload logo (PNG, JPG, SVG)"}</span>
+                <label className="flex-1 cursor-pointer bg-card border border-dashed border-line hover:border-purple-500 rounded px-3 py-2 text-center transition">
+                  <span className="text-muted text-xs">{newDepotLogo ? "Logo selected — click to change" : "Click to upload logo (PNG, JPG, SVG)"}</span>
                   <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoFile(f, setNewDepotLogo); }} />
                 </label>
                 {newDepotLogo && (
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-purple-500/50 bg-black/30 shrink-0">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-purple-500/50 bg-card shrink-0">
                     <img src={newDepotLogo} alt="Logo preview" className="w-full h-full object-contain"/>
                     <button onClick={() => setNewDepotLogo("")} className="absolute top-0 right-0 w-4 h-4 bg-red-600 text-white text-[10px] flex items-center justify-center rounded-bl">×</button>
                   </div>
@@ -1710,38 +1709,38 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
               </div>
             </div>
             {(["PMS", "AGO", "ATK"] as const).map(p => (
-              <div key={p} className="bg-black/30 rounded-lg p-3 border border-gray-700">
+              <div key={p} className="bg-card rounded-lg p-3 border border-line">
                 <p className={`text-sm font-medium mb-3 ${p === "PMS" ? "text-red-400" : p === "AGO" ? "text-blue-400" : "text-orange-400"}`}>{p}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Tank Capacity (L)</label>
+                    <label className="text-muted text-xs block mb-1">Tank Capacity (L)</label>
                     <input type="number" min={0}
                       value={newDepot[p].capacityLitres || ""}
                       placeholder="e.g. 500000"
                       onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], capacityLitres: Math.max(0, Number(e.target.value)) } }))}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Current Volume (L)</label>
+                    <label className="text-muted text-xs block mb-1">Current Volume (L)</label>
                     <input type="number" min={0}
                       value={newDepot[p].currentLitres || ""}
                       placeholder="e.g. 300000"
                       onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], currentLitres: Math.max(0, Number(e.target.value)) } }))}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Price (e.g. ₦1,300/L)</label>
+                    <label className="text-muted text-xs block mb-1">Price (e.g. ₦1,300/L)</label>
                     <input type="text"
                       value={newDepot[p].price}
                       onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], price: e.target.value } }))}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Status</label>
+                    <label className="text-muted text-xs block mb-1">Status</label>
                     <select
                       value={newDepot[p].status}
                       onChange={e => setNewDepot(prev => ({ ...prev, [p]: { ...prev[p], status: e.target.value as DepotProduct["status"] } }))}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500">
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500">
                       <option value="Available">Available</option>
                       <option value="Limited">Limited</option>
                       <option value="Unavailable">Unavailable</option>
@@ -1752,7 +1751,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
             ))}
           </div>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowAdd(false)} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+            <button onClick={() => setShowAdd(false)} className="px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
             <button
               onClick={saveNewDepot}
               disabled={!newDepot.name.trim() || !newDepot.location.trim()}
@@ -1768,14 +1767,14 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
         <Modal onClose={() => { setEditing(null); setDraft(null); setDraftLogo(""); }} title={`Edit — ${draft.name}`} subtitle={draft.location}>
           <div className="space-y-4 mb-5">
             <div>
-              <label className="text-gray-400 text-xs block mb-1">Depot Logo</label>
+              <label className="text-muted text-xs block mb-1">Depot Logo</label>
               <div className="flex items-center gap-3">
-                <label className="flex-1 cursor-pointer bg-black/40 border border-dashed border-gray-600 hover:border-purple-500 rounded px-3 py-2 text-center transition">
-                  <span className="text-gray-400 text-xs">{draftLogo ? "Logo set — click to change" : "Click to upload logo (PNG, JPG, SVG)"}</span>
+                <label className="flex-1 cursor-pointer bg-card border border-dashed border-line hover:border-purple-500 rounded px-3 py-2 text-center transition">
+                  <span className="text-muted text-xs">{draftLogo ? "Logo set — click to change" : "Click to upload logo (PNG, JPG, SVG)"}</span>
                   <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoFile(f, setDraftLogo); }} />
                 </label>
                 {draftLogo && (
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-purple-500/50 bg-black/30 shrink-0">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-purple-500/50 bg-card shrink-0">
                     <img src={draftLogo} alt="Logo preview" className="w-full h-full object-contain"/>
                     <button onClick={() => setDraftLogo("")} className="absolute top-0 right-0 w-4 h-4 bg-red-600 text-white text-[10px] flex items-center justify-center rounded-bl">×</button>
                   </div>
@@ -1783,38 +1782,38 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
               </div>
             </div>
             {(["PMS", "AGO", "ATK"] as const).map(p => (
-              <div key={p} className="bg-black/30 rounded-lg p-3 border border-gray-700">
+              <div key={p} className="bg-card rounded-lg p-3 border border-line">
                 <p className={`text-sm font-medium mb-3 ${pText(p)}`}>{p}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Tank Capacity (L)</label>
+                    <label className="text-muted text-xs block mb-1">Tank Capacity (L)</label>
                     <input type="number" min={0}
                       value={draft[p].capacityLitres || ""}
                       placeholder="e.g. 500000"
                       onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], capacityLitres: Math.max(0, Number(e.target.value)) } } : prev)}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Current Volume (L)</label>
+                    <label className="text-muted text-xs block mb-1">Current Volume (L)</label>
                     <input type="number" min={0}
                       value={draft[p].currentLitres || ""}
                       placeholder="e.g. 300000"
                       onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], currentLitres: Math.max(0, Number(e.target.value)) } } : prev)}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Price (e.g. ₦1,300/L)</label>
+                    <label className="text-muted text-xs block mb-1">Price (e.g. ₦1,300/L)</label>
                     <input type="text"
                       value={draft[p].price}
                       onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], price: e.target.value } } : prev)}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500" />
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500" />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Status</label>
+                    <label className="text-muted text-xs block mb-1">Status</label>
                     <select
                       value={draft[p].status}
                       onChange={e => setDraft(prev => prev ? { ...prev, [p]: { ...prev[p], status: e.target.value as DepotProduct["status"] } } : prev)}
-                      className="w-full bg-black/40 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500">
+                      className="w-full bg-card border border-line rounded px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-purple-500">
                       <option value="Available">Available</option>
                       <option value="Limited">Limited</option>
                       <option value="Unavailable">Unavailable</option>
@@ -1825,7 +1824,7 @@ function SectionDepots({ setToast }: { setToast: (m: string) => void }) {
             ))}
           </div>
           <div className="flex justify-end gap-3">
-            <button onClick={() => { setEditing(null); setDraft(null); }} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+            <button onClick={() => { setEditing(null); setDraft(null); }} className="px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
             <button onClick={saveEdit} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium">Save Changes</button>
           </div>
         </Modal>
@@ -1965,7 +1964,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
   const filtered = filter === "All" ? trucks : trucks.filter(t => t.status === filter);
   const sc = (s: string) => s === "approved" ? "green" : s === "rejected" ? "red" : "yellow";
 
-  const inputCls = "w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500";
+  const inputCls = "w-full bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500";
   const selectCls = inputCls;
 
   return (
@@ -1974,7 +1973,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
       <div className="flex gap-2">
         {(["review", "rent"] as const).map(v => (
           <button key={v} onClick={() => setActiveView(v)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold border transition-colors ${activeView === v ? "bg-purple-600 border-purple-500 text-white" : "bg-black/40 border-gray-700 text-gray-300 hover:border-purple-500"}`}>
+            className={`px-5 py-2 rounded-lg text-sm font-semibold border transition-colors ${activeView === v ? "bg-purple-600 border-purple-500 text-white" : "bg-card border-line text-foreground hover:border-purple-500"}`}>
             {v === "review" ? "Review Submissions" : "Rent a Truck"}
           </button>
         ))}
@@ -1992,8 +1991,8 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
 
           <FilterBar options={["All", "pending_review", "approved", "rejected"]} active={filter} counts={counts} onChange={setFilter} />
 
-          <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-            <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+          <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+            <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line text-xs text-muted uppercase tracking-wide">
               <span className="col-span-2">Owner</span>
               <span className="col-span-2">Reg. No.</span>
               <span className="col-span-2">Type</span>
@@ -2003,22 +2002,22 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
               <span className="col-span-1">Status</span>
               <span className="col-span-1 text-right">Action</span>
             </div>
-            {filtered.length === 0 && <p className="text-center text-gray-500 py-10">No trucks found</p>}
+            {filtered.length === 0 && <p className="text-center text-muted py-10">No trucks found</p>}
             {filtered.map(truck => (
-              <div key={truck.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800/50 hover:bg-white/5 items-center">
+              <div key={truck.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line/50 hover:bg-card-2 items-center">
                 <div className="col-span-2">
-                  <p className="text-white text-xs">{truck.ownerName}</p>
-                  <p className="text-gray-500 text-xs">{truck.ownerPhone}</p>
+                  <p className="text-foreground text-xs">{truck.ownerName}</p>
+                  <p className="text-muted text-xs">{truck.ownerPhone}</p>
                 </div>
-                <span className="col-span-2 text-gray-300 font-mono text-xs">{truck.truckRegNumber}</span>
-                <span className="col-span-2 text-gray-400 text-xs">{truck.vehicleType}</span>
-                <span className="col-span-1 text-gray-300 text-xs">{truck.tankCapacity}</span>
+                <span className="col-span-2 text-foreground font-mono text-xs">{truck.truckRegNumber}</span>
+                <span className="col-span-2 text-muted text-xs">{truck.vehicleType}</span>
+                <span className="col-span-1 text-foreground text-xs">{truck.tankCapacity}</span>
                 <div className="col-span-2 flex gap-1 flex-wrap">
                   {truck.productTypes.map(p => (
                     <span key={p} className={`text-xs ${p === "PMS" ? "text-red-400" : p === "AGO" ? "text-blue-400" : "text-orange-400"}`}>{p}</span>
                   ))}
                 </div>
-                <span className="col-span-1 text-gray-300 text-xs">{truck.dailyRate}</span>
+                <span className="col-span-1 text-foreground text-xs">{truck.dailyRate}</span>
                 <span className="col-span-1"><Badge label={truck.status === "pending_review" ? "Pending" : truck.status} color={sc(truck.status)} /></span>
                 <div className="col-span-1 flex justify-end">
                   <button onClick={() => { setSelected(truck); setNote(truck.reviewNote || ""); setRateEdits(truck.approvedZoneRates ?? truck.zoneRates ?? {}); }}
@@ -2032,15 +2031,15 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
             <Modal wide onClose={() => { setSelected(null); setNote(""); }} title={`Truck Review — ${selected.truckRegNumber}`} subtitle={`Submitted ${selected.submittedAt}`}>
               <div className="space-y-5">
                 <div>
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-gray-700">Owner Information</p>
+                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-line">Owner Information</p>
                   <div className="grid grid-cols-3 gap-3">
                     {[["Owner", selected.ownerName], ["Email", selected.ownerEmail], ["Phone", selected.ownerPhone]].map(([k, v]) => (
-                      <div key={k}><span className="text-gray-500 text-xs block">{k}</span><span className="text-white text-sm">{v || "—"}</span></div>
+                      <div key={k}><span className="text-muted text-xs block">{k}</span><span className="text-foreground text-sm">{v || "—"}</span></div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-gray-700">Vehicle Details</p>
+                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-line">Vehicle Details</p>
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       ["Type", selected.vehicleType], ["Capacity", selected.tankCapacity], ["Compartments", selected.compartments],
@@ -2048,10 +2047,10 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                       ["Chassis No.", selected.chassisNumber], ["Engine No.", selected.engineNumber], ["Year of Manufacture", selected.yearOfManufacture],
                       ["Destination State", selected.destinationState], ["Destination Town", selected.destinationTown], ["Daily Rate", selected.dailyRate],
                     ].map(([k, v]) => (
-                      <div key={k}><span className="text-gray-500 text-xs block">{k}</span><span className="text-white text-sm font-mono">{v || "—"}</span></div>
+                      <div key={k}><span className="text-muted text-xs block">{k}</span><span className="text-foreground text-sm font-mono">{v || "—"}</span></div>
                     ))}
                     <div className="col-span-3">
-                      <span className="text-gray-500 text-xs block">Product Types</span>
+                      <span className="text-muted text-xs block">Product Types</span>
                       <div className="flex gap-2 mt-1">
                         {selected.productTypes.map(p => (
                           <span key={p} className={`text-xs font-bold px-2 py-0.5 rounded ${p === "PMS" ? "bg-red-900/50 text-red-300" : p === "AGO" ? "bg-blue-900/50 text-blue-300" : "bg-orange-900/50 text-orange-300"}`}>{p}</span>
@@ -2062,70 +2061,70 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                 </div>
                 {(selected.tractorImageUrl || selected.tankImageUrl) && (
                   <div>
-                    <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-gray-700">Truck Photos</p>
+                    <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-line">Truck Photos</p>
                     <div className="grid grid-cols-2 gap-4">
                       {selected.tractorImageUrl && (
                         <div>
-                          <p className="text-gray-500 text-xs mb-1">Tractor / Head Unit</p>
-                          <img src={selected.tractorImageUrl} alt="Tractor" className="w-full h-40 object-cover rounded-lg border border-gray-700" />
+                          <p className="text-muted text-xs mb-1">Tractor / Head Unit</p>
+                          <img src={selected.tractorImageUrl} alt="Tractor" className="w-full h-40 object-cover rounded-lg border border-line" />
                         </div>
                       )}
                       {selected.tankImageUrl && (
                         <div>
-                          <p className="text-gray-500 text-xs mb-1">Tank / Body</p>
-                          <img src={selected.tankImageUrl} alt="Tank" className="w-full h-40 object-cover rounded-lg border border-gray-700" />
+                          <p className="text-muted text-xs mb-1">Tank / Body</p>
+                          <img src={selected.tankImageUrl} alt="Tank" className="w-full h-40 object-cover rounded-lg border border-line" />
                         </div>
                       )}
                     </div>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-gray-700">Certifications & Insurance</p>
+                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-line">Certifications & Insurance</p>
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       ["Insurance Provider", selected.insuranceProvider], ["Policy Number", selected.insurancePolicyNumber], ["Insurance Expiry", selected.insuranceExpiry],
                       ["DPR Cert. Number", selected.dprCertNumber], ["DPR Cert. Expiry", selected.dprCertExpiry], ["Road Worthiness Expiry", selected.roadWorthinessExpiry],
                     ].map(([k, v]) => (
-                      <div key={k}><span className="text-gray-500 text-xs block">{k}</span><span className="text-white text-sm font-mono">{v || "—"}</span></div>
+                      <div key={k}><span className="text-muted text-xs block">{k}</span><span className="text-foreground text-sm font-mono">{v || "—"}</span></div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-gray-700">Driver Details</p>
+                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-line">Driver Details</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[["Driver Name", selected.driverName], ["Driver Phone", selected.driverPhone], ["License Number", selected.driverLicenseNumber], ["License Expiry", selected.driverLicenseExpiry]].map(([k, v]) => (
-                      <div key={k}><span className="text-gray-500 text-xs block">{k}</span><span className="text-white text-sm">{v || "—"}</span></div>
+                      <div key={k}><span className="text-muted text-xs block">{k}</span><span className="text-foreground text-sm">{v || "—"}</span></div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-gray-700">Motor Boy Details</p>
+                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-line">Motor Boy Details</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[["Motor Boy Name", selected.motorBoyName], ["Motor Boy Phone", selected.motorBoyPhone], ["ID Type", selected.motorBoyIdType], ["ID Number", selected.motorBoyIdNumber]].map(([k, v]) => (
-                      <div key={k}><span className="text-gray-500 text-xs block">{k}</span><span className="text-white text-sm">{v || "—"}</span></div>
+                      <div key={k}><span className="text-muted text-xs block">{k}</span><span className="text-foreground text-sm">{v || "—"}</span></div>
                     ))}
                   </div>
                 </div>
                 {/* Zone Rates */}
                 {selected.zoneRates && Object.keys(selected.zoneRates).length > 0 && (
                   <div>
-                    <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-gray-700">Proposed Zone Rates</p>
-                    <p className="text-gray-400 text-xs mb-3">Owner's proposed rates per zone. You can adjust before approving — adjusted values become the approved rates.</p>
+                    <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 pb-1 border-b border-line">Proposed Zone Rates</p>
+                    <p className="text-muted text-xs mb-3">Owner's proposed rates per zone. You can adjust before approving — adjusted values become the approved rates.</p>
                     <div className="space-y-2">
                       {Object.entries(selected.zoneRates).map(([zone, proposed]) => (
-                        <div key={zone} className="flex items-center gap-3 bg-black/20 border border-gray-700 rounded-lg px-3 py-2">
+                        <div key={zone} className="flex items-center gap-3 bg-card border border-line rounded-lg px-3 py-2">
                           <div className="flex-1">
-                            <p className="text-white text-xs font-semibold">{zone}</p>
-                            <p className="text-gray-500 text-[10px]">Proposed: ₦{proposed.toLocaleString()}</p>
+                            <p className="text-foreground text-xs font-semibold">{zone}</p>
+                            <p className="text-muted text-[10px]">Proposed: ₦{proposed.toLocaleString()}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-400 text-xs">Approved rate (₦)</span>
+                            <span className="text-muted text-xs">Approved rate (₦)</span>
                             <input
                               type="number"
                               min={0}
                               value={rateEdits[zone] ?? proposed}
                               onChange={e => setRateEdits(prev => ({ ...prev, [zone]: Number(e.target.value) }))}
-                              className="w-28 bg-black/40 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-purple-500"
+                              className="w-28 bg-card border border-line rounded px-2 py-1 text-foreground text-xs focus:outline-none focus:border-purple-500"
                             />
                           </div>
                           {rateEdits[zone] !== undefined && rateEdits[zone] !== proposed && (
@@ -2137,15 +2136,15 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                   </div>
                 )}
                 {selected.reviewNote && (
-                  <div className="p-3 bg-black/30 rounded-lg border border-gray-700">
-                    <p className="text-gray-400 text-xs mb-1">Previous Review Note</p>
-                    <p className="text-gray-200 text-sm">{selected.reviewNote}</p>
+                  <div className="p-3 bg-card rounded-lg border border-line">
+                    <p className="text-muted text-xs mb-1">Previous Review Note</p>
+                    <p className="text-foreground text-sm">{selected.reviewNote}</p>
                   </div>
                 )}
                 <div>
-                  <label className="text-gray-400 text-xs block mb-1">Review Note {selected.status === "pending_review" ? "(sent to truck owner)" : ""}</label>
+                  <label className="text-muted text-xs block mb-1">Review Note {selected.status === "pending_review" ? "(sent to truck owner)" : ""}</label>
                   <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Describe your decision..."
-                    className="w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 resize-none" />
+                    className="w-full bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500 resize-none" />
                 </div>
                 <div className="flex justify-between items-center">
                   <Badge label={selected.status === "pending_review" ? "Awaiting Review" : selected.status} color={sc(selected.status)} />
@@ -2157,7 +2156,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                       </>
                     )}
                     {selected.status !== "pending_review" && (
-                      <button onClick={() => resetToPending(selected)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg">Reset to Pending Review</button>
+                      <button onClick={() => resetToPending(selected)} className="px-4 py-2 bg-card-2 hover:bg-gray-600 text-foreground text-sm rounded-lg">Reset to Pending Review</button>
                     )}
                   </div>
                 </div>
@@ -2174,15 +2173,15 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
             /* ── Step 2: Requester Details ── */
             <div className="space-y-4">
               {/* Selected truck summary */}
-              <div className="bg-black/40 border border-gray-700 rounded-xl p-4 flex gap-4 items-start">
+              <div className="bg-card border border-line rounded-xl p-4 flex gap-4 items-start">
                 {selectedRentTruck.tractorImageUrl && (
-                  <img src={selectedRentTruck.tractorImageUrl} alt="Truck" className="w-24 h-16 object-cover rounded-lg border border-gray-700 shrink-0" />
+                  <img src={selectedRentTruck.tractorImageUrl} alt="Truck" className="w-24 h-16 object-cover rounded-lg border border-line shrink-0" />
                 )}
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-white font-bold">{selectedRentTruck.truckRegNumber}</p>
-                      <p className="text-gray-400 text-xs">{selectedRentTruck.vehicleType} · {selectedRentTruck.tankCapacity}</p>
+                      <p className="text-foreground font-bold">{selectedRentTruck.truckRegNumber}</p>
+                      <p className="text-muted text-xs">{selectedRentTruck.vehicleType} · {selectedRentTruck.tankCapacity}</p>
                     </div>
                     <button onClick={() => { setShowRequesterForm(false); setShowRentResults(true); }}
                       className="text-xs text-purple-400 hover:text-purple-300 underline">Change truck</button>
@@ -2198,50 +2197,50 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
 
               <form onSubmit={e => { e.preventDefault(); setShowRequesterForm(false); setShowRentConfirmation(true); }} className="space-y-5">
                 {/* Requester details */}
-                <div className="bg-black/40 border border-gray-700 rounded-xl p-5">
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4 pb-1 border-b border-gray-700">Requester Details</p>
+                <div className="bg-card border border-line rounded-xl p-5">
+                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4 pb-1 border-b border-line">Requester Details</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-gray-400 text-xs block mb-1">Full Name</label>
+                      <label className="text-muted text-xs block mb-1">Full Name</label>
                       <input className={inputCls} placeholder="Enter full name" value={requester.fullName} onChange={e => setRequester(p => ({ ...p, fullName: e.target.value }))} required />
                     </div>
                     <div>
-                      <label className="text-gray-400 text-xs block mb-1">Phone Number</label>
+                      <label className="text-muted text-xs block mb-1">Phone Number</label>
                       <input className={inputCls} placeholder="+234 xxx xxx xxxx" value={requester.phone} onChange={e => setRequester(p => ({ ...p, phone: e.target.value }))} required />
                     </div>
                     <div>
-                      <label className="text-gray-400 text-xs block mb-1">Email Address</label>
+                      <label className="text-muted text-xs block mb-1">Email Address</label>
                       <input className={inputCls} type="email" placeholder="email@example.com" value={requester.email} onChange={e => setRequester(p => ({ ...p, email: e.target.value }))} required />
                     </div>
                     <div>
-                      <label className="text-gray-400 text-xs block mb-1">Company / Organisation (optional)</label>
+                      <label className="text-muted text-xs block mb-1">Company / Organisation (optional)</label>
                       <input className={inputCls} placeholder="e.g. Sunrise Filling Station" value={requester.company} onChange={e => setRequester(p => ({ ...p, company: e.target.value }))} />
                     </div>
                   </div>
                 </div>
 
                 {/* Rental details */}
-                <div className="bg-black/40 border border-gray-700 rounded-xl p-5">
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4 pb-1 border-b border-gray-700">Rental Details</p>
+                <div className="bg-card border border-line rounded-xl p-5">
+                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4 pb-1 border-b border-line">Rental Details</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-gray-400 text-xs block mb-1">Pickup Date</label>
+                      <label className="text-muted text-xs block mb-1">Pickup Date</label>
                       <input className={inputCls} type="date" min={new Date().toISOString().split("T")[0]} value={requester.pickupDate} onChange={e => setRequester(p => ({ ...p, pickupDate: e.target.value }))} required />
                     </div>
                     <div>
-                      <label className="text-gray-400 text-xs block mb-1">Number of Rental Days</label>
+                      <label className="text-muted text-xs block mb-1">Number of Rental Days</label>
                       <input className={inputCls} type="number" min="1" max="90" placeholder="e.g. 3" value={requester.rentalDays} onChange={e => setRequester(p => ({ ...p, rentalDays: e.target.value }))} required />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-gray-400 text-xs block mb-1">Additional Notes (optional)</label>
+                      <label className="text-muted text-xs block mb-1">Additional Notes (optional)</label>
                       <textarea className={inputCls + " resize-none"} rows={3} placeholder="Any special requirements..." value={requester.notes} onChange={e => setRequester(p => ({ ...p, notes: e.target.value }))} />
                     </div>
                   </div>
 
                   {/* Cost summary */}
                   {requester.rentalDays && Number(requester.rentalDays) > 0 && (
-                    <div className="mt-4 p-3 bg-white/5 border border-gray-700 rounded-lg flex justify-between items-center">
-                      <span className="text-gray-400 text-sm">{selectedRentTruck.dailyRate} × {requester.rentalDays} day{Number(requester.rentalDays) !== 1 ? "s" : ""}</span>
+                    <div className="mt-4 p-3 bg-card border border-line rounded-lg flex justify-between items-center">
+                      <span className="text-muted text-sm">{selectedRentTruck.dailyRate} × {requester.rentalDays} day{Number(requester.rentalDays) !== 1 ? "s" : ""}</span>
                       <span className="text-orange-400 font-bold text-base">
                         ₦{(parsedDailyRate(selectedRentTruck.dailyRate) * Number(requester.rentalDays)).toLocaleString()}
                       </span>
@@ -2257,11 +2256,11 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
           ) : (
             /* ── Step 1: Filter + Truck Grid ── */
             <>
-              <div className="bg-black/40 border border-gray-700 rounded-xl p-5">
-                <h3 className="text-white font-semibold mb-4">Find an Available Truck</h3>
+              <div className="bg-card border border-line rounded-xl p-5">
+                <h3 className="text-foreground font-semibold mb-4">Find an Available Truck</h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Vehicle Type</label>
+                    <label className="text-muted text-xs block mb-1">Vehicle Type</label>
                     <select className={selectCls} value={rentFilter.vehicleType} onChange={e => setRentFilter(p => ({ ...p, vehicleType: e.target.value }))}>
                       <option value="">Any Type</option>
                       <option value="Articulated Tanker">Articulated Tanker</option>
@@ -2271,7 +2270,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                     </select>
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Tank Capacity</label>
+                    <label className="text-muted text-xs block mb-1">Tank Capacity</label>
                     <select className={selectCls} value={rentFilter.capacity} onChange={e => setRentFilter(p => ({ ...p, capacity: e.target.value }))}>
                       <option value="">Any Capacity</option>
                       <option value="10,000 L">10,000 L</option>
@@ -2282,7 +2281,7 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                     </select>
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Product Type</label>
+                    <label className="text-muted text-xs block mb-1">Product Type</label>
                     <select className={selectCls} value={rentFilter.productType} onChange={e => setRentFilter(p => ({ ...p, productType: e.target.value }))}>
                       <option value="">Any Product</option>
                       <option value="PMS">PMS (Petrol)</option>
@@ -2300,32 +2299,32 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
 
               {showRentResults && (
                 <div className="space-y-3">
-                  <p className="text-gray-400 text-sm">{filteredRentTrucks.length} approved truck{filteredRentTrucks.length !== 1 ? "s" : ""} available</p>
+                  <p className="text-muted text-sm">{filteredRentTrucks.length} approved truck{filteredRentTrucks.length !== 1 ? "s" : ""} available</p>
                   {filteredRentTrucks.length === 0 ? (
-                    <div className="bg-black/40 border border-gray-700 rounded-xl p-10 text-center">
-                      <p className="text-gray-500 text-sm">No approved trucks match your filters</p>
+                    <div className="bg-card border border-line rounded-xl p-10 text-center">
+                      <p className="text-muted text-sm">No approved trucks match your filters</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {filteredRentTrucks.map(truck => (
-                        <div key={truck.id} className="bg-black/40 border border-gray-700 rounded-xl overflow-hidden hover:border-purple-500/50 transition-colors">
+                        <div key={truck.id} className="bg-card border border-line rounded-xl overflow-hidden hover:border-purple-500/50 transition-colors">
                           {truck.tractorImageUrl && (
                             <img src={truck.tractorImageUrl} alt={truck.truckRegNumber} className="w-full h-36 object-cover" />
                           )}
                           <div className="p-4 space-y-2">
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className="text-white font-bold font-mono">{truck.truckRegNumber}</p>
-                                <p className="text-gray-400 text-xs">{truck.vehicleType} · {truck.tankCapacity}</p>
+                                <p className="text-foreground font-bold font-mono">{truck.truckRegNumber}</p>
+                                <p className="text-muted text-xs">{truck.vehicleType} · {truck.tankCapacity}</p>
                               </div>
-                              <p className="text-orange-400 font-bold text-sm">{truck.dailyRate}<span className="text-gray-500 font-normal text-xs">/day</span></p>
+                              <p className="text-orange-400 font-bold text-sm">{truck.dailyRate}<span className="text-muted font-normal text-xs">/day</span></p>
                             </div>
                             <div className="flex gap-1 flex-wrap">
                               {truck.productTypes.map(p => (
                                 <span key={p} className={`text-xs font-bold px-2 py-0.5 rounded ${p === "PMS" ? "bg-red-900/50 text-red-300" : p === "AGO" ? "bg-blue-900/50 text-blue-300" : "bg-orange-900/50 text-orange-300"}`}>{p}</span>
                               ))}
                             </div>
-                            <div className="text-xs text-gray-500">Owner: {truck.ownerName} · Driver: {truck.driverName}</div>
+                            <div className="text-xs text-muted">Owner: {truck.ownerName} · Driver: {truck.driverName}</div>
                             <button
                               onClick={() => { setSelectedRentTruck(truck); setShowRentResults(false); setShowRequesterForm(true); }}
                               className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-lg transition-colors">
@@ -2348,14 +2347,14 @@ function SectionTrucks({ setToast }: { setToast: (m: string) => void }) {
                 <div className="w-12 h-12 bg-green-500/20 border border-green-500/40 rounded-full flex items-center justify-center mx-auto">
                   <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                 </div>
-                <p className="text-center text-gray-300">Rental request confirmed for</p>
-                <p className="text-center text-white font-bold text-base">{requester.fullName}</p>
-                <div className="bg-black/30 border border-gray-700 rounded-lg p-4 space-y-2">
+                <p className="text-center text-foreground">Rental request confirmed for</p>
+                <p className="text-center text-foreground font-bold text-base">{requester.fullName}</p>
+                <div className="bg-card border border-line rounded-lg p-4 space-y-2">
                   {[["Truck", selectedRentTruck.truckRegNumber], ["Type", selectedRentTruck.vehicleType], ["Pickup", requester.pickupDate], ["Duration", `${requester.rentalDays} day${Number(requester.rentalDays) !== 1 ? "s" : ""}`], ["Total", `₦${(parsedDailyRate(selectedRentTruck.dailyRate) * Number(requester.rentalDays)).toLocaleString()}`], ["Email", requester.email], ["Phone", requester.phone]].map(([k, v]) => (
-                    <div key={k} className="flex justify-between"><span className="text-gray-500">{k}</span><span className="text-white font-medium">{v}</span></div>
+                    <div key={k} className="flex justify-between"><span className="text-muted">{k}</span><span className="text-foreground font-medium">{v}</span></div>
                   ))}
                 </div>
-                <p className="text-gray-500 text-xs text-center">A payment link will be sent to the requester's email and phone within 10–20 minutes.</p>
+                <p className="text-muted text-xs text-center">A payment link will be sent to the requester's email and phone within 10–20 minutes.</p>
                 <button onClick={() => { setShowRentConfirmation(false); setSelectedRentTruck(null); setRequester({ fullName: "", phone: "", email: "", company: "", rentalDays: "1", pickupDate: "", notes: "" }); }}
                   className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors">Done</button>
               </div>
@@ -2423,14 +2422,14 @@ function SectionTransactions() {
 
       <div className="flex flex-wrap gap-3">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by user or transaction ID..."
-          className="flex-1 min-w-48 bg-black/40 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />
+          className="flex-1 min-w-48 bg-card border border-line rounded-lg px-4 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500" />
         <FilterBar
           options={["All", "supply_request", "purchase_order", "supply_fulfillment", "truck_rental", "union_dues", "Fuel Purchase", "completed", "pending", "failed"]}
           active={filter} onChange={setFilter} />
       </div>
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line text-xs text-muted uppercase tracking-wide">
           <span className="col-span-2">ID</span>
           <span className="col-span-2">User</span>
           <span className="col-span-2">Type</span>
@@ -2440,17 +2439,17 @@ function SectionTransactions() {
           <span className="col-span-1">Status</span>
           <span className="col-span-1 text-right">View</span>
         </div>
-        {filtered.length === 0 && <p className="text-center text-gray-500 py-10">No transactions found</p>}
+        {filtered.length === 0 && <p className="text-center text-muted py-10">No transactions found</p>}
         {filtered.map(txn => (
-          <div key={txn.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800/50 hover:bg-white/5 items-center">
+          <div key={txn.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line/50 hover:bg-card-2 items-center">
             <span className="col-span-2 text-purple-400 font-mono text-xs">{txn.id}</span>
-            <span className="col-span-2 text-gray-300 text-xs">{txn.user}</span>
+            <span className="col-span-2 text-foreground text-xs">{txn.user}</span>
             <span className="col-span-2"><Badge label={txn.type} color={tc(txn.type)} /></span>
-            <span className="col-span-1 text-gray-400 text-xs">{txn.date}</span>
+            <span className="col-span-1 text-muted text-xs">{txn.date}</span>
             <div className="col-span-2">
-              {txn.product && <p className="text-xs text-gray-300">{txn.product} — {txn.quantity}</p>}
-              {txn.depot && <p className="text-xs text-gray-500 truncate">{txn.depot}</p>}
-              {!txn.product && !txn.depot && <span className="text-gray-600 text-xs">—</span>}
+              {txn.product && <p className="text-xs text-foreground">{txn.product} — {txn.quantity}</p>}
+              {txn.depot && <p className="text-xs text-muted truncate">{txn.depot}</p>}
+              {!txn.product && !txn.depot && <span className="text-muted text-xs">—</span>}
             </div>
             <span className="col-span-1 text-green-400 text-xs font-medium">{txn.totalAmount}</span>
             <span className="col-span-1"><Badge label={txn.status} color={sc(txn.status)} /></span>
@@ -2469,14 +2468,14 @@ function SectionTransactions() {
               ["Payment Method", selected.paymentMethod ?? "—"],
               ["Date", selected.date],
             ].map(([k, v]) => (
-              <div key={k} className="flex justify-between"><span className="text-gray-400">{k}</span><span className="text-white">{v}</span></div>
+              <div key={k} className="flex justify-between"><span className="text-muted">{k}</span><span className="text-foreground">{v}</span></div>
             ))}
-            {selected.depot && <div className="flex justify-between"><span className="text-gray-400">Depot</span><span className="text-white">{selected.depot}</span></div>}
-            {selected.product && <div className="flex justify-between"><span className="text-gray-400">Product</span><span className="text-white">{selected.product}</span></div>}
-            {selected.quantity && <div className="flex justify-between"><span className="text-gray-400">Quantity</span><span className="text-white">{selected.quantity}</span></div>}
-            <div className="flex justify-between"><span className="text-gray-400">Type</span><Badge label={selected.type} color={tc(selected.type)} /></div>
-            <div className="flex justify-between"><span className="text-gray-400">Amount</span><span className="text-green-400 font-bold text-base">{selected.totalAmount}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
+            {selected.depot && <div className="flex justify-between"><span className="text-muted">Depot</span><span className="text-foreground">{selected.depot}</span></div>}
+            {selected.product && <div className="flex justify-between"><span className="text-muted">Product</span><span className="text-foreground">{selected.product}</span></div>}
+            {selected.quantity && <div className="flex justify-between"><span className="text-muted">Quantity</span><span className="text-foreground">{selected.quantity}</span></div>}
+            <div className="flex justify-between"><span className="text-muted">Type</span><Badge label={selected.type} color={tc(selected.type)} /></div>
+            <div className="flex justify-between"><span className="text-muted">Amount</span><span className="text-green-400 font-bold text-base">{selected.totalAmount}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Status</span><Badge label={selected.status} color={sc(selected.status)} /></div>
           </div>
         </Modal>
       )}
@@ -2562,39 +2561,39 @@ function SectionReports({ users }: { users: AdminUser[] }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-5">
-        <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-          <h3 className="text-white font-semibold mb-4">User Breakdown</h3>
-          <div className="rounded-lg border border-gray-800 overflow-hidden">
-            <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 uppercase">
+        <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+          <h3 className="text-foreground font-semibold mb-4">User Breakdown</h3>
+          <div className="rounded-lg border border-line overflow-hidden">
+            <div className="grid grid-cols-4 px-4 py-2 border-b border-line text-xs text-muted uppercase">
               <span>Role</span><span className="text-center">Total</span><span className="text-center">Active</span><span className="text-center">Suspended</span>
             </div>
             {roleRows.map(r => (
-              <div key={r.role} className="grid grid-cols-4 px-4 py-3 border-b border-gray-800/50 text-sm">
-                <span className="text-gray-300 text-xs">{r.role}</span>
-                <span className="text-white text-center">{r.total}</span>
+              <div key={r.role} className="grid grid-cols-4 px-4 py-3 border-b border-line/50 text-sm">
+                <span className="text-foreground text-xs">{r.role}</span>
+                <span className="text-foreground text-center">{r.total}</span>
                 <span className="text-green-400 text-center">{r.active}</span>
                 <span className="text-red-400 text-center">{r.suspended}</span>
               </div>
             ))}
-            <div className="grid grid-cols-4 px-4 py-3 text-sm font-bold border-t border-gray-700">
-              <span className="text-white">Total</span>
-              <span className="text-white text-center">{users.length}</span>
+            <div className="grid grid-cols-4 px-4 py-3 text-sm font-bold border-t border-line">
+              <span className="text-foreground">Total</span>
+              <span className="text-foreground text-center">{users.length}</span>
               <span className="text-green-400 text-center">{users.filter(u => u.status === "active").length}</span>
               <span className="text-red-400 text-center">{users.filter(u => u.status === "suspended").length}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-          <h3 className="text-white font-semibold mb-4">Transactions by Type</h3>
-          <div className="rounded-lg border border-gray-800 overflow-hidden">
-            <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 uppercase">
+        <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+          <h3 className="text-foreground font-semibold mb-4">Transactions by Type</h3>
+          <div className="rounded-lg border border-line overflow-hidden">
+            <div className="grid grid-cols-4 px-4 py-2 border-b border-line text-xs text-muted uppercase">
               <span className="col-span-2">Type</span><span className="text-center">Total</span><span className="text-center">Completed</span>
             </div>
             {txnRows.map(t => (
-              <div key={t.type} className="grid grid-cols-4 px-4 py-3 border-b border-gray-800/50 text-sm">
-                <span className="text-gray-300 text-xs col-span-2">{toLabel(t.type)}</span>
-                <span className="text-white text-center">{t.total}</span>
+              <div key={t.type} className="grid grid-cols-4 px-4 py-3 border-b border-line/50 text-sm">
+                <span className="text-foreground text-xs col-span-2">{toLabel(t.type)}</span>
+                <span className="text-foreground text-center">{t.total}</span>
                 <span className="text-green-400 text-center">{t.completed}</span>
               </div>
             ))}
@@ -2602,8 +2601,8 @@ function SectionReports({ users }: { users: AdminUser[] }) {
         </div>
       </div>
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-        <h3 className="text-white font-semibold mb-4">Supply Request Summary</h3>
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+        <h3 className="text-foreground font-semibold mb-4">Supply Request Summary</h3>
         <div className="grid grid-cols-4 gap-4">
           <StatCard label="Total Requests" value={supplyStats.total} />
           <StatCard label="Pending" value={supplyStats.pending} color="text-yellow-400" />
@@ -2612,8 +2611,8 @@ function SectionReports({ users }: { users: AdminUser[] }) {
         </div>
       </div>
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-        <h3 className="text-white font-semibold mb-4">Critical Depot Stock</h3>
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+        <h3 className="text-foreground font-semibold mb-4">Critical Depot Stock</h3>
         {depotAlerts.length === 0 ? (
           <p className="text-green-400 text-sm">All depots are adequately stocked.</p>
         ) : (
@@ -2621,15 +2620,15 @@ function SectionReports({ users }: { users: AdminUser[] }) {
             {depotAlerts.map((a, i) => (
               <div key={i} className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
                 <p className="text-red-400 font-medium text-sm">{a.depot}</p>
-                <p className="text-gray-400 text-xs">{a.product} — {a.level}% remaining</p>
+                <p className="text-muted text-xs">{a.product} — {a.level}% remaining</p>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-        <h3 className="text-white font-semibold mb-4">Truck Fleet Summary</h3>
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+        <h3 className="text-foreground font-semibold mb-4">Truck Fleet Summary</h3>
         <div className="grid grid-cols-4 gap-4">
           <StatCard label="Total Trucks" value={BASE_TRUCKS.length} />
           <StatCard label="Approved" value={BASE_TRUCKS.filter(t => t.status === "approved").length} color="text-green-400" />
@@ -2753,7 +2752,7 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
   const depotManagerMap: Record<string, StationManager | null> = {};
   allDepotNames.forEach(d => { depotManagerMap[d] = managers.find(m => m.depot === d) || null; });
 
-  const inputCls = "w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition";
+  const inputCls = "w-full bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500 transition";
 
   return (
     <div className="space-y-6">
@@ -2770,21 +2769,21 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
       </div>
 
       {/* Depot–Manager Map */}
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-        <h2 className="text-white font-semibold mb-4">Depots & Assigned Managers</h2>
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+        <h2 className="text-foreground font-semibold mb-4">Depots & Assigned Managers</h2>
         <div className="grid grid-cols-2 gap-3">
           {allDepotNames.map(depot => {
             const sm = depotManagerMap[depot];
             return (
-              <div key={depot} className="flex items-center justify-between bg-black/30 border border-gray-700 rounded-lg px-4 py-3">
+              <div key={depot} className="flex items-center justify-between bg-card border border-line rounded-lg px-4 py-3">
                 <div>
-                  <p className="text-white text-sm font-medium">{depot}</p>
+                  <p className="text-foreground text-sm font-medium">{depot}</p>
                   {sm ? (
                     <p className={`text-xs mt-0.5 ${sm.status === "active" ? "text-green-400" : "text-red-400"}`}>
                       {sm.name} · {sm.status}
                     </p>
                   ) : (
-                    <p className="text-xs text-gray-500 mt-0.5">No manager assigned</p>
+                    <p className="text-xs text-muted mt-0.5">No manager assigned</p>
                   )}
                 </div>
                 {sm && (
@@ -2800,18 +2799,18 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
 
       {/* Managers List */}
       {managers.length > 0 && (
-        <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5">
-          <h2 className="text-white font-semibold mb-4">All Station Managers</h2>
+        <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+          <h2 className="text-foreground font-semibold mb-4">All Station Managers</h2>
           <div className="space-y-3">
             {managers.map(sm => (
-              <div key={sm.id} className="flex items-center justify-between bg-black/30 border border-gray-700 rounded-lg px-4 py-3">
+              <div key={sm.id} className="flex items-center justify-between bg-card border border-line rounded-lg px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-purple-600/40 border border-purple-500/40 flex items-center justify-center text-purple-300 font-bold text-sm shrink-0">
                     {sm.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-white text-sm font-medium">{sm.name}</p>
-                    <p className="text-gray-400 text-xs">{sm.email} · {sm.depot}</p>
+                    <p className="text-foreground text-sm font-medium">{sm.name}</p>
+                    <p className="text-muted text-xs">{sm.email} · {sm.depot}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -2841,19 +2840,19 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
             {formError && <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">{formError}</p>}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-gray-400 text-xs block mb-1">Full Name</label>
+                <label className="text-muted text-xs block mb-1">Full Name</label>
                 <input className={inputCls} placeholder="e.g. Emeka Nwosu" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
               </div>
               <div>
-                <label className="text-gray-400 text-xs block mb-1">Email</label>
+                <label className="text-muted text-xs block mb-1">Email</label>
                 <input type="email" className={inputCls} placeholder="manager@energy.ng" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
               </div>
               <div>
-                <label className="text-gray-400 text-xs block mb-1">Password</label>
+                <label className="text-muted text-xs block mb-1">Password</label>
                 <input type="text" className={inputCls} placeholder="Set login password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
               </div>
               <div>
-                <label className="text-gray-400 text-xs block mb-1">Assign Depot</label>
+                <label className="text-muted text-xs block mb-1">Assign Depot</label>
                 <select className={inputCls} value={form.depot} onChange={e => setForm(f => ({ ...f, depot: e.target.value }))}>
                   <option value="">— Select Depot —</option>
                   {allDepotNames.map(d => <option key={d} value={d}>{d}</option>)}
@@ -2862,7 +2861,7 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
             </div>
           </div>
           <div className="flex justify-end gap-3">
-            <button onClick={() => { setShowCreate(false); setFormError(""); }} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+            <button onClick={() => { setShowCreate(false); setFormError(""); }} className="px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
             <button onClick={handleCreate} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium">Create Manager</button>
           </div>
         </Modal>
@@ -2873,16 +2872,16 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
         <Modal onClose={() => setViewActivities(null)} title={`Activity — ${viewActivities.name}`} subtitle={viewActivities.depot}>
           <div className="max-h-80 overflow-y-auto">
             {activities.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-8">No activity recorded yet</p>
+              <p className="text-muted text-sm text-center py-8">No activity recorded yet</p>
             ) : (
               <div className="space-y-2">
                 {activities.map((a, i) => (
-                  <div key={i} className="flex items-start justify-between py-2 border-b border-gray-800 last:border-0">
+                  <div key={i} className="flex items-start justify-between py-2 border-b border-line last:border-0">
                     <div className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0" />
-                      <p className="text-sm text-gray-300">{a.action}</p>
+                      <p className="text-sm text-foreground">{a.action}</p>
                     </div>
-                    <span className="text-xs text-gray-500 shrink-0 ml-4">
+                    <span className="text-xs text-muted shrink-0 ml-4">
                       {new Date(a.timestamp).toLocaleString("en-NG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -2891,7 +2890,7 @@ function SectionStationManagers({ setToast }: { setToast: (m: string) => void })
             )}
           </div>
           <div className="flex justify-end mt-4">
-            <button onClick={() => setViewActivities(null)} className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Close</button>
+            <button onClick={() => setViewActivities(null)} className="px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Close</button>
           </div>
         </Modal>
       )}
@@ -3006,13 +3005,13 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-white font-bold text-lg">Station Manager Activity Log</h2>
-          <p className="text-gray-400 text-xs mt-0.5">All stock movements recorded by station managers. Only you can delete entries.</p>
+          <h2 className="text-foreground font-bold text-lg">Station Manager Activity Log</h2>
+          <p className="text-muted text-xs mt-0.5">All stock movements recorded by station managers. Only you can delete entries.</p>
         </div>
         <div className="flex gap-2">
           {(["all", "sales", "stock"] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition ${filter === f ? "bg-purple-600 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition ${filter === f ? "bg-purple-600 text-white" : "bg-card-2 text-muted hover:bg-card-2"}`}>
               {f === "all" ? "All" : f === "sales" ? "Sales" : "Restocks"}
             </button>
           ))}
@@ -3020,21 +3019,21 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
       </div>
 
       {/* Table */}
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-12">No activity records found</p>
+          <p className="text-muted text-sm text-center py-12">No activity records found</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[700px]">
               <thead>
-                <tr className="border-b border-gray-700 bg-black/30">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Date & Time</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Manager</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Dealer</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Products</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Depot</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
+                <tr className="border-b border-line bg-card">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap">Date & Time</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Manager</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Dealer</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Products</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap">Depot</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-muted uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -3043,16 +3042,16 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
                   const managerName = managers[a.managerId] ?? a.managerId;
                   const dealerInfo = DEALER_INFO_MAP[code];
                   return (
-                    <tr key={a.id ?? i} className="border-b border-gray-800/60 last:border-0 hover:bg-white/5 transition">
-                      <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap align-top">
+                    <tr key={a.id ?? i} className="border-b border-line/60 last:border-0 hover:bg-card-2 transition">
+                      <td className="px-4 py-3 text-muted text-xs whitespace-nowrap align-top">
                         {new Date(a.timestamp).toLocaleString("en-NG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </td>
                       <td className="px-4 py-3 align-top">
-                        <p className="text-white text-xs font-semibold">{managerName}</p>
-                        <p className="text-gray-500 text-[10px] font-mono">{a.managerId}</p>
+                        <p className="text-foreground text-xs font-semibold">{managerName}</p>
+                        <p className="text-muted text-[10px] font-mono">{a.managerId}</p>
                       </td>
                       <td className="px-4 py-3 align-top">
-                        <p className="text-white text-xs font-semibold">{dealerInfo?.name ?? code}</p>
+                        <p className="text-foreground text-xs font-semibold">{dealerInfo?.name ?? code}</p>
                         <p className="text-orange-400 text-[10px] font-mono">{code}</p>
                       </td>
                       <td className="px-4 py-3 align-top">
@@ -3063,11 +3062,11 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
                       <td className="px-4 py-3 align-top">
                         <div className="flex flex-wrap gap-1">
                           {productLines.map((line: string, j: number) => (
-                            <span key={j} className="inline-block bg-gray-800 border border-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">{line}</span>
+                            <span key={j} className="inline-block bg-card-2 border border-line text-foreground text-xs px-2 py-0.5 rounded-full whitespace-nowrap">{line}</span>
                           ))}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-300 text-xs whitespace-nowrap align-top">{depotName}</td>
+                      <td className="px-4 py-3 text-foreground text-xs whitespace-nowrap align-top">{depotName}</td>
                       <td className="px-4 py-3 text-right align-top">
                         <button
                           onClick={() => confirmDelete(a.id)}
@@ -3088,16 +3087,16 @@ function SectionActivityLog({ setToast }: { setToast: (m: string) => void }) {
       {/* Delete confirmation modal */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
+          <div className="bg-card border border-line rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               </svg>
             </div>
-            <h3 className="text-white font-bold mb-2">Delete this entry?</h3>
-            <p className="text-gray-400 text-sm mb-6">This action cannot be undone. The activity record will be permanently removed.</p>
+            <h3 className="text-foreground font-bold mb-2">Delete this entry?</h3>
+            <p className="text-muted text-sm mb-6">This action cannot be undone. The activity record will be permanently removed.</p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+              <button onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
               <button onClick={doDelete} className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">Delete</button>
             </div>
           </div>
@@ -3268,7 +3267,7 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
   return (
     <div className="space-y-3 pt-1">
       <div className="flex items-center justify-between">
-        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Custom Dues & Levies</p>
+        <p className="text-muted text-xs font-semibold uppercase tracking-wider">Custom Dues & Levies</p>
         <button
           onClick={() => { setAdding(true); setEditId(null); }}
           className="flex items-center gap-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg transition font-semibold"
@@ -3282,8 +3281,8 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
 
       {/* Add form */}
       {adding && (
-        <div className="bg-gray-900/60 border border-purple-500/40 rounded-lg p-4 space-y-3">
-          <p className="text-white text-xs font-semibold">New Due or Levy</p>
+        <div className="bg-card/60 border border-purple-500/40 rounded-lg p-4 space-y-3">
+          <p className="text-foreground text-xs font-semibold">New Due or Levy</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className={labelCls}>Name / Label</label>
@@ -3293,7 +3292,7 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
             <div>
               <label className={labelCls}>Amount (₦)</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₦</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs font-bold">₦</span>
                 <input className={`${inputCls} pl-6`} type="number" min={0} placeholder="0"
                   value={draft.amount} onChange={e => setDraft(p => ({ ...p, amount: e.target.value }))} />
               </div>
@@ -3306,7 +3305,7 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
             </div>
           </div>
           <div className="flex gap-2 justify-end">
-            <button onClick={() => setAdding(false)} className="text-xs text-gray-400 hover:text-white border border-gray-700 px-3 py-1.5 rounded-lg transition">Cancel</button>
+            <button onClick={() => setAdding(false)} className="text-xs text-muted hover:text-foreground border border-line px-3 py-1.5 rounded-lg transition">Cancel</button>
             <button onClick={handleAdd} className="text-xs bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded-lg transition font-semibold">Save</button>
           </div>
         </div>
@@ -3314,10 +3313,10 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
 
       {/* List */}
       {levies.length === 0 && !adding && (
-        <p className="text-gray-600 text-xs italic">No custom levies added yet.</p>
+        <p className="text-muted text-xs italic">No custom levies added yet.</p>
       )}
       {levies.map(levy => (
-        <div key={levy.id} className="bg-gray-900/40 border border-gray-800 rounded-lg p-3">
+        <div key={levy.id} className="bg-card/40 border border-line rounded-lg p-3">
           {editId === levy.id ? (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
@@ -3326,7 +3325,7 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
                     onChange={e => handleEdit(levy.id, { name: e.target.value })} />
                 </div>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₦</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs font-bold">₦</span>
                   <input className={`${inputCls} pl-6`} type="number" min={0} value={levy.amount}
                     onChange={e => handleEdit(levy.id, { amount: parseInt(e.target.value) || 0 })} />
                 </div>
@@ -3336,15 +3335,15 @@ function CustomLeviesManager({ inputCls, labelCls }: { inputCls: string; labelCl
                 </select>
               </div>
               <div className="flex gap-2 justify-end">
-                <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-white border border-gray-700 px-3 py-1.5 rounded-lg transition">Done</button>
+                <button onClick={() => setEditId(null)} className="text-xs text-muted hover:text-foreground border border-line px-3 py-1.5 rounded-lg transition">Done</button>
                 <button onClick={() => handleDelete(levy.id)} className="text-xs text-red-400 hover:text-red-300 border border-red-500/40 px-3 py-1.5 rounded-lg transition">Delete</button>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white text-sm font-medium">{levy.name}</p>
-                <p className="text-gray-400 text-xs">₦{levy.amount.toLocaleString()} &middot; {levy.frequency}</p>
+                <p className="text-foreground text-sm font-medium">{levy.name}</p>
+                <p className="text-muted text-xs">₦{levy.amount.toLocaleString()} &middot; {levy.frequency}</p>
               </div>
               <button onClick={() => setEditId(levy.id)} className="text-xs text-purple-400 border border-purple-500/40 px-2 py-1 rounded hover:text-purple-300 transition">Edit</button>
             </div>
@@ -3512,9 +3511,9 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
     { id: "maintenance", label: "Maintenance",      icon: "🔧" },
   ] as const;
 
-  const inputCls = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm transition";
-  const labelCls = "block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5";
-  const cardCls = "bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5 space-y-4";
+  const inputCls = "w-full bg-card/60 border border-line rounded-lg px-3 py-2 text-foreground placeholder-muted focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm transition";
+  const labelCls = "block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5";
+  const cardCls = "bg-card backdrop-blur-md border border-line rounded-xl p-5 space-y-4";
   const saveBtnCls = "px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg text-sm transition";
 
   return (
@@ -3524,7 +3523,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border
-              ${tab === t.id ? "bg-purple-600/20 border-purple-500 text-purple-300" : "border-gray-700 text-gray-400 hover:text-white hover:bg-white/5"}`}>
+              ${tab === t.id ? "bg-purple-600/20 border-purple-500 text-purple-300" : "border-line text-muted hover:text-white hover:bg-card-2"}`}>
             <span>{t.icon}</span>{t.label}
           </button>
         ))}
@@ -3534,7 +3533,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {tab === "profile" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Account Information</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Account Information</h3>
             <div>
               <label className={labelCls}>Display Name</label>
               <input className={inputCls} value={profileDraft.name} onChange={e => setProfileDraft(p => ({ ...p, name: e.target.value }))} placeholder="Your name" />
@@ -3549,7 +3548,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </button>
             </div>
             {showPassFields && (
-              <div className="space-y-3 border-t border-gray-800 pt-3">
+              <div className="space-y-3 border-t border-line pt-3">
                 <div>
                   <label className={labelCls}>Current Password</label>
                   <input className={inputCls} type="password" value={profileDraft.currentPassword} onChange={e => setProfileDraft(p => ({ ...p, currentPassword: e.target.value }))} placeholder="••••••••" />
@@ -3570,25 +3569,25 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Account Status</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Account Status</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b border-gray-800/50">
-                <span className="text-gray-400 text-sm">Role</span>
+              <div className="flex items-center justify-between py-2 border-b border-line/50">
+                <span className="text-muted text-sm">Role</span>
                 <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-bold">Super Admin</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-gray-800/50">
-                <span className="text-gray-400 text-sm">Current Name</span>
-                <span className="text-white text-sm font-semibold">{adminName}</span>
+              <div className="flex items-center justify-between py-2 border-b border-line/50">
+                <span className="text-muted text-sm">Current Name</span>
+                <span className="text-foreground text-sm font-semibold">{adminName}</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-gray-800/50">
-                <span className="text-gray-400 text-sm">Platform Access</span>
+              <div className="flex items-center justify-between py-2 border-b border-line/50">
+                <span className="text-muted text-sm">Platform Access</span>
                 <span className="flex items-center gap-1.5 text-green-400 text-xs font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400" />Full Access
                 </span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="text-gray-400 text-sm">Session</span>
-                <span className="text-gray-300 text-xs">Active · JWT Cookie</span>
+                <span className="text-muted text-sm">Session</span>
+                <span className="text-foreground text-xs">Active · JWT Cookie</span>
               </div>
             </div>
           </div>
@@ -3599,7 +3598,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {tab === "platform" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Platform Identity</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Platform Identity</h3>
             <div>
               <label className={labelCls}>Platform Name</label>
               <input className={inputCls} value={cfg.platformName} onChange={e => setCfg(p => ({ ...p, platformName: e.target.value }))} />
@@ -3626,7 +3625,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Contact & Support</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Contact & Support</h3>
             <div>
               <label className={labelCls}>Support Email</label>
               <input className={inputCls} type="email" value={cfg.supportEmail} onChange={e => setCfg(p => ({ ...p, supportEmail: e.target.value }))} />
@@ -3642,7 +3641,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </div>
             </div>
 
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3 pt-2">Social Media</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3 pt-2">Social Media</h3>
             <div>
               <label className={labelCls}>Facebook URL</label>
               <input className={inputCls} placeholder="https://facebook.com/..." value={cfg.facebookUrl} onChange={e => setCfg(p => ({ ...p, facebookUrl: e.target.value }))} />
@@ -3658,7 +3657,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </div>
             </div>
 
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3 pt-2">Notifications</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3 pt-2">Notifications</h3>
             {([
               ["notifyNewSupplyRequests", "New Supply Requests"],
               ["notifyNewPurchaseOrders", "New Purchase Orders"],
@@ -3666,21 +3665,21 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               ["notifyTruckRegistrations","Truck Registrations"],
             ] as [keyof typeof DEFAULT_ADMIN_SETTINGS, string][]).map(([key, label]) => (
               <div key={String(key)} className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">{label}</span>
+                <span className="text-foreground text-sm">{label}</span>
                 <button onClick={() => saveSettings({ [key]: !cfg[key] } as Partial<typeof DEFAULT_ADMIN_SETTINGS>)}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${cfg[key] ? "bg-purple-600" : "bg-gray-700"}`}>
+                  className={`relative w-10 h-5 rounded-full transition-colors ${cfg[key] ? "bg-purple-600" : "bg-card-2"}`}>
                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${cfg[key] ? "left-5" : "left-0.5"}`} />
                 </button>
               </div>
             ))}
 
-            <div className="flex items-center justify-between border-t border-gray-800 pt-3">
+            <div className="flex items-center justify-between border-t border-line pt-3">
               <div>
-                <span className="text-gray-300 text-sm">Allow New Registrations</span>
-                <p className="text-gray-500 text-xs">Users can sign up on the platform</p>
+                <span className="text-foreground text-sm">Allow New Registrations</span>
+                <p className="text-muted text-xs">Users can sign up on the platform</p>
               </div>
               <button onClick={() => saveSettings({ allowNewRegistrations: !cfg.allowNewRegistrations })}
-                className={`relative w-10 h-5 rounded-full transition-colors ${cfg.allowNewRegistrations ? "bg-green-600" : "bg-gray-700"}`}>
+                className={`relative w-10 h-5 rounded-full transition-colors ${cfg.allowNewRegistrations ? "bg-green-600" : "bg-card-2"}`}>
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${cfg.allowNewRegistrations ? "left-5" : "left-0.5"}`} />
               </button>
             </div>
@@ -3694,8 +3693,8 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {tab === "pricing" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Base Fuel Prices (per Litre)</h3>
-            <p className="text-gray-500 text-xs -mt-2">These are the platform-wide reference prices used in supply orders and depot pricing.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Base Fuel Prices (per Litre)</h3>
+            <p className="text-muted text-xs -mt-2">These are the platform-wide reference prices used in supply orders and depot pricing.</p>
             {([
               ["pmsPricePerLitre",  "PMS (Petrol)",  "text-red-400"],
               ["agoPricePerLitre",  "AGO (Diesel)",  "text-blue-400"],
@@ -3706,7 +3705,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
                 <div className="flex-1">
                   <label className={labelCls}>{label}</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₦</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-bold">₦</span>
                     <input className={`${inputCls} pl-7`} type="number" min={0}
                       value={cfg[key] as number}
                       onChange={e => setCfg(p => ({ ...p, [key]: parseInt(e.target.value) || 0 }))} />
@@ -3719,29 +3718,29 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Depot & Inventory Limits</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Depot & Inventory Limits</h3>
             <div>
               <label className={labelCls}>Depot Capacity per Product (Litres)</label>
               <input className={inputCls} type="number" min={0} value={cfg.depotCapacityLitres}
                 onChange={e => setCfg(p => ({ ...p, depotCapacityLitres: parseInt(e.target.value) || 0 }))} />
-              <p className="text-gray-500 text-xs mt-1">Maximum litres each depot can hold per product type.</p>
+              <p className="text-muted text-xs mt-1">Maximum litres each depot can hold per product type.</p>
             </div>
             <div>
               <label className={labelCls}>Low Stock Alert Threshold (%)</label>
               <div className="relative">
                 <input className={`${inputCls} pr-8`} type="number" min={1} max={100} value={cfg.lowStockThreshold}
                   onChange={e => setCfg(p => ({ ...p, lowStockThreshold: parseInt(e.target.value) || 0 }))} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-sm">%</span>
               </div>
-              <p className="text-gray-500 text-xs mt-1">Alert triggers when depot stock falls below this percentage.</p>
+              <p className="text-muted text-xs mt-1">Alert triggers when depot stock falls below this percentage.</p>
             </div>
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
               <p className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Current Reference Prices</p>
               <div className="space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-gray-400">PMS</span><span className="text-red-400 font-bold">₦{cfg.pmsPricePerLitre.toLocaleString()}/L</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">AGO</span><span className="text-blue-400 font-bold">₦{cfg.agoPricePerLitre.toLocaleString()}/L</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">ATK</span><span className="text-orange-400 font-bold">₦{cfg.atkPricePerLitre.toLocaleString()}/L</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">LPG</span><span className="text-green-400 font-bold">₦{cfg.lgpPricePerLitre.toLocaleString()}/L</span></div>
+                <div className="flex justify-between"><span className="text-muted">PMS</span><span className="text-red-400 font-bold">₦{cfg.pmsPricePerLitre.toLocaleString()}/L</span></div>
+                <div className="flex justify-between"><span className="text-muted">AGO</span><span className="text-blue-400 font-bold">₦{cfg.agoPricePerLitre.toLocaleString()}/L</span></div>
+                <div className="flex justify-between"><span className="text-muted">ATK</span><span className="text-orange-400 font-bold">₦{cfg.atkPricePerLitre.toLocaleString()}/L</span></div>
+                <div className="flex justify-between"><span className="text-muted">LPG</span><span className="text-green-400 font-bold">₦{cfg.lgpPricePerLitre.toLocaleString()}/L</span></div>
               </div>
             </div>
             <button onClick={() => saveSettings(cfg)} className={saveBtnCls}>Save Limits</button>
@@ -3752,10 +3751,10 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {/* ── TRUCK RATES ── */}
       {tab === "truck_rates" && (
         <div className={`${cardCls} space-y-5`}>
-          <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+          <div className="flex items-center justify-between border-b border-line pb-3">
             <div>
-              <h3 className="text-white font-semibold text-sm">Truck Rental Rates by State</h3>
-              <p className="text-gray-500 text-xs mt-0.5">Set the base trip price per state. These are shown to customers when booking a truck.</p>
+              <h3 className="text-foreground font-semibold text-sm">Truck Rental Rates by State</h3>
+              <p className="text-muted text-xs mt-0.5">Set the base trip price per state. These are shown to customers when booking a truck.</p>
             </div>
             <button onClick={saveStatePrices} className={saveBtnCls}>Save All Rates</button>
           </div>
@@ -3766,11 +3765,11 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {zone.states.map(state => (
                     <div key={state}>
-                      <label className="block text-xs text-gray-400 mb-1 font-medium">{state}</label>
+                      <label className="block text-xs text-muted mb-1 font-medium">{state}</label>
                       <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₦</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs font-bold">₦</span>
                         <input
-                          className="w-full bg-gray-900/60 border border-gray-700 rounded-lg pl-6 pr-2 py-2 text-white text-xs focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
+                          className="w-full bg-card/60 border border-line rounded-lg pl-6 pr-2 py-2 text-foreground text-xs focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
                           type="number" min={0}
                           value={statePriceDrafts[state] ?? String(statePrices[state] ?? 0)}
                           onChange={e => setStatePriceDrafts(p => ({ ...p, [state]: e.target.value }))}
@@ -3785,7 +3784,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </div>
             ))}
           </div>
-          <div className="flex justify-end border-t border-gray-800 pt-4">
+          <div className="flex justify-end border-t border-line pt-4">
             <button onClick={saveStatePrices} className={saveBtnCls}>Save All Rates</button>
           </div>
         </div>
@@ -3795,27 +3794,27 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {tab === "operations" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Delivery Fees</h3>
-            <p className="text-gray-500 text-xs -mt-2">Flat fees charged on top of the order when a customer selects a priority tier.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Delivery Fees</h3>
+            <p className="text-muted text-xs -mt-2">Flat fees charged on top of the order when a customer selects a priority tier.</p>
             <div>
               <label className={labelCls}>Urgent Delivery Fee (₦)</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₦</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-bold">₦</span>
                 <input className={`${inputCls} pl-7`} type="number" min={0}
                   value={cfg.urgentDeliveryFee}
                   onChange={e => setCfg(p => ({ ...p, urgentDeliveryFee: parseInt(e.target.value) || 0 }))} />
               </div>
-              <p className="text-gray-500 text-xs mt-1">Applied to "Urgent" priority supply requests.</p>
+              <p className="text-muted text-xs mt-1">Applied to "Urgent" priority supply requests.</p>
             </div>
             <div>
               <label className={labelCls}>Emergency Delivery Fee (₦)</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₦</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-bold">₦</span>
                 <input className={`${inputCls} pl-7`} type="number" min={0}
                   value={cfg.emergencyDeliveryFee}
                   onChange={e => setCfg(p => ({ ...p, emergencyDeliveryFee: parseInt(e.target.value) || 0 }))} />
               </div>
-              <p className="text-gray-500 text-xs mt-1">Applied to "Emergency" priority supply requests.</p>
+              <p className="text-muted text-xs mt-1">Applied to "Emergency" priority supply requests.</p>
             </div>
             <div>
               <label className={labelCls}>Platform Commission (%)</label>
@@ -3823,15 +3822,15 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
                 <input className={`${inputCls} pr-8`} type="number" min={0} max={100} step={0.1}
                   value={cfg.platformCommissionPct}
                   onChange={e => setCfg(p => ({ ...p, platformCommissionPct: parseFloat(e.target.value) || 0 }))} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-sm">%</span>
               </div>
-              <p className="text-gray-500 text-xs mt-1">Percentage taken from each order value. 0 = disabled.</p>
+              <p className="text-muted text-xs mt-1">Percentage taken from each order value. 0 = disabled.</p>
             </div>
             <button onClick={() => saveSettings(cfg)} className={saveBtnCls}>Save Delivery Fees</button>
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Order Limits & Lead Times</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Order Limits & Lead Times</h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Min Order (Litres)</label>
@@ -3852,7 +3851,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
                 <input className={inputCls} type="number" min={1}
                   value={cfg.standardLeadTimeHours}
                   onChange={e => setCfg(p => ({ ...p, standardLeadTimeHours: parseInt(e.target.value) || 72 }))} />
-                <p className="text-gray-500 text-xs mt-1">Shown to customers as expected delivery window.</p>
+                <p className="text-muted text-xs mt-1">Shown to customers as expected delivery window.</p>
               </div>
               <div>
                 <label className={labelCls}>Urgent Lead Time (hrs)</label>
@@ -3862,13 +3861,13 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </div>
             </div>
 
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3 pt-2">Union Dues & Levies</h3>
-            <p className="text-gray-500 text-xs -mt-2">These amounts are charged when members pay dues through the Pay Dues flow.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3 pt-2">Union Dues & Levies</h3>
+            <p className="text-muted text-xs -mt-2">These amounts are charged when members pay dues through the Pay Dues flow.</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Annual Membership Fee (₦)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₦</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs font-bold">₦</span>
                   <input className={`${inputCls} pl-6`} type="number" min={0}
                     value={cfg.annualMembershipFee}
                     onChange={e => setCfg(p => ({ ...p, annualMembershipFee: parseInt(e.target.value) || 0 }))} />
@@ -3877,7 +3876,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               <div>
                 <label className={labelCls}>Monthly Levy (₦)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₦</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs font-bold">₦</span>
                   <input className={`${inputCls} pl-6`} type="number" min={0}
                     value={cfg.monthlyLevy}
                     onChange={e => setCfg(p => ({ ...p, monthlyLevy: parseInt(e.target.value) || 0 }))} />
@@ -3887,7 +3886,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
             <div>
               <label className={labelCls}>Loading Surcharge (₦)</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₦</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs font-bold">₦</span>
                 <input className={`${inputCls} pl-6`} type="number" min={0}
                   value={cfg.loadingSurcharge}
                   onChange={e => setCfg(p => ({ ...p, loadingSurcharge: parseInt(e.target.value) || 0 }))} />
@@ -3896,17 +3895,17 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
 
             <CustomLeviesManager inputCls={inputCls} labelCls={labelCls} />
 
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3 pt-2">Bulk Dealer Fees</h3>
-            <p className="text-gray-500 text-xs -mt-2">Fees charged to bulk dealers for platform access and account maintenance.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3 pt-2">Bulk Dealer Fees</h3>
+            <p className="text-muted text-xs -mt-2">Fees charged to bulk dealers for platform access and account maintenance.</p>
             <div>
               <label className={labelCls}>Yearly Account Maintenance Fee (₦)</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₦</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs font-bold">₦</span>
                 <input className={`${inputCls} pl-6`} type="number" min={0}
                   value={cfg.bulkDealerYearlyFee}
                   onChange={e => setCfg(p => ({ ...p, bulkDealerYearlyFee: parseInt(e.target.value) || 0 }))} />
               </div>
-              <p className="text-gray-500 text-xs mt-1">Charged annually to maintain bulk dealer account access. Displayed on bulk dealer dashboard.</p>
+              <p className="text-muted text-xs mt-1">Charged annually to maintain bulk dealer account access. Displayed on bulk dealer dashboard.</p>
             </div>
 
             <button onClick={() => saveSettings(cfg)} className={saveBtnCls}>Save Operations</button>
@@ -3918,8 +3917,8 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {tab === "payments" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Payment Methods</h3>
-            <p className="text-gray-500 text-xs -mt-2">Toggle which methods customers can use at checkout.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Payment Methods</h3>
+            <p className="text-muted text-xs -mt-2">Toggle which methods customers can use at checkout.</p>
             {([
               ["enablePaystack",     "Paystack (Card / Online)", "Customers pay via Paystack checkout"],
               ["enableGlobalpay",   "GlobalPay",                  "Customers pay via GlobalPay checkout"],
@@ -3928,13 +3927,13 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               ["enableWallet",      "e-Nergy Wallet",             "Deduct from customer platform wallet"],
               ["enableOpay",        "OPay",                       "Pay via OPay mobile money"],
             ] as [keyof typeof DEFAULT_ADMIN_SETTINGS, string, string][]).map(([key, label, desc]) => (
-              <div key={String(key)} className="flex items-start justify-between py-3 border-b border-gray-800/50 gap-4">
+              <div key={String(key)} className="flex items-start justify-between py-3 border-b border-line/50 gap-4">
                 <div>
-                  <p className="text-gray-200 text-sm font-semibold">{label}</p>
-                  <p className="text-gray-500 text-xs">{desc}</p>
+                  <p className="text-foreground text-sm font-semibold">{label}</p>
+                  <p className="text-muted text-xs">{desc}</p>
                 </div>
                 <button onClick={() => saveSettings({ [key]: !cfg[key] } as Partial<typeof DEFAULT_ADMIN_SETTINGS>)}
-                  className={`relative w-10 h-5 rounded-full transition-colors shrink-0 mt-0.5 ${cfg[key] ? "bg-green-600" : "bg-gray-700"}`}>
+                  className={`relative w-10 h-5 rounded-full transition-colors shrink-0 mt-0.5 ${cfg[key] ? "bg-green-600" : "bg-card-2"}`}>
                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${cfg[key] ? "left-5" : "left-0.5"}`} />
                 </button>
               </div>
@@ -3942,7 +3941,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Paystack Configuration</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Paystack Configuration</h3>
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 text-xs text-yellow-400">
               ⚠ Your Paystack public key is safe to store here. Never paste your Secret Key into this field — the secret key belongs only on your Sliplane backend.
             </div>
@@ -3950,12 +3949,12 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               <label className={labelCls}>Paystack Public Key</label>
               <input className={inputCls} placeholder="pk_live_..." value={cfg.paystackPublicKey}
                 onChange={e => setCfg(p => ({ ...p, paystackPublicKey: e.target.value }))} />
-              <p className="text-gray-500 text-xs mt-1">Starts with <span className="font-mono text-purple-400">pk_test_</span> or <span className="font-mono text-purple-400">pk_live_</span></p>
+              <p className="text-muted text-xs mt-1">Starts with <span className="font-mono text-purple-400">pk_test_</span> or <span className="font-mono text-purple-400">pk_live_</span></p>
             </div>
             <button onClick={() => saveSettings(cfg)} className={saveBtnCls}>Save Paystack Key</button>
 
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3 pt-2">Bank Transfer Details</h3>
-            <p className="text-gray-500 text-xs -mt-2">Shown to customers who choose manual bank transfer at checkout.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3 pt-2">Bank Transfer Details</h3>
+            <p className="text-muted text-xs -mt-2">Shown to customers who choose manual bank transfer at checkout.</p>
             <div>
               <label className={labelCls}>Bank Name</label>
               <input className={inputCls} placeholder="e.g. First Bank of Nigeria" value={cfg.bankName}
@@ -3992,33 +3991,33 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </svg>
               <div className="flex-1">
                 <p className="text-orange-400 font-bold text-sm group-hover:text-orange-300 transition">View Full Backend Documentation →</p>
-                <p className="text-gray-500 text-xs">17 collections · 7 auth routes · 7 AI routes · migration guide · environment vars</p>
+                <p className="text-muted text-xs">17 collections · 7 auth routes · 7 AI routes · migration guide · environment vars</p>
               </div>
             </Link>
           </div>
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Sliplane Backend</h3>
-            <p className="text-gray-500 text-xs -mt-2">Configure the connection to your Node.js backend hosted on Sliplane.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Sliplane Backend</h3>
+            <p className="text-muted text-xs -mt-2">Configure the connection to your Node.js backend hosted on Sliplane.</p>
             <div>
               <label className={labelCls}>Backend Base URL</label>
               <input className={inputCls} placeholder="https://your-app.sliplane.app" value={cfg.backendUrl}
                 onChange={e => setCfg(p => ({ ...p, backendUrl: e.target.value.trim() }))} />
-              <p className="text-gray-500 text-xs mt-1">All API calls will be prefixed with this URL.</p>
+              <p className="text-muted text-xs mt-1">All API calls will be prefixed with this URL.</p>
             </div>
             <div>
               <label className={labelCls}>API Key</label>
               <input className={inputCls} type="password" placeholder="sk_..." value={cfg.apiKey}
                 onChange={e => setCfg(p => ({ ...p, apiKey: e.target.value }))} />
-              <p className="text-gray-500 text-xs mt-1">Sent as <span className="font-mono text-purple-400">Authorization: Bearer</span> header on every API request.</p>
+              <p className="text-muted text-xs mt-1">Sent as <span className="font-mono text-purple-400">Authorization: Bearer</span> header on every API request.</p>
             </div>
 
-            <div className={`flex items-center gap-3 rounded-xl p-3 border ${cfg.backendUrl ? "bg-green-500/10 border-green-500/30" : "bg-gray-800/40 border-gray-700"}`}>
+            <div className={`flex items-center gap-3 rounded-xl p-3 border ${cfg.backendUrl ? "bg-green-500/10 border-green-500/30" : "bg-card-2/40 border-line"}`}>
               <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cfg.backendUrl ? "bg-green-400 animate-pulse" : "bg-gray-600"}`} />
               <div>
-                <p className={`text-xs font-semibold ${cfg.backendUrl ? "text-green-300" : "text-gray-500"}`}>
+                <p className={`text-xs font-semibold ${cfg.backendUrl ? "text-green-300" : "text-muted"}`}>
                   {cfg.backendUrl ? "Backend URL configured" : "Not configured"}
                 </p>
-                <p className="text-gray-600 text-xs">{cfg.backendUrl || "Enter a URL above to connect"}</p>
+                <p className="text-muted text-xs">{cfg.backendUrl || "Enter a URL above to connect"}</p>
               </div>
             </div>
 
@@ -4026,21 +4025,21 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">MongoDB Atlas</h3>
-            <p className="text-gray-500 text-xs -mt-2">Your MongoDB connection string lives on the Sliplane server as an environment variable — never on the frontend. Use this panel to verify the connection status once your backend is live.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">MongoDB Atlas</h3>
+            <p className="text-muted text-xs -mt-2">Your MongoDB connection string lives on the Sliplane server as an environment variable — never on the frontend. Use this panel to verify the connection status once your backend is live.</p>
 
-            <div className={`rounded-xl p-4 border ${cfg.mongoDbConnected ? "bg-green-500/10 border-green-500/30" : "bg-gray-800/40 border-gray-700"}`}>
+            <div className={`rounded-xl p-4 border ${cfg.mongoDbConnected ? "bg-green-500/10 border-green-500/30" : "bg-card-2/40 border-line"}`}>
               <div className="flex items-center gap-3 mb-3">
                 <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cfg.mongoDbConnected ? "bg-green-400 animate-pulse" : "bg-gray-600"}`} />
-                <p className={`text-sm font-semibold ${cfg.mongoDbConnected ? "text-green-300" : "text-gray-400"}`}>
+                <p className={`text-sm font-semibold ${cfg.mongoDbConnected ? "text-green-300" : "text-muted"}`}>
                   {cfg.mongoDbConnected ? "Connected to MongoDB Atlas" : "Not connected"}
                 </p>
               </div>
-              <p className="text-gray-500 text-xs">Status is reported by your backend at <span className="font-mono text-purple-400">{cfg.backendUrl || "<backend-url>"}/api/health</span></p>
+              <p className="text-muted text-xs">Status is reported by your backend at <span className="font-mono text-purple-400">{cfg.backendUrl || "<backend-url>"}/api/health</span></p>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Setup Checklist</p>
+              <p className="text-xs font-bold text-muted uppercase tracking-wider">Setup Checklist</p>
               {[
                 [!!cfg.backendUrl,         "Backend URL configured"],
                 [!!cfg.apiKey,             "API key set"],
@@ -4048,10 +4047,10 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
                 [cfg.mongoDbConnected,     "MongoDB Atlas connected"],
               ].map(([done, label], i) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-xs shrink-0 ${done ? "bg-green-500/20 text-green-400" : "bg-gray-700 text-gray-500"}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-xs shrink-0 ${done ? "bg-green-500/20 text-green-400" : "bg-card-2 text-muted"}`}>
                     {done ? "✓" : "○"}
                   </span>
-                  <span className={done ? "text-gray-300" : "text-gray-500"}>{label as string}</span>
+                  <span className={done ? "text-foreground" : "text-muted"}>{label as string}</span>
                 </div>
               ))}
             </div>
@@ -4073,18 +4072,18 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {tab === "security" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Depot Access Control</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Depot Access Control</h3>
             <div>
               <label className={labelCls}>Depot Code TTL (hours)</label>
               <input className={inputCls} type="number" min={1} max={24} value={cfg.depotCodeTtlHours}
                 onChange={e => setCfg(p => ({ ...p, depotCodeTtlHours: parseInt(e.target.value) || 3 }))} />
-              <p className="text-gray-500 text-xs mt-1">How long a generated depot access code stays valid.</p>
+              <p className="text-muted text-xs mt-1">How long a generated depot access code stays valid.</p>
             </div>
             <div>
               <label className={labelCls}>Depot Code Secret Key</label>
               <input className={inputCls} type="text" value={cfg.depotCodeSecret}
                 onChange={e => setCfg(p => ({ ...p, depotCodeSecret: e.target.value }))} />
-              <p className="text-gray-500 text-xs mt-1">Secret seed used to generate time-based depot codes. Changing this invalidates all active codes.</p>
+              <p className="text-muted text-xs mt-1">Secret seed used to generate time-based depot codes. Changing this invalidates all active codes.</p>
             </div>
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3">
               <p className="text-xs text-yellow-400 font-semibold">⚠ Changing the secret key will immediately invalidate all active depot access codes. Station managers will need new codes.</p>
@@ -4093,21 +4092,21 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Platform Access</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Platform Access</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-2 border-b border-gray-800/50">
+              <div className="flex items-center justify-between py-2 border-b border-line/50">
                 <div>
-                  <p className="text-gray-300 text-sm">New User Registrations</p>
-                  <p className="text-gray-500 text-xs">Allow the public to sign up</p>
+                  <p className="text-foreground text-sm">New User Registrations</p>
+                  <p className="text-muted text-xs">Allow the public to sign up</p>
                 </div>
                 <button onClick={() => saveSettings({ allowNewRegistrations: !cfg.allowNewRegistrations })}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${cfg.allowNewRegistrations ? "bg-green-600" : "bg-gray-700"}`}>
+                  className={`relative w-10 h-5 rounded-full transition-colors ${cfg.allowNewRegistrations ? "bg-green-600" : "bg-card-2"}`}>
                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${cfg.allowNewRegistrations ? "left-5" : "left-0.5"}`} />
                 </button>
               </div>
 
-              <div className="rounded-xl border border-gray-800 overflow-hidden">
-                <div className="px-4 py-2 border-b border-gray-800 text-xs text-gray-500 uppercase font-semibold bg-gray-900/30">Data Storage</div>
+              <div className="rounded-xl border border-line overflow-hidden">
+                <div className="px-4 py-2 border-b border-line text-xs text-muted uppercase font-semibold bg-card/30">Data Storage</div>
                 <div className="px-4 py-3 text-xs text-green-400 bg-green-500/5">
                   All platform data is stored in MongoDB Atlas. No client-side localStorage is used for operational data.
                 </div>
@@ -4121,8 +4120,8 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {tab === "maintenance" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Data Management</h3>
-            <p className="text-gray-500 text-xs -mt-2">These actions clear data stored in the browser. Use with caution — most are irreversible.</p>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Data Management</h3>
+            <p className="text-muted text-xs -mt-2">These actions clear data stored in the browser. Use with caution — most are irreversible.</p>
             <div className="space-y-3">
               {([
                 ["clear_activity",      "Clear Activity Log",         "Removes all station manager activity records from sm_activity_log.",          "bg-yellow-600 hover:bg-yellow-700"],
@@ -4130,13 +4129,13 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
                 ["clear_notifications", "Clear All Notifications",    "Removes bulk dealer and customer notification queues.",                        "bg-blue-600 hover:bg-blue-700"],
                 ["reset_stock",         "Reset Stock Data",           "Clears dealer_stock, sm_depot_stock, sm_global_stock back to system defaults.","bg-red-600 hover:bg-red-700"],
               ] as [string, string, string, string][]).map(([action, label, desc, btnCls]) => (
-                <div key={action} className="flex items-start justify-between gap-4 py-3 border-b border-gray-800/50">
+                <div key={action} className="flex items-start justify-between gap-4 py-3 border-b border-line/50">
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-200 text-sm font-semibold">{label}</p>
-                    <p className="text-gray-500 text-xs mt-0.5">{desc}</p>
+                    <p className="text-foreground text-sm font-semibold">{label}</p>
+                    <p className="text-muted text-xs mt-0.5">{desc}</p>
                   </div>
                   <button onClick={() => setMaintConfirm(action)}
-                    className={`shrink-0 px-4 py-1.5 ${btnCls} text-white text-xs font-semibold rounded-lg transition`}>
+                    className={`shrink-0 px-4 py-1.5 ${btnCls} text-foreground text-xs font-semibold rounded-lg transition`}>
                     Run
                   </button>
                 </div>
@@ -4145,10 +4144,10 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-white font-semibold text-sm border-b border-gray-800 pb-3">Storage Overview</h3>
+            <h3 className="text-foreground font-semibold text-sm border-b border-line pb-3">Storage Overview</h3>
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
               <p className="text-xs text-green-400 font-semibold mb-1">Database Storage Active</p>
-              <p className="text-xs text-gray-400">All platform data (transactions, users, supply requests, trucks, depots, notifications) is stored in MongoDB Atlas. No localStorage is used for operational data.</p>
+              <p className="text-xs text-muted">All platform data (transactions, users, supply requests, trucks, depots, notifications) is stored in MongoDB Atlas. No localStorage is used for operational data.</p>
             </div>
           </div>
         </div>
@@ -4157,10 +4156,10 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
       {/* Maintenance Confirm Modal */}
       {maintConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4">
-            <h3 className="text-white font-bold text-base">Confirm Action</h3>
-            <p className="text-gray-400 text-sm">
-              Are you sure you want to <span className="text-white font-semibold">
+          <div className="bg-card border border-line rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+            <h3 className="text-foreground font-bold text-base">Confirm Action</h3>
+            <p className="text-muted text-sm">
+              Are you sure you want to <span className="text-foreground font-semibold">
                 {maintConfirm === "clear_activity" ? "clear the activity log" :
                  maintConfirm === "clear_transactions" ? "clear all transaction history" :
                  maintConfirm === "clear_notifications" ? "clear all notifications" :
@@ -4168,7 +4167,7 @@ function SectionSettings({ setToast, adminName, setAdminName }: {
               </span>? This cannot be undone.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setMaintConfirm(null)} className="flex-1 px-4 py-2 border border-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-800">Cancel</button>
+              <button onClick={() => setMaintConfirm(null)} className="flex-1 px-4 py-2 border border-line text-foreground rounded-lg text-sm hover:bg-card-2">Cancel</button>
               <button onClick={() => runMaintenance(maintConfirm)} className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">Confirm</button>
             </div>
           </div>
@@ -4250,9 +4249,9 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen relative" style={{ backgroundImage: `url(${tower.src})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}>
+    <div className="min-h-screen relative">
       <Head><title>Admin Dashboard | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/72" />
+      <div className="fixed inset-0 bg-background" />
 
       <div className="relative z-10 flex h-screen">
 
@@ -4265,15 +4264,15 @@ export default function AdminDashboard() {
         )}
 
         {/* Sidebar */}
-        <aside className={`fixed md:relative inset-y-0 left-0 z-40 w-56 flex flex-col bg-black/80 md:bg-black/50 backdrop-blur-md border-r border-gray-800 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
-          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+        <aside className={`fixed md:relative inset-y-0 left-0 z-40 w-56 flex flex-col bg-card md:bg-card backdrop-blur-md border-r border-line transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+          <div className="px-5 py-4 border-b border-line flex items-center justify-between">
             <div>
               <p className="text-purple-400 font-bold text-lg tracking-wide">e-Nergy</p>
-              <p className="text-gray-500 text-xs">Admin Portal</p>
+              <p className="text-muted text-xs">Admin Portal</p>
             </div>
             {/* Close button — mobile only */}
             <button
-              className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition"
+              className="md:hidden p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-card-2 transition"
               onClick={() => setSidebarOpen(false)}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -4285,21 +4284,21 @@ export default function AdminDashboard() {
           <nav className="flex-1 overflow-y-auto py-3">
             {NAV_ITEMS.map(item => (
               <button key={item.id} onClick={() => { setActive(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-5 py-3 text-sm transition-colors ${active === item.id ? "bg-purple-600/25 text-purple-300 border-r-2 border-purple-500" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}>
+                className={`w-full flex items-center gap-3 px-5 py-3 text-sm transition-colors ${active === item.id ? "bg-purple-600/25 text-purple-300 border-r-2 border-purple-500" : "text-muted hover:bg-card-2 hover:text-white"}`}>
                 <span className="text-base">{item.icon}</span>
                 <span>{item.id}</span>
               </button>
             ))}
           </nav>
 
-          <div className="p-4 border-t border-gray-800">
+          <div className="p-4 border-t border-line">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {adminName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-white text-xs font-medium truncate">{adminName}</p>
-                <p className="text-gray-500 text-xs">Administrator</p>
+                <p className="text-foreground text-xs font-medium truncate">{adminName}</p>
+                <p className="text-muted text-xs">Administrator</p>
               </div>
             </div>
             <button onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"))}
@@ -4311,10 +4310,10 @@ export default function AdminDashboard() {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden">
-          <header className="h-14 shrink-0 flex items-center gap-3 px-4 md:px-6 bg-black/40 backdrop-blur-md border-b border-gray-800">
+          <header className="h-14 shrink-0 flex items-center gap-3 px-4 md:px-6 bg-card backdrop-blur-md border-b border-line">
             {/* Hamburger — mobile only */}
             <button
-              className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition shrink-0"
+              className="md:hidden p-2 rounded-lg text-muted hover:text-foreground hover:bg-card-2 transition shrink-0"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
             >
@@ -4322,9 +4321,9 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-white font-semibold flex-1 truncate">{active}</h1>
+            <h1 className="text-foreground font-semibold flex-1 truncate">{active}</h1>
             <div className="flex items-center gap-3 shrink-0">
-              <span className="hidden sm:block text-gray-400 text-sm">
+              <span className="hidden sm:block text-muted text-sm">
                 {new Date().toLocaleDateString("en-NG", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
               </span>
               <span className="flex items-center gap-1.5 text-green-400 text-xs">

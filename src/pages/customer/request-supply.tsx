@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 import { useDepot, ProductKey } from "../../context/DepotContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -28,13 +27,13 @@ const PRODUCTS = [
 ];
 
 const PRIORITIES = [
-  { value: "normal",    label: "Normal",    desc: "Standard 3–5 day lead time",    color: "text-gray-300"   },
+  { value: "normal",    label: "Normal",    desc: "Standard 3–5 day lead time",    color: "text-foreground"   },
   { value: "urgent",    label: "Urgent",    desc: "48-hour turnaround requested",  color: "text-yellow-400" },
   { value: "emergency", label: "Emergency", desc: "Same-day / critical shortage",  color: "text-red-400"    },
 ];
 
-const inputCls  = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
-const selectCls = "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
+const inputCls  = "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground placeholder-muted focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
+const selectCls = "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -87,7 +86,7 @@ export default function RequestSupply() {
   }, [router]);
 
   if (!user) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
     </div>
   );
@@ -201,22 +200,22 @@ export default function RequestSupply() {
   if (submitted) {
     return (
       <div
-        className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-        style={{ backgroundImage: `url(${tower.src})` }}
+        className="min-h-screen text-foreground"
+
       >
-        <div className="fixed inset-0 bg-black/65 z-0" />
+        <div className="fixed inset-0 bg-background z-0" />
         <CustomerNavigation user={user} />
         <div className="relative z-10 pt-16 md:pl-64 min-h-screen flex items-center justify-center px-4">
           <div className="w-full max-w-md text-center">
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-2xl p-8 space-y-5">
+            <div className="bg-card backdrop-blur-md border border-line rounded-2xl p-8 space-y-5">
               <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center mx-auto">
                 <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Request Submitted!</h2>
-                <p className="text-gray-400 text-sm mt-1">Your supply request has been received and is being processed.</p>
+                <h2 className="text-2xl font-bold text-foreground">Request Submitted!</h2>
+                <p className="text-muted text-sm mt-1">Your supply request has been received and is being processed.</p>
               </div>
               <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 space-y-2 text-left">
                 {[
@@ -230,8 +229,8 @@ export default function RequestSupply() {
                   ...(urgentFee > 0 ? [{ label: "Urgent Delivery Fee", value: `₦${urgentFee.toLocaleString()}` }] : []),
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-sm border-b border-orange-500/10 pb-1.5 last:border-0 last:pb-0">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="text-white font-semibold text-right">{value}</span>
+                    <span className="text-muted">{label}</span>
+                    <span className="text-foreground font-semibold text-right">{value}</span>
                   </div>
                 ))}
               </div>
@@ -241,7 +240,7 @@ export default function RequestSupply() {
                     setSubmitted(false);
                     setForm({ stationId: "", stationName: "", product: "", depot: "", quantity: "", priority: "normal", deliveryDate: "", notes: "" });
                   }}
-                  className="flex-1 py-2.5 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 text-sm font-semibold rounded-lg transition"
+                  className="flex-1 py-2.5 border border-line text-foreground hover:text-foreground hover:border-line text-sm font-semibold rounded-lg transition"
                 >
                   New Request
                 </button>
@@ -264,11 +263,11 @@ export default function RequestSupply() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-      style={{ backgroundImage: `url(${tower.src})` }}
+      className="min-h-screen text-foreground"
+
     >
       <Head><title>Request Supply | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
       <CustomerNavigation user={user} />
 
       <div className="relative z-10 pt-16 md:pl-64 min-h-screen">
@@ -278,7 +277,7 @@ export default function RequestSupply() {
           <div className="flex items-center gap-4 mb-6">
             <Link
               href="/customer/station-manager"
-              className="flex items-center gap-1.5 text-gray-400 hover:text-orange-400 text-sm font-semibold transition"
+              className="flex items-center gap-1.5 text-muted hover:text-orange-400 text-sm font-semibold transition"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -288,22 +287,22 @@ export default function RequestSupply() {
           </div>
 
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-1">Request Supply</h1>
-            <p className="text-gray-400 text-sm">Submit a fuel supply request from a depot to your station</p>
+            <h1 className="text-3xl font-bold text-foreground mb-1">Request Supply</h1>
+            <p className="text-muted text-sm">Submit a fuel supply request from a depot to your station</p>
           </div>
 
           <div className="space-y-5">
 
             {/* Station & Product */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line bg-orange-500/5">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Station & Product</p>
               </div>
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {/* Station dropdown */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Receiving Station <span className="text-red-400">*</span>
                   </label>
                   <select
@@ -325,7 +324,7 @@ export default function RequestSupply() {
 
                 {/* Product */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Product <span className="text-red-400">*</span>
                   </label>
                   <select className={selectCls} value={form.product} onChange={(e) => set("product", e.target.value)}>
@@ -346,15 +345,15 @@ export default function RequestSupply() {
             </div>
 
             {/* Depot & Quantity */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line bg-orange-500/5">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Depot & Quantity</p>
               </div>
               <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {/* Source depot dropdown — from DepotContext */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Source Depot <span className="text-red-400">*</span>
                   </label>
                   <select className={selectCls} value={form.depot} onChange={(e) => set("depot", e.target.value)}>
@@ -368,11 +367,11 @@ export default function RequestSupply() {
 
                 {/* Live depot stock info from DepotContext */}
                 {form.depot && (
-                  <div className="sm:col-span-2 bg-black/30 border border-gray-700/60 rounded-xl overflow-hidden">
-                    <div className="px-4 py-2 border-b border-gray-700/40 bg-orange-500/5">
+                  <div className="sm:col-span-2 bg-card border border-line/60 rounded-xl overflow-hidden">
+                    <div className="px-4 py-2 border-b border-line/40 bg-orange-500/5">
                       <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Live Stock at {form.depot}</p>
                     </div>
-                    <div className="grid grid-cols-3 divide-x divide-gray-700/40">
+                    <div className="grid grid-cols-3 divide-x divide-line/40">
                       {(["PMS", "AGO", "ATK"] as ProductKey[]).map((pk) => {
                         const d = depotProducts[form.depot]?.[pk];
                         if (!d) return null;
@@ -391,16 +390,16 @@ export default function RequestSupply() {
                               }`}>{pk}</span>
                               {isSelected && <span className="text-xs text-orange-400 font-semibold">Selected</span>}
                             </div>
-                            <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-1.5">
+                            <div className="h-1.5 bg-card-2 rounded-full overflow-hidden mb-1.5">
                               <div className={`h-full ${barColor} rounded-full`} style={{ width: `${d.level}%` }} />
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-400">{d.level}% full</span>
+                              <span className="text-xs text-muted">{d.level}% full</span>
                               <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${statusColor}`}>
                                 {d.status}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">{d.price}/L</p>
+                            <p className="text-xs text-muted mt-1">{d.price}/L</p>
                           </div>
                         );
                       })}
@@ -420,7 +419,7 @@ export default function RequestSupply() {
 
                 {/* Quantity */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Quantity (Litres) <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
@@ -433,19 +432,19 @@ export default function RequestSupply() {
                       value={form.quantity}
                       onChange={(e) => set("quantity", e.target.value)}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-semibold">L</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted font-semibold">L</span>
                   </div>
                   {errors.quantity
                     ? <p className="text-xs text-red-400 mt-1">{errors.quantity}</p>
                     : form.quantity && !isNaN(Number(form.quantity))
-                      ? <p className="text-xs text-gray-500 mt-1">{Number(form.quantity).toLocaleString()} litres</p>
+                      ? <p className="text-xs text-muted mt-1">{Number(form.quantity).toLocaleString()} litres</p>
                       : null
                   }
                 </div>
 
                 {/* Preferred delivery date */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Preferred Delivery Date <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -462,15 +461,15 @@ export default function RequestSupply() {
             </div>
 
             {/* Priority & Notes */}
-            <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800 bg-orange-500/5">
+            <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-line bg-orange-500/5">
                 <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Priority & Notes</p>
               </div>
               <div className="p-5 space-y-4">
 
                 {/* Priority selector */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
                     Request Priority
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -482,7 +481,7 @@ export default function RequestSupply() {
                         className={`rounded-xl border p-3 text-left transition ${
                           form.priority === p.value
                             ? "border-orange-500 bg-orange-500/10"
-                            : "border-gray-700 bg-gray-900/40 hover:border-gray-600"
+                            : "border-line bg-card/40 hover:border-line"
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1">
@@ -490,11 +489,11 @@ export default function RequestSupply() {
                             p.value === "emergency" ? "bg-red-500" :
                             p.value === "urgent"    ? "bg-yellow-500" : "bg-gray-500"
                           } ${form.priority === p.value ? "ring-2 ring-offset-1 ring-offset-gray-900 ring-orange-500" : ""}`} />
-                          <span className={`text-sm font-bold ${form.priority === p.value ? p.color : "text-gray-300"}`}>
+                          <span className={`text-sm font-bold ${form.priority === p.value ? p.color : "text-foreground"}`}>
                             {p.label}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">{p.desc}</p>
+                        <p className="text-xs text-muted">{p.desc}</p>
                       </button>
                     ))}
                   </div>
@@ -502,7 +501,7 @@ export default function RequestSupply() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
                     Additional Notes / Instructions
                   </label>
                   <textarea
@@ -534,8 +533,8 @@ export default function RequestSupply() {
                     ...(urgentFee > 0 ? [{ label: "Urgent Fee", value: `₦${urgentFee.toLocaleString()}` }] : []),
                   ].map(({ label, value }) => (
                     <div key={label}>
-                      <p className="text-xs text-gray-500">{label}</p>
-                      <p className="font-semibold text-white truncate">{value}</p>
+                      <p className="text-xs text-muted">{label}</p>
+                      <p className="font-semibold text-foreground truncate">{value}</p>
                     </div>
                   ))}
                 </div>
@@ -546,7 +545,7 @@ export default function RequestSupply() {
             <div className="flex gap-3">
               <Link
                 href="/customer/station-manager"
-                className="px-5 py-3 border border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 text-sm font-semibold rounded-lg transition text-center"
+                className="px-5 py-3 border border-line text-muted hover:text-foreground hover:border-line text-sm font-semibold rounded-lg transition text-center"
               >
                 Cancel
               </Link>

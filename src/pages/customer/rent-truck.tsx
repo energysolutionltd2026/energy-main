@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import { getLgas } from "nigeria-state-lga-data";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 import { useDepot } from "@/context/DepotContext";
 
 // ─── Geo Zones & Pricing ─────────────────────────────────────────────────────
@@ -35,9 +34,9 @@ const DEFAULT_statePrices: Record<string, number> = {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const inputClass =
-  "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
+  "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground placeholder-muted focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
 const selectClass =
-  "w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
+  "w-full bg-card/60 border border-line rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm";
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -78,7 +77,7 @@ export default function CustomerRentTruck() {
   }, [router]);
 
   if (!user) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
     </div>
   );
@@ -162,9 +161,9 @@ export default function CustomerRentTruck() {
   const STEP_LABELS = ["Truck Details", "Destination", "Your Details", "Payment"] as const;
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white" style={{ backgroundImage: `url(${tower.src})` }}>
+    <div className="min-h-screen text-foreground">
       <Head><title>Rent a Truck | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
       <CustomerNavigation user={user} />
 
       <div className="relative z-10 pt-16 md:pl-64 min-h-screen">
@@ -172,8 +171,8 @@ export default function CustomerRentTruck() {
 
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white">Rent a Truck</h1>
-            <p className="text-gray-400 text-sm mt-1">Book a certified petroleum tanker for your delivery.</p>
+            <h1 className="text-3xl font-bold text-foreground">Rent a Truck</h1>
+            <p className="text-muted text-sm mt-1">Book a certified petroleum tanker for your delivery.</p>
           </div>
 
           {/* Step Indicator */}
@@ -187,12 +186,12 @@ export default function CustomerRentTruck() {
                   <React.Fragment key={label}>
                     <div className="flex flex-col items-center gap-1">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                        ${done ? "bg-green-500 text-white" : active ? "bg-orange-500 text-white ring-4 ring-orange-500/30" : "bg-gray-700 text-gray-400"}`}>
+                        ${done ? "bg-green-500 text-white" : active ? "bg-orange-500 text-white ring-4 ring-orange-500/30" : "bg-card-2 text-muted"}`}>
                         {done ? "✓" : num}
                       </div>
-                      <span className={`text-[10px] font-semibold whitespace-nowrap ${active ? "text-orange-400" : done ? "text-green-400" : "text-gray-500"}`}>{label}</span>
+                      <span className={`text-[10px] font-semibold whitespace-nowrap ${active ? "text-orange-400" : done ? "text-green-400" : "text-muted"}`}>{label}</span>
                     </div>
-                    {i < 2 && <div className={`flex-1 max-w-16 h-px mb-4 mx-1 ${done ? "bg-green-500" : "bg-gray-700"}`} />}
+                    {i < 2 && <div className={`flex-1 max-w-16 h-px mb-4 mx-1 ${done ? "bg-green-500" : "bg-card-2"}`} />}
                   </React.Fragment>
                 );
               })}
@@ -202,18 +201,18 @@ export default function CustomerRentTruck() {
           {/* ── STEP 1: Truck Details ── */}
           {rentStep === 1 && (
             <div className="max-w-2xl space-y-4">
-              <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-6 space-y-4">
-                <h2 className="font-bold text-white text-base">Truck Details</h2>
+              <div className="bg-card backdrop-blur-md border border-line rounded-xl p-6 space-y-4">
+                <h2 className="font-bold text-foreground text-base">Truck Details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Loading Depot</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Loading Depot</label>
                     <select className={selectClass} value={rentBook.depot} onChange={e => setRentBook(p => ({ ...p, depot: e.target.value }))}>
                       <option value="">— Select Depot —</option>
                       {depots.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Tank Capacity</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Tank Capacity</label>
                     <select className={selectClass} value={rentBook.capacity} onChange={e => setRentBook(p => ({ ...p, capacity: e.target.value }))}>
                       <option value="">Any Capacity</option>
                       <option value="33,000">33,000 Litres</option>
@@ -223,7 +222,7 @@ export default function CustomerRentTruck() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Vehicle Type</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Vehicle Type</label>
                     <select className={selectClass} value={rentBook.vehicleType} onChange={e => setRentBook(p => ({ ...p, vehicleType: e.target.value }))}>
                       <option value="">Any Type</option>
                       <option value="Articulated Tanker">Articulated Tanker</option>
@@ -232,7 +231,7 @@ export default function CustomerRentTruck() {
                     </select>
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Product Type</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Product Type</label>
                     <select className={selectClass} value={rentBook.productType} onChange={e => setRentBook(p => ({ ...p, productType: e.target.value }))}>
                       <option value="">Any Product</option>
                       <option value="PMS">PMS (Petrol)</option>
@@ -255,20 +254,20 @@ export default function CustomerRentTruck() {
           {/* ── STEP 2: Destination & Price ── */}
           {rentStep === 2 && (
             <div className="max-w-2xl space-y-4">
-              <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-6 space-y-5">
-                <h2 className="font-bold text-white text-base">Select Destination</h2>
+              <div className="bg-card backdrop-blur-md border border-line rounded-xl p-6 space-y-5">
+                <h2 className="font-bold text-foreground text-base">Select Destination</h2>
 
                 {/* Geo Zone Cards */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Geopolitical Zone</p>
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Geopolitical Zone</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {GEO_ZONES.map(z => (
                       <button key={z.name} type="button"
                         onClick={() => setRentBook(p => ({ ...p, zone: z.name, state: "", lga: "" }))}
                         className={`px-3 py-3 rounded-xl border-2 text-left transition-all
-                          ${rentBook.zone === z.name ? "border-orange-500 bg-orange-500/10" : "border-gray-700 hover:border-orange-500/50"}`}>
-                        <p className={`text-sm font-bold ${rentBook.zone === z.name ? "text-orange-400" : "text-gray-300"}`}>{z.name}</p>
-                        <p className="text-[10px] text-gray-500 font-normal mt-0.5">{z.states.length} states</p>
+                          ${rentBook.zone === z.name ? "border-orange-500 bg-orange-500/10" : "border-line hover:border-orange-500/50"}`}>
+                        <p className={`text-sm font-bold ${rentBook.zone === z.name ? "text-orange-400" : "text-foreground"}`}>{z.name}</p>
+                        <p className="text-[10px] text-muted font-normal mt-0.5">{z.states.length} states</p>
                       </button>
                     ))}
                   </div>
@@ -277,13 +276,13 @@ export default function CustomerRentTruck() {
                 {/* State Pills */}
                 {rentBook.zone && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Select State</p>
+                    <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Select State</p>
                     <div className="flex flex-wrap gap-2">
                       {GEO_ZONES.find(z => z.name === rentBook.zone)?.states.map(st => (
                         <button key={st} type="button"
                           onClick={() => setRentBook(p => ({ ...p, state: st, lga: "" }))}
                           className={`px-3 py-2 rounded-lg border-2 text-xs font-semibold transition-all
-                            ${rentBook.state === st ? "border-orange-500 bg-orange-500 text-white" : "border-gray-700 hover:border-orange-500/50 text-gray-300"}`}>
+                            ${rentBook.state === st ? "border-orange-500 bg-orange-500 text-white" : "border-line hover:border-orange-500/50 text-foreground"}`}>
                           {st}
                           {statePrices[st] && (
                             <span className={`block text-[10px] font-bold mt-0.5 ${rentBook.state === st ? "text-orange-100" : "text-orange-500"}`}>
@@ -299,7 +298,7 @@ export default function CustomerRentTruck() {
                 {/* LGA */}
                 {rentBook.state && (
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Select LGA</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Select LGA</label>
                     <select className={selectClass} value={rentBook.lga} onChange={e => setRentBook(p => ({ ...p, lga: e.target.value }))}>
                       <option value="">— Select LGA —</option>
                       {getLgas(rentBook.state).map((l: string) => <option key={l} value={l}>{l}</option>)}
@@ -310,15 +309,15 @@ export default function CustomerRentTruck() {
                 {/* Price Banner */}
                 {rentBook.state && statePrices[rentBook.state] && (
                   <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Estimated Trip Price</p>
+                    <p className="text-xs text-muted uppercase tracking-wider font-semibold mb-1">Estimated Trip Price</p>
                     <p className="text-3xl font-black text-orange-400">₦{statePrices[rentBook.state].toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-1">Base rate for {rentBook.state} ({rentBook.zone}) · Final price confirmed after booking.</p>
+                    <p className="text-xs text-muted mt-1">Base rate for {rentBook.state} ({rentBook.zone}) · Final price confirmed after booking.</p>
                   </div>
                 )}
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setRentStep(1)} className="flex-1 py-3 border-2 border-gray-700 text-gray-400 font-semibold rounded-xl hover:bg-gray-800/50 transition text-sm">← Back</button>
+                <button onClick={() => setRentStep(1)} className="flex-1 py-3 border-2 border-line text-muted font-semibold rounded-xl hover:bg-card-2/50 transition text-sm">← Back</button>
                 <button
                   onClick={() => { if (!rentBook.state) { alert("Please select a destination state"); return; } setRentStep(3); }}
                   className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition shadow-lg shadow-orange-500/20"
@@ -332,31 +331,31 @@ export default function CustomerRentTruck() {
           {/* ── STEP 3: Your Details ── */}
           {rentStep === 3 && (
             <div className="max-w-2xl space-y-4">
-              <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-6 space-y-4">
-                <h2 className="font-bold text-white text-base">Your Details</h2>
+              <div className="bg-card backdrop-blur-md border border-line rounded-xl p-6 space-y-4">
+                <h2 className="font-bold text-foreground text-base">Your Details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Full Name</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Full Name</label>
                     <input type="text" className={inputClass} placeholder="Enter your full name" value={rentBook.fullName}
                       onChange={e => setRentBook(p => ({ ...p, fullName: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Phone Number</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Phone Number</label>
                     <input type="tel" className={inputClass} placeholder="+234 xxx xxx xxxx" value={rentBook.phone}
                       onChange={e => setRentBook(p => ({ ...p, phone: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Email Address</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Email Address</label>
                     <input type="email" className={inputClass} placeholder="you@example.com" value={rentBook.email}
                       onChange={e => setRentBook(p => ({ ...p, email: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Company / Organisation (optional)</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Company / Organisation (optional)</label>
                     <input type="text" className={inputClass} placeholder="e.g. Sunrise Filling Station" value={rentBook.company}
                       onChange={e => setRentBook(p => ({ ...p, company: e.target.value }))} />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Additional Notes (optional)</label>
+                    <label className="block text-xs font-semibold text-muted uppercase mb-2">Additional Notes (optional)</label>
                     <textarea className={inputClass} rows={3} placeholder="Any special requirements..." value={rentBook.notes}
                       onChange={e => setRentBook(p => ({ ...p, notes: e.target.value }))} />
                   </div>
@@ -366,8 +365,8 @@ export default function CustomerRentTruck() {
                 {rentBook.state && (
                   <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Trip Price</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{rentBook.state} · {rentBook.zone}</p>
+                      <p className="text-xs text-muted uppercase tracking-wider font-semibold">Trip Price</p>
+                      <p className="text-xs text-muted mt-0.5">{rentBook.state} · {rentBook.zone}</p>
                     </div>
                     <p className="text-2xl font-black text-orange-400">₦{price.toLocaleString()}</p>
                   </div>
@@ -375,7 +374,7 @@ export default function CustomerRentTruck() {
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setRentStep(2)} className="flex-1 py-3 border-2 border-gray-700 text-gray-400 font-semibold rounded-xl hover:bg-gray-800/50 transition text-sm">← Back</button>
+                <button onClick={() => setRentStep(2)} className="flex-1 py-3 border-2 border-line text-muted font-semibold rounded-xl hover:bg-card-2/50 transition text-sm">← Back</button>
                 <button
                   onClick={() => {
                     if (!rentBook.fullName || !rentBook.phone || !rentBook.email) { alert("Please fill in your name, phone and email"); return; }
@@ -393,23 +392,23 @@ export default function CustomerRentTruck() {
           {rentStep === 4 && !confirmedTxn && (
             <div className="max-w-2xl space-y-4">
               {/* Amount Due */}
-              <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-5 space-y-3">
-                <h2 className="font-bold text-white text-base mb-2">Payment</h2>
+              <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5 space-y-3">
+                <h2 className="font-bold text-foreground text-base mb-2">Payment</h2>
                 <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between flex-wrap gap-3">
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Total Amount Due</p>
+                    <p className="text-xs text-muted uppercase tracking-wider font-semibold">Total Amount Due</p>
                     <p className="text-3xl font-black text-orange-400">₦{price.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{rentBook.state}{rentBook.lga ? ` · ${rentBook.lga}` : ""}</p>
+                    <p className="text-xs text-muted mt-0.5">{rentBook.state}{rentBook.lga ? ` · ${rentBook.lga}` : ""}</p>
                   </div>
-                  <div className="text-right text-xs text-gray-400 space-y-0.5">
-                    <p className="font-semibold text-gray-300">{rentBook.fullName}</p>
+                  <div className="text-right text-xs text-muted space-y-0.5">
+                    <p className="font-semibold text-foreground">{rentBook.fullName}</p>
                     <p>{rentBook.depot}</p>
                     <p>{rentBook.zone}</p>
                   </div>
                 </div>
 
                 {/* Payment Methods */}
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2">Select Payment Method</p>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wider mt-2">Select Payment Method</p>
                 <div className="space-y-2">
                   {([
                     { id: "bank_transfer", label: "Bank Transfer",      desc: "Direct bank transfer to our account",   icon: "🏦", enabled: enabledMethods.enableBankTransfer },
@@ -421,15 +420,15 @@ export default function CustomerRentTruck() {
                     <button key={method.id} type="button"
                       onClick={() => setRentBook(p => ({ ...p, paymentMethod: method.id }))}
                       className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl border-2 text-left transition-all
-                        ${rentBook.paymentMethod === method.id ? "border-orange-500 bg-orange-500/10" : "border-gray-700 hover:border-gray-600"}`}>
+                        ${rentBook.paymentMethod === method.id ? "border-orange-500 bg-orange-500/10" : "border-line hover:border-line"}`}>
                       <span className="text-2xl">{method.icon}</span>
                       <div className="flex-1">
-                        <p className={`text-sm font-bold ${rentBook.paymentMethod === method.id ? "text-orange-400" : "text-gray-300"}`}>{method.label}</p>
-                        <p className="text-xs text-gray-500">{method.desc}</p>
+                        <p className={`text-sm font-bold ${rentBook.paymentMethod === method.id ? "text-orange-400" : "text-foreground"}`}>{method.label}</p>
+                        <p className="text-xs text-muted">{method.desc}</p>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0
-                        ${rentBook.paymentMethod === method.id ? "border-orange-500 bg-orange-500" : "border-gray-600"}`}>
-                        {rentBook.paymentMethod === method.id && <span className="text-white text-[10px]">✓</span>}
+                        ${rentBook.paymentMethod === method.id ? "border-orange-500 bg-orange-500" : "border-line"}`}>
+                        {rentBook.paymentMethod === method.id && <span className="text-foreground text-[10px]">✓</span>}
                       </div>
                     </button>
                   ))}
@@ -439,9 +438,9 @@ export default function CustomerRentTruck() {
                 {rentBook.paymentMethod === "bank_transfer" && (
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 space-y-1 text-sm">
                     <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">Bank Transfer Details</p>
-                    <p className="text-gray-300"><span className="text-gray-500">Bank:</span> {bankSettings.bankName}</p>
-                    <p className="text-gray-300"><span className="text-gray-500">Account Name:</span> {bankSettings.bankAccountName}</p>
-                    {bankSettings.bankAccountNumber && <p className="text-gray-300"><span className="text-gray-500">Account Number:</span> <span className="font-mono font-bold text-white">{bankSettings.bankAccountNumber}</span></p>}
+                    <p className="text-foreground"><span className="text-muted">Bank:</span> {bankSettings.bankName}</p>
+                    <p className="text-foreground"><span className="text-muted">Account Name:</span> {bankSettings.bankAccountName}</p>
+                    {bankSettings.bankAccountNumber && <p className="text-foreground"><span className="text-muted">Account Number:</span> <span className="font-mono font-bold text-foreground">{bankSettings.bankAccountNumber}</span></p>}
                     <p className="text-xs text-blue-400 mt-1">Use your name as reference. Send proof to {bankSettings.bankAccountName}.</p>
                   </div>
                 )}
@@ -450,8 +449,8 @@ export default function CustomerRentTruck() {
                 {rentBook.paymentMethod === "opay" && (
                   <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 space-y-1 text-sm">
                     <p className="text-xs font-bold text-green-400 uppercase tracking-widest mb-2">OPay Details</p>
-                    {bankSettings.opayNumber && <p className="text-gray-300"><span className="text-gray-500">OPay Number:</span> <span className="font-mono font-bold text-white">{bankSettings.opayNumber}</span></p>}
-                    <p className="text-gray-300"><span className="text-gray-500">Account Name:</span> {bankSettings.bankAccountName}</p>
+                    {bankSettings.opayNumber && <p className="text-foreground"><span className="text-muted">OPay Number:</span> <span className="font-mono font-bold text-foreground">{bankSettings.opayNumber}</span></p>}
+                    <p className="text-foreground"><span className="text-muted">Account Name:</span> {bankSettings.bankAccountName}</p>
                     <p className="text-xs text-green-400 mt-1">Send payment via OPay app then contact us with your receipt.</p>
                   </div>
                 )}
@@ -460,7 +459,7 @@ export default function CustomerRentTruck() {
                 {rentBook.paymentMethod === "cash" && (
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
                     <p className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-1">Cash Payment</p>
-                    <p className="text-sm text-gray-300">Full payment of <span className="font-black text-orange-400">₦{price.toLocaleString()}</span> is due on truck collection at <span className="font-semibold text-white">{rentBook.depot || "your selected depot"}</span>.</p>
+                    <p className="text-sm text-foreground">Full payment of <span className="font-black text-orange-400">₦{price.toLocaleString()}</span> is due on truck collection at <span className="font-semibold text-foreground">{rentBook.depot || "your selected depot"}</span>.</p>
                   </div>
                 )}
 
@@ -468,7 +467,7 @@ export default function CustomerRentTruck() {
                 {rentBook.paymentMethod === "card" && (
                   <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
                     <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-1">Card Payment</p>
-                    <p className="text-sm text-gray-300">You will be redirected to our secure payment gateway after confirming this booking.</p>
+                    <p className="text-sm text-foreground">You will be redirected to our secure payment gateway after confirming this booking.</p>
                   </div>
                 )}
 
@@ -476,13 +475,13 @@ export default function CustomerRentTruck() {
                 {rentBook.paymentMethod === "wallet" && (
                   <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4">
                     <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">e-Wallet Payment</p>
-                    <p className="text-sm text-gray-300">Your e-Nergy wallet will be debited <span className="font-black text-orange-400">₦{price.toLocaleString()}</span> upon confirmation.</p>
+                    <p className="text-sm text-foreground">Your e-Nergy wallet will be debited <span className="font-black text-orange-400">₦{price.toLocaleString()}</span> upon confirmation.</p>
                   </div>
                 )}
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setRentStep(3)} className="flex-1 py-3 border-2 border-gray-700 text-gray-400 font-semibold rounded-xl hover:bg-gray-800/50 transition text-sm">← Back</button>
+                <button onClick={() => setRentStep(3)} className="flex-1 py-3 border-2 border-line text-muted font-semibold rounded-xl hover:bg-card-2/50 transition text-sm">← Back</button>
                 <button
                   onClick={() => { if (!rentBook.paymentMethod) { alert("Please select a payment method"); return; } handleConfirmPayment(); }}
                   className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition shadow-lg"
@@ -496,35 +495,35 @@ export default function CustomerRentTruck() {
           {/* ── CONFIRMATION ── */}
           {confirmedTxn && (
             <div className="max-w-lg mx-auto">
-              <div className="bg-black/50 backdrop-blur-md border border-gray-700 rounded-2xl p-10 text-center space-y-5 shadow-2xl">
+              <div className="bg-card backdrop-blur-md border border-line rounded-2xl p-10 text-center space-y-5 shadow-2xl">
                 <div className="w-16 h-16 bg-green-500/20 border border-green-500/40 rounded-full flex items-center justify-center mx-auto">
                   <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Booking Confirmed!</h2>
-                  <p className="text-gray-400 text-sm mt-2">Your truck rental request has been submitted. Our team will contact you shortly.</p>
+                  <h2 className="text-2xl font-bold text-foreground">Booking Confirmed!</h2>
+                  <p className="text-muted text-sm mt-2">Your truck rental request has been submitted. Our team will contact you shortly.</p>
                 </div>
-                <div className="bg-gray-800/60 rounded-xl p-5 text-left space-y-2 text-sm">
+                <div className="bg-card-2/60 rounded-xl p-5 text-left space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Transaction ID</span>
+                    <span className="text-muted">Transaction ID</span>
                     <span className="text-orange-400 font-mono font-bold">{confirmedTxn.id}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Destination</span>
-                    <span className="text-white">{rentBook.state}{rentBook.lga ? `, ${rentBook.lga}` : ""}</span>
+                    <span className="text-muted">Destination</span>
+                    <span className="text-foreground">{rentBook.state}{rentBook.lga ? `, ${rentBook.lga}` : ""}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Depot</span>
-                    <span className="text-white">{confirmedTxn.depot}</span>
+                    <span className="text-muted">Depot</span>
+                    <span className="text-foreground">{confirmedTxn.depot}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Payment</span>
-                    <span className="text-white">{confirmedTxn.paymentMethod}</span>
+                    <span className="text-muted">Payment</span>
+                    <span className="text-foreground">{confirmedTxn.paymentMethod}</span>
                   </div>
-                  <div className="flex justify-between border-t border-gray-700 pt-2 mt-2">
-                    <span className="text-gray-400 font-semibold">Total</span>
+                  <div className="flex justify-between border-t border-line pt-2 mt-2">
+                    <span className="text-muted font-semibold">Total</span>
                     <span className="text-orange-400 font-black text-lg">{confirmedTxn.totalAmount}</span>
                   </div>
                 </div>
@@ -534,7 +533,7 @@ export default function CustomerRentTruck() {
                     View Transaction History
                   </button>
                   <button onClick={resetFlow}
-                    className="w-full py-3 border-2 border-gray-700 text-gray-400 font-semibold rounded-xl hover:bg-gray-800/50 transition text-sm">
+                    className="w-full py-3 border-2 border-line text-muted font-semibold rounded-xl hover:bg-card-2/50 transition text-sm">
                     Book Another Truck
                   </button>
                 </div>

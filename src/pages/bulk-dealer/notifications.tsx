@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import tower from "@/../public/tower.jpg";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type NotifType = "stock" | "delivery" | "order" | "payment" | "system" | "reconciliation";
@@ -93,10 +92,10 @@ export default function BulkDealerNotifications() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen text-white relative"
-      style={{ backgroundImage: `url(${tower.src})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}>
+    <div className="min-h-screen text-foreground relative"
+>
       <Head><title>Notifications | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top bar */}
@@ -106,7 +105,7 @@ export default function BulkDealerNotifications() {
               className="object-contain drop-shadow-[0_0_10px_rgba(34,197,94,0.4)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/bulk-dealer/dashboard" className="text-sm text-gray-400 hover:text-white border border-gray-700 px-4 py-2 rounded-lg transition">
+            <Link href="/bulk-dealer/dashboard" className="text-sm text-muted hover:text-foreground border border-line px-4 py-2 rounded-lg transition">
               ← Dashboard
             </Link>
             <button onClick={() => fetch("/api/auth/logout", { method: "POST" }).finally(() => router.push("/auth/login"))}
@@ -123,8 +122,8 @@ export default function BulkDealerNotifications() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-white">Notifications</h1>
-              {unread > 0 && <p className="text-sm text-gray-400 mt-0.5">{unread} unread</p>}
+              <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+              {unread > 0 && <p className="text-sm text-muted mt-0.5">{unread} unread</p>}
             </div>
             <div className="flex gap-2">
               {unread > 0 && (
@@ -148,12 +147,12 @@ export default function BulkDealerNotifications() {
               return (
                 <button key={t} onClick={() => setFilter(t)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 capitalize ${
-                    filter === t ? "bg-green-600 text-white" : "bg-gray-800 text-gray-300 hover:text-white"
+                    filter === t ? "bg-green-600 text-white" : "bg-card-2 text-foreground hover:text-white"
                   }`}>
                   {t === "all" ? "All" : TYPE_CONFIG[t].label}
                   {unreadCount > 0
-                    ? <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === t ? "bg-white/20" : "bg-green-500 text-white"}`}>{unreadCount}</span>
-                    : count > 0 && <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === t ? "bg-white/20" : "bg-gray-700"}`}>{count}</span>
+                    ? <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === t ? "bg-card-2" : "bg-green-500 text-white"}`}>{unreadCount}</span>
+                    : count > 0 && <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === t ? "bg-card-2" : "bg-card-2"}`}>{count}</span>
                   }
                 </button>
               );
@@ -165,11 +164,11 @@ export default function BulkDealerNotifications() {
             {/* List */}
             <div className="lg:col-span-2 space-y-2">
               {filtered.length === 0 ? (
-                <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700 rounded-xl p-10 text-center">
-                  <svg className="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <div className="bg-card/80 backdrop-blur-md border border-line rounded-xl p-10 text-center">
+                  <svg className="w-10 h-10 text-muted mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <p className="text-gray-300 text-sm">No notifications here</p>
+                  <p className="text-foreground text-sm">No notifications here</p>
                 </div>
               ) : (
                 filtered.map((n) => {
@@ -179,8 +178,8 @@ export default function BulkDealerNotifications() {
                     <button key={n.id} onClick={() => handleClick(n)}
                       className={`w-full flex items-start gap-3 p-4 rounded-xl border text-left transition ${
                         isSelected ? "bg-green-600/25 border-green-500/60" :
-                        !n.read ? "bg-gray-800 border-gray-600 border-l-2 border-l-green-400" :
-                        "bg-gray-900/80 border-gray-700 hover:bg-gray-800"
+                        !n.read ? "bg-card-2 border-line border-l-2 border-l-green-400" :
+                        "bg-card/80 border-line hover:bg-card-2"
                       }`}>
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 border ${cfg.bg} ${cfg.border}`}>
                         <svg className={`w-4 h-4 ${cfg.color}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -189,10 +188,10 @@ export default function BulkDealerNotifications() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={`text-xs font-bold leading-tight ${!n.read ? "text-white" : "text-gray-200"}`}>{n.title}</p>
-                          <span className="text-[10px] text-gray-400 whitespace-nowrap shrink-0">{timeAgo(n.timestamp)}</span>
+                          <p className={`text-xs font-bold leading-tight ${!n.read ? "text-foreground" : "text-foreground"}`}>{n.title}</p>
+                          <span className="text-[10px] text-muted whitespace-nowrap shrink-0">{timeAgo(n.timestamp)}</span>
                         </div>
-                        <p className="text-xs text-gray-300 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                        <p className="text-xs text-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
                       </div>
                       {!n.read && <div className="w-2 h-2 rounded-full bg-green-400 shrink-0 mt-1.5" />}
                     </button>
@@ -204,16 +203,16 @@ export default function BulkDealerNotifications() {
             {/* Detail panel */}
             <div className="lg:col-span-3">
               {!selected ? (
-                <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700 rounded-xl p-10 text-center h-full flex flex-col items-center justify-center">
-                  <svg className="w-12 h-12 text-gray-500 mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <div className="bg-card/80 backdrop-blur-md border border-line rounded-xl p-10 text-center h-full flex flex-col items-center justify-center">
+                  <svg className="w-12 h-12 text-muted mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <p className="text-gray-300 text-sm">Select a notification to view details</p>
+                  <p className="text-foreground text-sm">Select a notification to view details</p>
                 </div>
               ) : (() => {
                 const cfg = TYPE_CONFIG[selected.type];
                 return (
-                  <div className="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-xl p-6">
+                  <div className="bg-card/90 backdrop-blur-md border border-line rounded-xl p-6">
                     {/* Detail header */}
                     <div className="flex items-start gap-4 mb-5">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${cfg.bg} ${cfg.border}`}>
@@ -222,16 +221,16 @@ export default function BulkDealerNotifications() {
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p className="text-white font-bold text-base">{selected.title}</p>
+                        <p className="text-foreground font-bold text-base">{selected.title}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color} ${cfg.border}`}>{cfg.label}</span>
-                          <span className="text-xs text-gray-300">{timeAgo(selected.timestamp)}</span>
+                          <span className="text-xs text-foreground">{timeAgo(selected.timestamp)}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Message card */}
-                    <div className="bg-gray-800 border border-gray-600 rounded-xl p-4 mb-5">
+                    <div className="bg-card-2 border border-line rounded-xl p-4 mb-5">
                       <p className="text-sm text-gray-100 leading-relaxed">{selected.message}</p>
                     </div>
 
@@ -243,9 +242,9 @@ export default function BulkDealerNotifications() {
                         { label: "Received",  value: timeAgo(selected.timestamp) },
                         { label: "Full Date", value: new Date(selected.timestamp).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }) },
                       ].map((m) => (
-                        <div key={m.label} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5">
-                          <p className="text-xs text-gray-400 mb-0.5">{m.label}</p>
-                          <p className="text-sm text-white font-semibold">{m.value}</p>
+                        <div key={m.label} className="bg-card-2 border border-line rounded-lg px-3 py-2.5">
+                          <p className="text-xs text-muted mb-0.5">{m.label}</p>
+                          <p className="text-sm text-foreground font-semibold">{m.value}</p>
                         </div>
                       ))}
                     </div>
@@ -268,16 +267,16 @@ export default function BulkDealerNotifications() {
           </div>
         </main>
 
-        <footer className="px-6 py-4 border-t border-gray-800/60 flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 hidden md:flex">
-          <Link href="/contact"              className="hover:text-gray-300 transition">Contact</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/terms-and-conditions" className="hover:text-gray-300 transition">Terms &amp; Conditions</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/refund-policy"        className="hover:text-gray-300 transition">Refund Policy</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/privacy-policy"       className="hover:text-gray-300 transition">Privacy Policy</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/about"                className="hover:text-gray-300 transition">About Us</Link>
+        <footer className="px-6 py-4 border-t border-line/60 flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted hidden md:flex">
+          <Link href="/contact"              className="hover:text-foreground transition">Contact</Link>
+          <span className="text-muted">|</span>
+          <Link href="/terms-and-conditions" className="hover:text-foreground transition">Terms &amp; Conditions</Link>
+          <span className="text-muted">|</span>
+          <Link href="/refund-policy"        className="hover:text-foreground transition">Refund Policy</Link>
+          <span className="text-muted">|</span>
+          <Link href="/privacy-policy"       className="hover:text-foreground transition">Privacy Policy</Link>
+          <span className="text-muted">|</span>
+          <Link href="/about"                className="hover:text-foreground transition">About Us</Link>
         </footer>
       </div>
     </div>

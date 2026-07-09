@@ -53,7 +53,7 @@ function statusBadge(s: string) {
     confirmed:       "bg-indigo-500/20 text-indigo-400 border-indigo-500/40",
     cancelled:       "bg-red-500/20 text-red-400 border-red-500/40",
   };
-  return (map[s] ?? "bg-gray-500/20 text-gray-400 border-gray-500/40") +
+  return (map[s] ?? "bg-gray-500/20 text-muted border-line/40") +
     " px-2 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap";
 }
 
@@ -63,10 +63,10 @@ function formatNaira(n: number) {
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
-    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5">
-      <p className="text-gray-400 text-xs mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${color ?? "text-white"}`}>{value}</p>
-      {sub && <p className="text-gray-500 text-xs mt-1">{sub}</p>}
+    <div className="bg-card backdrop-blur-md border border-line rounded-xl p-5">
+      <p className="text-muted text-xs mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${color ?? "text-foreground"}`}>{value}</p>
+      {sub && <p className="text-muted text-xs mt-1">{sub}</p>}
     </div>
   );
 }
@@ -108,23 +108,23 @@ export default function TruckOwnerDashboard() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-      style={{ backgroundImage: "url('/tower.jpg')" }}
+      className="min-h-screen text-foreground"
+
     >
       <Head><title>Truck Owner Dashboard | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/70 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
 
       {/* Topbar */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-black/60 backdrop-blur-md border-b border-white/10 z-30 flex items-center px-4 sm:px-6 gap-4">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-card backdrop-blur-md border-b border-line z-30 flex items-center px-4 sm:px-6 gap-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center font-black text-white text-sm">e</div>
-          <span className="text-white font-bold text-sm hidden sm:block">e-Nergy</span>
+          <span className="text-foreground font-bold text-sm hidden sm:block">e-Nergy</span>
         </Link>
         <div className="flex-1" />
-        <span className="text-gray-300 text-sm hidden sm:block">{user?.name}</span>
+        <span className="text-foreground text-sm hidden sm:block">{user?.name}</span>
         <button
           onClick={() => fetch("/api/auth/logout", { method: "POST" }).then(() => router.replace("/auth/login"))}
-          className="text-xs text-gray-400 hover:text-red-400 border border-white/10 px-3 py-1.5 rounded-lg transition"
+          className="text-xs text-muted hover:text-red-400 border border-line px-3 py-1.5 rounded-lg transition"
         >
           Log out
         </button>
@@ -136,10 +136,10 @@ export default function TruckOwnerDashboard() {
 
           {/* Welcome */}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
             </h1>
-            <p className="text-gray-400 text-sm mt-1">Manage your fleet and track rental earnings.</p>
+            <p className="text-muted text-sm mt-1">Manage your fleet and track rental earnings.</p>
           </div>
 
           {/* Stats */}
@@ -151,13 +151,13 @@ export default function TruckOwnerDashboard() {
           </div>
 
           {/* Tab bar */}
-          <div className="flex gap-2 border-b border-white/10 pb-px">
+          <div className="flex gap-2 border-b border-line pb-px">
             {(["trucks", "rentals"] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-4 py-2 text-sm font-semibold capitalize rounded-t-lg border-b-2 transition ${
-                  tab === t ? "border-orange-500 text-orange-400" : "border-transparent text-gray-400 hover:text-white"
+                  tab === t ? "border-orange-500 text-orange-400" : "border-transparent text-muted hover:text-foreground"
                 }`}
               >
                 {t === "trucks" ? `My Trucks (${trucks.length})` : `Rental History (${rentals.length})`}
@@ -166,7 +166,7 @@ export default function TruckOwnerDashboard() {
           </div>
 
           {loading ? (
-            <div className="text-center py-16 text-gray-500 text-sm">Loading…</div>
+            <div className="text-center py-16 text-muted text-sm">Loading…</div>
           ) : tab === "trucks" ? (
             <TrucksTable trucks={trucks} />
           ) : (
@@ -183,8 +183,8 @@ export default function TruckOwnerDashboard() {
 function TrucksTable({ trucks }: { trucks: TruckRecord[] }) {
   if (!trucks.length) {
     return (
-      <div className="bg-white/5 border border-white/10 rounded-xl p-12 text-center">
-        <p className="text-gray-400">No trucks registered yet.</p>
+      <div className="bg-card border border-line rounded-xl p-12 text-center">
+        <p className="text-muted">No trucks registered yet.</p>
         <Link href="/RentTruck" className="mt-4 inline-block text-sm text-orange-400 hover:text-orange-300 underline">
           Register a truck
         </Link>
@@ -192,10 +192,10 @@ function TrucksTable({ trucks }: { trucks: TruckRecord[] }) {
     );
   }
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+    <div className="bg-card border border-line rounded-xl overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="border-b border-white/10 text-gray-400 text-xs uppercase">
+          <thead className="border-b border-line text-muted text-xs uppercase">
             <tr>
               <th className="px-4 py-3 text-left">Reg No.</th>
               <th className="px-4 py-3 text-left">Type</th>
@@ -206,15 +206,15 @@ function TrucksTable({ trucks }: { trucks: TruckRecord[] }) {
               <th className="px-4 py-3 text-left">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-line">
             {trucks.map(t => (
-              <tr key={t._id} className="hover:bg-white/5 transition">
-                <td className="px-4 py-3 font-mono font-bold text-white">{t.truckRegNumber}</td>
-                <td className="px-4 py-3 text-gray-300">{t.vehicleType}</td>
-                <td className="px-4 py-3 text-gray-300">{Number(t.tankCapacity || 0).toLocaleString()}L</td>
-                <td className="px-4 py-3 text-gray-300">{(t.productTypes || []).join(", ") || "—"}</td>
+              <tr key={t._id} className="hover:bg-card-2 transition">
+                <td className="px-4 py-3 font-mono font-bold text-foreground">{t.truckRegNumber}</td>
+                <td className="px-4 py-3 text-foreground">{t.vehicleType}</td>
+                <td className="px-4 py-3 text-foreground">{Number(t.tankCapacity || 0).toLocaleString()}L</td>
+                <td className="px-4 py-3 text-foreground">{(t.productTypes || []).join(", ") || "—"}</td>
                 <td className="px-4 py-3 text-green-400 font-semibold">₦{Number(t.dailyRate || 0).toLocaleString()}</td>
-                <td className="px-4 py-3 text-gray-300">{t.driverName || "—"}</td>
+                <td className="px-4 py-3 text-foreground">{t.driverName || "—"}</td>
                 <td className="px-4 py-3"><span className={statusBadge(t.status)}>{toLabel(t.status)}</span></td>
               </tr>
             ))}
@@ -230,16 +230,16 @@ function TrucksTable({ trucks }: { trucks: TruckRecord[] }) {
 function RentalsTable({ rentals }: { rentals: RentalRecord[] }) {
   if (!rentals.length) {
     return (
-      <div className="bg-white/5 border border-white/10 rounded-xl p-12 text-center">
-        <p className="text-gray-400">No rental history yet. Earnings will appear here once your trucks are rented.</p>
+      <div className="bg-card border border-line rounded-xl p-12 text-center">
+        <p className="text-muted">No rental history yet. Earnings will appear here once your trucks are rented.</p>
       </div>
     );
   }
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+    <div className="bg-card border border-line rounded-xl overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="border-b border-white/10 text-gray-400 text-xs uppercase">
+          <thead className="border-b border-line text-muted text-xs uppercase">
             <tr>
               <th className="px-4 py-3 text-left">Rental ID</th>
               <th className="px-4 py-3 text-left">Truck</th>
@@ -251,14 +251,14 @@ function RentalsTable({ rentals }: { rentals: RentalRecord[] }) {
               <th className="px-4 py-3 text-left">Payment</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-line">
             {rentals.map(r => (
-              <tr key={r._id} className="hover:bg-white/5 transition">
-                <td className="px-4 py-3 font-mono text-xs text-gray-400">{r.rentalId || r._id?.slice(-8)}</td>
-                <td className="px-4 py-3 font-bold text-white">{r.truckRegNumber || "—"}</td>
-                <td className="px-4 py-3 text-gray-300 max-w-[120px] truncate">{r.rentedBy || "—"}</td>
-                <td className="px-4 py-3 text-gray-300">{r.pickupDepot || "—"}</td>
-                <td className="px-4 py-3 text-gray-300">{r.totalDays ?? "—"}</td>
+              <tr key={r._id} className="hover:bg-card-2 transition">
+                <td className="px-4 py-3 font-mono text-xs text-muted">{r.rentalId || r._id?.slice(-8)}</td>
+                <td className="px-4 py-3 font-bold text-foreground">{r.truckRegNumber || "—"}</td>
+                <td className="px-4 py-3 text-foreground max-w-[120px] truncate">{r.rentedBy || "—"}</td>
+                <td className="px-4 py-3 text-foreground">{r.pickupDepot || "—"}</td>
+                <td className="px-4 py-3 text-foreground">{r.totalDays ?? "—"}</td>
                 <td className="px-4 py-3 text-green-400 font-semibold">{formatNaira(r.totalAmount)}</td>
                 <td className="px-4 py-3"><span className={statusBadge(r.status)}>{toLabel(r.status)}</span></td>
                 <td className="px-4 py-3">

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import CustomerNavigation from "./CustomerNavigation";
-import tower from "@/../public/tower.jpg";
 import type { Notification, NotifType } from "../../components/NotificationBell";
 
 const TYPE_CONFIG: Record<NotifType, { color: string; bg: string; border: string; label: string; icon: string }> = {
@@ -77,7 +76,7 @@ export default function NotificationsPage() {
   }, [router]);
 
   if (!user) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
     </div>
   );
@@ -115,11 +114,11 @@ export default function NotificationsPage() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
-      style={{ backgroundImage: `url(${tower.src})` }}
+      className="min-h-screen text-foreground"
+
     >
       <Head><title>Notifications | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
       <CustomerNavigation user={user} />
 
       <div className="relative z-10 pt-16 md:pl-64 min-h-screen">
@@ -128,8 +127,8 @@ export default function NotificationsPage() {
           {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-1">Notifications</h1>
-              <p className="text-gray-400 text-sm">
+              <h1 className="text-3xl font-bold text-foreground mb-1">Notifications</h1>
+              <p className="text-muted text-sm">
                 {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up"}
               </p>
             </div>
@@ -150,7 +149,7 @@ export default function NotificationsPage() {
           </div>
 
           {/* Filter tabs */}
-          <div className="flex gap-1 mb-5 bg-black/30 backdrop-blur-sm border border-gray-800 rounded-xl p-1 overflow-x-auto w-fit max-w-full">
+          <div className="flex gap-1 mb-5 bg-card backdrop-blur-sm border border-line rounded-xl p-1 overflow-x-auto w-fit max-w-full">
             {FILTERS.map((f) => {
               const count = f.value === "all"    ? notifs.length
                           : f.value === "unread" ? notifs.filter((n) => !n.read).length
@@ -160,13 +159,13 @@ export default function NotificationsPage() {
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
                     filter === f.value
                       ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                      : "text-gray-400 hover:text-white"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   {f.label}
                   {count > 0 && (
                     <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      filter === f.value ? "bg-white/20 text-white" : "bg-gray-700 text-gray-300"
+                      filter === f.value ? "bg-card-2 text-foreground" : "bg-card-2 text-foreground"
                     }`}>{count}</span>
                   )}
                 </button>
@@ -179,16 +178,16 @@ export default function NotificationsPage() {
 
             {/* ── List ── */}
             <div className={`lg:col-span-2 ${selected ? "hidden lg:block" : ""}`}>
-              <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
+              <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
                 {filtered.length === 0 ? (
                   <div className="py-16 text-center px-6">
-                    <svg className="w-12 h-12 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <svg className="w-12 h-12 text-muted mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
-                    <p className="text-sm text-gray-500">No notifications here.</p>
+                    <p className="text-sm text-muted">No notifications here.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-800/60">
+                  <div className="divide-y divide-line/60">
                     {filtered.map((n) => {
                       const cfg = TYPE_CONFIG[n.type];
                       const isSelected = selected?.id === n.id;
@@ -196,7 +195,7 @@ export default function NotificationsPage() {
                         <button key={n.id} onClick={() => handleSelect(n)}
                           className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition ${
                             isSelected ? "bg-orange-500/10 border-l-2 border-orange-500" :
-                            !n.read    ? "bg-orange-500/[0.03] hover:bg-white/5" : "hover:bg-white/5"
+                            !n.read    ? "bg-orange-500/[0.03] hover:bg-card-2" : "hover:bg-card-2"
                           }`}
                         >
                           <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border ${cfg.bg} ${cfg.border}`}>
@@ -206,12 +205,12 @@ export default function NotificationsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <p className={`text-xs font-bold leading-snug ${!n.read ? "text-white" : "text-gray-300"}`}>
+                              <p className={`text-xs font-bold leading-snug ${!n.read ? "text-foreground" : "text-foreground"}`}>
                                 {n.title}
                               </p>
-                              <span className="text-[10px] text-gray-600 whitespace-nowrap shrink-0">{timeAgo(n.timestamp)}</span>
+                              <span className="text-[10px] text-muted whitespace-nowrap shrink-0">{timeAgo(n.timestamp)}</span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                            <p className="text-xs text-muted mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
                             <span className={`inline-block mt-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                               {cfg.label}
                             </span>
@@ -228,19 +227,19 @@ export default function NotificationsPage() {
             {/* ── Detail panel ── */}
             <div className={`lg:col-span-3 ${!selected ? "hidden lg:flex lg:items-center lg:justify-center" : ""}`}>
               {!selected ? (
-                <div className="text-center py-20 px-6 w-full bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl">
-                  <svg className="w-12 h-12 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <div className="text-center py-20 px-6 w-full bg-card backdrop-blur-md border border-line rounded-xl">
+                  <svg className="w-12 h-12 text-muted mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <p className="text-sm text-gray-500">Select a notification to view details</p>
+                  <p className="text-sm text-muted">Select a notification to view details</p>
                 </div>
               ) : (() => {
                 const cfg = TYPE_CONFIG[selected.type];
                 return (
-                  <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden h-full">
+                  <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden h-full">
                     {/* Detail header */}
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-orange-500/5">
-                      <button onClick={() => setSelected(null)} className="lg:hidden flex items-center gap-1.5 text-gray-400 hover:text-white text-xs font-semibold transition">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-orange-500/5">
+                      <button onClick={() => setSelected(null)} className="lg:hidden flex items-center gap-1.5 text-muted hover:text-foreground text-xs font-semibold transition">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
@@ -265,19 +264,19 @@ export default function NotificationsPage() {
                           </svg>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h2 className="text-lg font-bold text-white leading-tight">{selected.title}</h2>
+                          <h2 className="text-lg font-bold text-foreground leading-tight">{selected.title}</h2>
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                               {cfg.label}
                             </span>
-                            <span className="text-xs text-gray-500">{fullDate(selected.timestamp)}</span>
+                            <span className="text-xs text-muted">{fullDate(selected.timestamp)}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Message */}
-                      <div className="bg-gray-900/50 border border-gray-700/50 rounded-xl p-4">
-                        <p className="text-sm text-gray-300 leading-relaxed">{selected.message}</p>
+                      <div className="bg-card/50 border border-line/50 rounded-xl p-4">
+                        <p className="text-sm text-foreground leading-relaxed">{selected.message}</p>
                       </div>
 
                       {/* Meta */}
@@ -288,9 +287,9 @@ export default function NotificationsPage() {
                           { label: "Received",  value: timeAgo(selected.timestamp)       },
                           { label: "Full Date", value: fullDate(selected.timestamp)      },
                         ].map(({ label, value }) => (
-                          <div key={label} className="bg-black/30 border border-gray-800 rounded-lg p-3">
-                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
-                            <p className="text-sm font-semibold text-white">{value}</p>
+                          <div key={label} className="bg-card border border-line rounded-lg p-3">
+                            <p className="text-xs text-muted uppercase tracking-wider mb-0.5">{label}</p>
+                            <p className="text-sm font-semibold text-foreground">{value}</p>
                           </div>
                         ))}
                       </div>

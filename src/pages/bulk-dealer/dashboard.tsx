@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import tower from "@/../public/tower.jpg";
 import { logTransaction } from "@/utils/logTransaction";
 import { startTracking } from "@/utils/onlineTracker";
 import { toLabel } from "@/utils/toLabel";
@@ -38,14 +37,14 @@ function statusBadge(s: string) {
     Flagged:         "bg-red-500/20 text-red-400 border-red-500/40",
     Cleared:         "bg-green-500/20 text-green-400 border-green-500/40",
   };
-  return (map[s] ?? "bg-gray-500/20 text-gray-400 border-gray-500/40") +
+  return (map[s] ?? "bg-gray-500/20 text-muted border-line/40") +
     " px-2 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap";
 }
 
-const card  = "bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-4";
-const label = "text-xs font-bold uppercase tracking-wider text-gray-500 mb-1";
+const card  = "bg-card backdrop-blur-md border border-line rounded-xl p-4";
+const label = "text-xs font-bold uppercase tracking-wider text-muted mb-1";
 const gBtn  = "bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition";
-const inputCls = "bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-green-500 focus:outline-none w-full";
+const inputCls = "bg-card/60 border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:border-green-500 focus:outline-none w-full";
 
 // ─── Tank Gauge ───────────────────────────────────────────────────────────────
 function TankBar({ tank, color }: { tank: Tank; color: string }) {
@@ -54,10 +53,10 @@ function TankBar({ tank, color }: { tank: Tank; color: string }) {
   return (
     <div className="flex items-end gap-1">
       <div className="flex flex-col justify-between h-52 text-right pr-1">
-        {scales.map((m) => <span key={m} className="text-[9px] text-gray-600 leading-none">{m}M</span>)}
+        {scales.map((m) => <span key={m} className="text-[9px] text-muted leading-none">{m}M</span>)}
       </div>
       <div className="flex flex-col items-center gap-1">
-        <div className="relative w-10 h-52 bg-gray-900/80 border border-gray-700 rounded overflow-hidden">
+        <div className="relative w-10 h-52 bg-card/80 border border-line rounded overflow-hidden">
           <div
             className="absolute bottom-0 left-0 right-0 transition-all duration-1000"
             style={{
@@ -67,8 +66,8 @@ function TankBar({ tank, color }: { tank: Tank; color: string }) {
             }}
           />
         </div>
-        <span className="text-[10px] text-gray-400">{tank.level}M</span>
-        <span className="text-[9px] text-gray-600">{tank.label}</span>
+        <span className="text-[10px] text-muted">{tank.level}M</span>
+        <span className="text-[9px] text-muted">{tank.label}</span>
       </div>
     </div>
   );
@@ -109,7 +108,7 @@ function MiniChart({ tanks }: { tanks?: Record<string, { level: number; max: num
         {lines.map(({ key, color }) => (
           <div key={key} className="flex items-center gap-1">
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-            <span className="text-[10px] text-gray-400">{key}</span>
+            <span className="text-[10px] text-muted">{key}</span>
           </div>
         ))}
       </div>
@@ -191,12 +190,12 @@ function AccountFeeBar() {
       <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
-      <span className="text-gray-300">
-        <span className="text-white font-semibold">Yearly Account Maintenance Fee:</span>{" "}
+      <span className="text-foreground">
+        <span className="text-foreground font-semibold">Yearly Account Maintenance Fee:</span>{" "}
         <span className="text-green-400 font-bold">&#8358;{yearlyFee.toLocaleString()}</span>
-        <span className="text-gray-500"> &middot; Due annually in December</span>
+        <span className="text-muted"> &middot; Due annually in December</span>
       </span>
-      <span className="ml-auto text-xs text-gray-500 italic">Contact admin to renew</span>
+      <span className="ml-auto text-xs text-muted italic">Contact admin to renew</span>
     </div>
   );
 }
@@ -234,7 +233,7 @@ function SectionCurrentStock() {
 
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-4 italic">Real-time data on fuel in tanks / barrels / storage</p>
+      <p className="text-xs text-muted mb-4 italic">Real-time data on fuel in tanks / barrels / storage</p>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Left */}
@@ -246,13 +245,13 @@ function SectionCurrentStock() {
                 <span key={p} className={`text-xs font-bold px-2 py-1 rounded ${PRODUCT_COLORS[p].light} ${PRODUCT_COLORS[p].text} border ${PRODUCT_COLORS[p].border}`}>{p}</span>
               ))}
             </div>
-            <div className="flex gap-4 text-sm text-white font-semibold">
+            <div className="flex gap-4 text-sm text-foreground font-semibold">
               {dealerProducts.map(p => <span key={p}>{MERGED_TANKS[p].level}M L</span>)}
             </div>
           </div>
           <div className={card}>
             <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-lg mb-3">Recalibration Log</span>
-            <p className="text-xs text-gray-500 italic">No calibration records on file. Contact your depot manager to log tank readings.</p>
+            <p className="text-xs text-muted italic">No calibration records on file. Contact your depot manager to log tank readings.</p>
           </div>
         </div>
 
@@ -272,7 +271,7 @@ function SectionCurrentStock() {
                 <div className="flex items-end gap-2">
                   {/* Scale */}
                   <div className="flex flex-col justify-between text-right pr-1" style={{ height: tankH }}>
-                    {scales.map((m) => <span key={m} className="text-[9px] text-gray-600 leading-none">{m}M</span>)}
+                    {scales.map((m) => <span key={m} className="text-[9px] text-muted leading-none">{m}M</span>)}
                   </div>
 
                   {/* 3D Tank */}
@@ -343,7 +342,7 @@ function SectionCurrentStock() {
 
                       {/* Percentage label */}
                       <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                        <span className="text-white text-xs font-bold drop-shadow" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>
+                        <span className="text-foreground text-xs font-bold drop-shadow" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>
                           {Math.round(pct)}%
                         </span>
                       </div>
@@ -363,7 +362,7 @@ function SectionCurrentStock() {
                   </div>
                 </div>
 
-                <span className="text-base font-bold text-white">{level}M L</span>
+                <span className="text-base font-bold text-foreground">{level}M L</span>
                 <span className={`text-xs font-semibold ${PRODUCT_COLORS[product].text}`}>
                   ₦{(valueNaira / 1_000_000_000).toFixed(2)}B
                 </span>
@@ -428,23 +427,23 @@ function SectionStockValue() {
       <div className="space-y-4">
         <div className={card}>
           <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-lg mb-3">Worth of current stock in NAIRA</span>
-          <p className="text-3xl font-bold text-white mb-4">₦{totalValue.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-foreground mb-4">₦{totalValue.toLocaleString()}</p>
           <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-lg mb-3">Product Valuation</span>
-          <div className="grid grid-cols-3 gap-px bg-gray-700 rounded-lg overflow-hidden text-center">
+          <div className="grid grid-cols-3 gap-px bg-card-2 rounded-lg overflow-hidden text-center">
             {(["ATK","AGO","PMS"] as const).map((p) => {
               const val = tanks[p].level * 1_000_000 * (_platformPrices[p] ?? 0);
               return (
                 <div key={p} className={`${PRODUCT_COLORS[p].light} py-2`}>
                   <p className={`text-xs font-bold ${PRODUCT_COLORS[p].text}`}>{p}</p>
-                  <p className="text-xs text-white font-semibold mt-1">₦{val.toLocaleString()}</p>
+                  <p className="text-xs text-foreground font-semibold mt-1">₦{val.toLocaleString()}</p>
                 </div>
               );
             })}
           </div>
         </div>
         <div className={card}>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Price Update Log</p>
-          <p className="text-xs text-gray-500 italic">No price update history on file.</p>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Price Update Log</p>
+          <p className="text-xs text-muted italic">No price update history on file.</p>
         </div>
       </div>
 
@@ -456,19 +455,19 @@ function SectionStockValue() {
               <button onClick={() => setSalesModal("high")} className={`${gBtn} w-full mb-2 text-xs`}>All time high sales</button>
               {allTimeHigh.length > 0 ? (
                 <>
-                  <p className="text-white font-bold text-center">{allTimeHigh[0].amount}</p>
-                  <p className="text-[10px] text-gray-500 text-center">{allTimeHigh[0].product}</p>
+                  <p className="text-foreground font-bold text-center">{allTimeHigh[0].amount}</p>
+                  <p className="text-[10px] text-muted text-center">{allTimeHigh[0].product}</p>
                 </>
-              ) : <p className="text-xs text-gray-500 text-center">No data</p>}
+              ) : <p className="text-xs text-muted text-center">No data</p>}
             </div>
             <div>
               <button onClick={() => setSalesModal("low")} className="bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition w-full mb-2">All time low sales</button>
               {allTimeLow.length > 0 ? (
                 <>
-                  <p className="text-white font-bold text-center">{allTimeLow[0].amount}</p>
-                  <p className="text-[10px] text-gray-500 text-center">{allTimeLow[0].product}</p>
+                  <p className="text-foreground font-bold text-center">{allTimeLow[0].amount}</p>
+                  <p className="text-[10px] text-muted text-center">{allTimeLow[0].product}</p>
                 </>
-              ) : <p className="text-xs text-gray-500 text-center">No data</p>}
+              ) : <p className="text-xs text-muted text-center">No data</p>}
             </div>
           </div>
         </div>
@@ -481,31 +480,31 @@ function SectionStockValue() {
       {salesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSalesModal(null)} />
-          <div className="relative z-10 bg-gray-950 border border-gray-700 rounded-2xl w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-              <p className="text-sm font-bold text-white">
+          <div className="relative z-10 bg-background border border-line rounded-2xl w-full max-w-lg shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+              <p className="text-sm font-bold text-foreground">
                 {salesModal === "high" ? "All Time High Sales" : "All Time Low Sales"}
               </p>
-              <button onClick={() => setSalesModal(null)} className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition">
+              <button onClick={() => setSalesModal(null)} className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-card-2 transition">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="px-6 py-4 space-y-3">
               {(salesModal === "high" ? allTimeHigh : allTimeLow).length === 0
-                ? <p className="text-gray-500 text-sm text-center py-4">No transaction records found.</p>
+                ? <p className="text-muted text-sm text-center py-4">No transaction records found.</p>
                 : (salesModal === "high" ? allTimeHigh : allTimeLow).map((s, i) => (
-                  <div key={i} className="flex items-center justify-between bg-gray-900/50 rounded-lg px-4 py-3">
+                  <div key={i} className="flex items-center justify-between bg-card/50 rounded-lg px-4 py-3">
                     <div>
-                      <p className="text-xs text-gray-500">{s.date}</p>
-                      <p className="text-sm text-white font-semibold">{s.buyer}</p>
-                      <p className="text-xs text-gray-400">{s.qty} · <span className={PRODUCT_COLORS[s.product]?.text}>{s.product}</span></p>
+                      <p className="text-xs text-muted">{s.date}</p>
+                      <p className="text-sm text-foreground font-semibold">{s.buyer}</p>
+                      <p className="text-xs text-muted">{s.qty} · <span className={PRODUCT_COLORS[s.product]?.text}>{s.product}</span></p>
                     </div>
                     <p className={`text-base font-bold ${salesModal === "high" ? "text-green-400" : "text-red-400"}`}>{s.amount}</p>
                   </div>
                 ))
               }
             </div>
-            <div className="px-6 py-3 border-t border-gray-800">
+            <div className="px-6 py-3 border-t border-line">
               <button onClick={() => setSalesModal(null)} className={`${gBtn} w-full`}>Close</button>
             </div>
           </div>
@@ -549,7 +548,7 @@ function SectionDailyDispense() {
       <div className="flex gap-2 mb-5 flex-wrap">
         {subTabs.map((t) => (
           <button key={t} onClick={() => setSubTab(t)}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition ${subTab === t ? "bg-green-600 text-white" : "bg-gray-800/60 text-gray-400 hover:text-white"}`}>
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition ${subTab === t ? "bg-green-600 text-white" : "bg-card-2/60 text-muted hover:text-white"}`}>
             {t}
           </button>
         ))}
@@ -559,21 +558,21 @@ function SectionDailyDispense() {
         <div className={card}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-gray-800">
+              <thead><tr className="border-b border-line">
                 {["Date","Reference","Product","Qty Dispensed","Amount","Status"].map((h) => (
-                  <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">{h}</th>
+                  <th key={h} className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase">{h}</th>
                 ))}
               </tr></thead>
-              <tbody className="divide-y divide-gray-800/50">
+              <tbody className="divide-y divide-line/50">
                 {dispenseRecords.length === 0
-                  ? <tr><td colSpan={6} className="text-center text-gray-500 py-8 text-sm">No dispense records for today.</td></tr>
+                  ? <tr><td colSpan={6} className="text-center text-muted py-8 text-sm">No dispense records for today.</td></tr>
                   : dispenseRecords.map((r, i) => (
-                    <tr key={i} className="hover:bg-white/5 transition">
-                      <td className="px-3 py-2.5 text-gray-300 text-xs">{(r.date || r.createdAt || "").split("T")[0]}</td>
+                    <tr key={i} className="hover:bg-card-2 transition">
+                      <td className="px-3 py-2.5 text-foreground text-xs">{(r.date || r.createdAt || "").split("T")[0]}</td>
                       <td className="px-3 py-2.5 text-green-400 font-mono text-xs">{r.reference || r._id}</td>
                       <td className="px-3 py-2.5"><span className={`text-xs font-bold ${PRODUCT_COLORS[r.product]?.text}`}>{r.product}</span></td>
-                      <td className="px-3 py-2.5 text-gray-300">{r.quantity}</td>
-                      <td className="px-3 py-2.5 text-white font-semibold">{r.totalAmount}</td>
+                      <td className="px-3 py-2.5 text-foreground">{r.quantity}</td>
+                      <td className="px-3 py-2.5 text-foreground font-semibold">{r.totalAmount}</td>
                       <td className="px-3 py-2.5"><span className={statusBadge(r.status || "pending")}>{r.status || "pending"}</span></td>
                     </tr>
                   ))
@@ -590,16 +589,16 @@ function SectionDailyDispense() {
             {summary.map(({ product: p, vol, rev }) => (
               <div key={p} className={`${card} text-center`}>
                 <span className={`inline-block text-xs font-bold px-3 py-1 rounded-lg mb-3 ${PRODUCT_COLORS[p].light} ${PRODUCT_COLORS[p].text} border ${PRODUCT_COLORS[p].border}`}>{p}</span>
-                <p className="text-2xl font-bold text-white">{vol.toLocaleString()} L</p>
-                <p className="text-xs text-gray-500 mt-1">Volume Dispensed Today</p>
+                <p className="text-2xl font-bold text-foreground">{vol.toLocaleString()} L</p>
+                <p className="text-xs text-muted mt-1">Volume Dispensed Today</p>
                 <p className="text-green-400 font-semibold mt-2">₦{rev.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Revenue</p>
+                <p className="text-xs text-muted">Revenue</p>
               </div>
             ))}
           </div>
           <div className={`${card} text-center`}>
-            <p className="text-gray-400 text-sm">Total Daily Revenue</p>
-            <p className="text-3xl font-bold text-white mt-1">₦{totalRev.toLocaleString()}</p>
+            <p className="text-muted text-sm">Total Daily Revenue</p>
+            <p className="text-3xl font-bold text-foreground mt-1">₦{totalRev.toLocaleString()}</p>
           </div>
         </div>
       )}
@@ -699,25 +698,25 @@ function SectionReconciliation() {
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowUpdateForm(false); }}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl">
+          <div className="bg-card border border-line rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl">
             {/* drag handle — mobile only */}
             <div className="flex justify-center pt-3 pb-1 sm:hidden">
               <div className="w-10 h-1 rounded-full bg-gray-600" />
             </div>
             <div className="px-6 pt-4 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-white font-bold text-base">Update Sold Stock</p>
-                <button onClick={() => setShowUpdateForm(false)} className="text-gray-500 hover:text-white transition p-1 -mr-1">
+                <p className="text-foreground font-bold text-base">Update Sold Stock</p>
+                <button onClick={() => setShowUpdateForm(false)} className="text-muted hover:text-foreground transition p-1 -mr-1">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              <p className="text-gray-400 text-xs mb-5">Enter the volume sold today for each product (in litres).</p>
+              <p className="text-muted text-xs mb-5">Enter the volume sold today for each product (in litres).</p>
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {(["pms", "ago", "atk"] as const).map((p) => (
                   <div key={p}>
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">{p}</label>
+                    <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wide">{p}</label>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -725,14 +724,14 @@ function SectionReconciliation() {
                       placeholder="0"
                       value={soldForm[p]}
                       onChange={(e) => setSoldForm((f) => ({ ...f, [p]: e.target.value }))}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                      className="w-full bg-card-2 border border-line rounded-lg px-3 py-3 text-foreground text-sm placeholder-muted focus:outline-none focus:border-blue-500 transition"
                     />
-                    <span className="text-gray-600 text-xs mt-1 block">litres</span>
+                    <span className="text-muted text-xs mt-1 block">litres</span>
                   </div>
                 ))}
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setShowUpdateForm(false)} className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-semibold rounded-xl transition">
+                <button onClick={() => setShowUpdateForm(false)} className="flex-1 px-4 py-3 bg-card-2 hover:bg-card-2 text-foreground text-sm font-semibold rounded-xl transition">
                   Cancel
                 </button>
                 <button
@@ -753,7 +752,7 @@ function SectionReconciliation() {
         <div className="bg-orange-500/20 border border-orange-500/40 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center mt-0.5">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
@@ -775,9 +774,9 @@ function SectionReconciliation() {
 
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted">
           Reconciliation as of{" "}
-          <span className="text-white font-semibold">
+          <span className="text-foreground font-semibold">
             {new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}
           </span>
         </p>
@@ -815,11 +814,11 @@ function SectionReconciliation() {
               {r.product}
             </span>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">Expected</span><span className="text-white">{r.expected}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Actual</span><span className="text-white">{r.actual}</span></div>
-              <div className="flex justify-between border-t border-gray-800 pt-2">
-                <span className="text-gray-500">Variance</span>
-                <span className={`font-bold ${r.variance.startsWith("−") ? "text-red-400" : r.variance === "0 L" ? "text-gray-500" : "text-green-400"}`}>{r.variance}</span>
+              <div className="flex justify-between"><span className="text-muted">Expected</span><span className="text-foreground">{r.expected}</span></div>
+              <div className="flex justify-between"><span className="text-muted">Actual</span><span className="text-foreground">{r.actual}</span></div>
+              <div className="flex justify-between border-t border-line pt-2">
+                <span className="text-muted">Variance</span>
+                <span className={`font-bold ${r.variance.startsWith("−") ? "text-red-400" : r.variance === "0 L" ? "text-muted" : "text-green-400"}`}>{r.variance}</span>
               </div>
               <div className="pt-1"><span className={statusBadge(r.status)}>{toLabel(r.status)}</span></div>
             </div>
@@ -829,29 +828,29 @@ function SectionReconciliation() {
 
       {/* Reconciliation History */}
       <div className={card}>
-        <p className="text-sm font-semibold text-white mb-3">Reconciliation History</p>
+        <p className="text-sm font-semibold text-foreground mb-3">Reconciliation History</p>
         <div className="overflow-x-auto -mx-1">
           <table className="w-full text-sm min-w-[420px]">
             <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">Date</th>
-                <th className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">Product</th>
-                <th className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">Variance</th>
-                <th className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase hidden sm:table-cell">Reconciled By</th>
-                <th className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">Status</th>
+              <tr className="border-b border-line">
+                <th className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase">Date</th>
+                <th className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase">Product</th>
+                <th className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase">Variance</th>
+                <th className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase hidden sm:table-cell">Reconciled By</th>
+                <th className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/50">
+            <tbody className="divide-y divide-line/50">
               {history.map((r, i) => (
-                <tr key={i} className="hover:bg-white/5 transition">
-                  <td className="px-3 py-2.5 text-gray-300 whitespace-nowrap">{r.date}</td>
+                <tr key={i} className="hover:bg-card-2 transition">
+                  <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{r.date}</td>
                   <td className="px-3 py-2.5">
                     <span className={`text-xs font-bold ${PRODUCT_COLORS[r.product].text}`}>{r.product}</span>
                   </td>
-                  <td className={`px-3 py-2.5 font-semibold whitespace-nowrap ${r.variance.startsWith("−") ? "text-red-400" : r.variance === "0 L" ? "text-gray-500" : "text-green-400"}`}>
+                  <td className={`px-3 py-2.5 font-semibold whitespace-nowrap ${r.variance.startsWith("−") ? "text-red-400" : r.variance === "0 L" ? "text-muted" : "text-green-400"}`}>
                     {r.variance}
                   </td>
-                  <td className="px-3 py-2.5 text-gray-300 hidden sm:table-cell">{r.by}</td>
+                  <td className="px-3 py-2.5 text-foreground hidden sm:table-cell">{r.by}</td>
                   <td className="px-3 py-2.5"><span className={statusBadge(r.status)}>{toLabel(r.status)}</span></td>
                 </tr>
               ))}
@@ -967,7 +966,7 @@ function SectionAllocations() {
     const map: Record<string, string> = {
       Active:    "bg-green-900/50 text-green-400 border border-green-800",
       Exhausted: "bg-orange-900/50 text-orange-400 border border-orange-800",
-      Expired:   "bg-gray-800/60 text-gray-400 border border-gray-700",
+      Expired:   "bg-card-2/60 text-muted border border-line",
       Revoked:   "bg-red-900/50 text-red-400 border border-red-800",
     };
     return `inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${map[s] ?? map.Expired}`;
@@ -984,13 +983,13 @@ function SectionAllocations() {
       {/* Order Modal */}
       {orderModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <p className="text-white font-semibold text-base mb-1">Request Order</p>
-            <p className="text-xs text-gray-400 mb-4">Allocation: <span className="font-mono text-green-400">{orderModal.allocationId}</span></p>
+          <div className="bg-card border border-line rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <p className="text-foreground font-semibold text-base mb-1">Request Order</p>
+            <p className="text-xs text-muted mb-4">Allocation: <span className="font-mono text-green-400">{orderModal.allocationId}</span></p>
             <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
               <div><p className={label}>Product</p><p className={`font-bold ${PRODUCT_COLORS[orderModal.product]?.text}`}>{orderModal.product}</p></div>
-              <div><p className={label}>Depot</p><p className="text-gray-300">{orderModal.depot}</p></div>
-              <div><p className={label}>Allocated</p><p className="text-white">{Number(orderModal.volumeLitres).toLocaleString()} L</p></div>
+              <div><p className={label}>Depot</p><p className="text-foreground">{orderModal.depot}</p></div>
+              <div><p className={label}>Allocated</p><p className="text-foreground">{Number(orderModal.volumeLitres).toLocaleString()} L</p></div>
               <div><p className={label}>Remaining</p><p className="text-green-400 font-semibold">{Number(orderModal.volumeLitres - orderModal.usedLitres).toLocaleString()} L</p></div>
             </div>
             <div className="mb-4">
@@ -1005,8 +1004,8 @@ function SectionAllocations() {
                 className={inputCls}
               />
               {orderQty && !isNaN(parseInt(orderQty)) && (
-                <p className="text-xs text-gray-400 mt-1">
-                  Est. amount: <span className="text-white font-semibold">₦{(parseInt(orderQty) * (_platformPrices[orderModal.product] ?? 0)).toLocaleString()}</span>
+                <p className="text-xs text-muted mt-1">
+                  Est. amount: <span className="text-foreground font-semibold">₦{(parseInt(orderQty) * (_platformPrices[orderModal.product] ?? 0)).toLocaleString()}</span>
                 </p>
               )}
             </div>
@@ -1014,7 +1013,7 @@ function SectionAllocations() {
               <button onClick={submitOrder} disabled={submitting} className={`${gBtn} flex-1 disabled:opacity-50`}>
                 {submitting ? "Submitting…" : "Submit Order"}
               </button>
-              <button onClick={() => setOrderModal(null)} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 transition">
+              <button onClick={() => setOrderModal(null)} className="px-4 py-2 rounded-lg text-sm text-muted hover:text-foreground border border-line hover:border-line transition">
                 Cancel
               </button>
             </div>
@@ -1026,18 +1025,18 @@ function SectionAllocations() {
       <div className="flex gap-2 flex-wrap">
         {statuses.map((s) => (
           <button key={s} onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${filter === s ? "bg-green-600 text-white" : "bg-gray-800/60 text-gray-400 hover:text-white"}`}>
-            {s} <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === s ? "bg-white/20" : "bg-gray-700"}`}>{counts[s] ?? 0}</span>
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${filter === s ? "bg-green-600 text-white" : "bg-card-2/60 text-muted hover:text-white"}`}>
+            {s} <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === s ? "bg-card-2" : "bg-card-2"}`}>{counts[s] ?? 0}</span>
           </button>
         ))}
       </div>
 
-      {loading && <p className="text-gray-500 text-sm text-center py-8">Loading allocations…</p>}
+      {loading && <p className="text-muted text-sm text-center py-8">Loading allocations…</p>}
 
       {!loading && filtered.length === 0 && (
         <div className={`${card} text-center py-10`}>
-          <p className="text-gray-500 text-sm">No allocations found.</p>
-          <p className="text-gray-600 text-xs mt-1">Contact admin to request a fuel allocation.</p>
+          <p className="text-muted text-sm">No allocations found.</p>
+          <p className="text-muted text-xs mt-1">Contact admin to request a fuel allocation.</p>
         </div>
       )}
 
@@ -1061,27 +1060,27 @@ function SectionAllocations() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-gray-800/60 rounded-lg px-2 py-2">
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Allocated</p>
-                    <p className="text-sm font-semibold text-white">{total.toLocaleString()} L</p>
+                  <div className="bg-card-2/60 rounded-lg px-2 py-2">
+                    <p className="text-[10px] text-muted uppercase font-bold">Allocated</p>
+                    <p className="text-sm font-semibold text-foreground">{total.toLocaleString()} L</p>
                   </div>
-                  <div className="bg-gray-800/60 rounded-lg px-2 py-2">
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Used</p>
+                  <div className="bg-card-2/60 rounded-lg px-2 py-2">
+                    <p className="text-[10px] text-muted uppercase font-bold">Used</p>
                     <p className="text-sm font-semibold text-orange-400">{used.toLocaleString()} L</p>
                   </div>
-                  <div className="bg-gray-800/60 rounded-lg px-2 py-2">
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Remaining</p>
-                    <p className={`text-sm font-semibold ${remaining > 0 ? "text-green-400" : "text-gray-500"}`}>{remaining.toLocaleString()} L</p>
+                  <div className="bg-card-2/60 rounded-lg px-2 py-2">
+                    <p className="text-[10px] text-muted uppercase font-bold">Remaining</p>
+                    <p className={`text-sm font-semibold ${remaining > 0 ? "text-green-400" : "text-muted"}`}>{remaining.toLocaleString()} L</p>
                   </div>
                 </div>
 
                 {/* Usage bar */}
                 <div>
-                  <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                  <div className="flex justify-between text-[10px] text-muted mb-1">
                     <span>{pct}% used</span>
                     <span>Valid {a.validFrom ? new Date(a.validFrom).toLocaleDateString() : "—"} – {a.validTo ? new Date(a.validTo).toLocaleDateString() : "—"}</span>
                   </div>
-                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-card-2 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${pct >= 90 ? "bg-red-500" : pct >= 60 ? "bg-orange-500" : "bg-green-500"}`}
                       style={{ width: `${pct}%` }}
@@ -1144,7 +1143,7 @@ function SectionSalesHistory() {
           { label: "Avg Margin", value: "12.8%", color: "text-orange-400" },
         ].map((s) => (
           <div key={s.label} className={`${card} text-center`}>
-            <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+            <p className="text-xs text-muted mb-1">{s.label}</p>
             <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
           </div>
         ))}
@@ -1158,24 +1157,24 @@ function SectionSalesHistory() {
       <div className={card}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-gray-800">
+            <thead><tr className="border-b border-line">
               {["Date","Product","Qty","Buyer","Amount","Margin","Margin %"].map((h) => (
-                <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase">{h}</th>
+                <th key={h} className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase">{h}</th>
               ))}
             </tr></thead>
-            <tbody className="divide-y divide-gray-800/50">
+            <tbody className="divide-y divide-line/50">
               {filtered.map((s, i) => {
                 const amtNum = parseFloat(s.amount.replace(/[₦,]/g, ""));
                 const marNum = parseFloat(s.margin.replace(/[₦,]/g, ""));
                 const pct = amtNum > 0 ? ((marNum / amtNum) * 100).toFixed(1) : "0";
                 const pctNum = parseFloat(pct);
                 return (
-                  <tr key={i} className="hover:bg-white/5 transition">
-                    <td className="px-3 py-2.5 text-gray-300">{s.date}</td>
+                  <tr key={i} className="hover:bg-card-2 transition">
+                    <td className="px-3 py-2.5 text-foreground">{s.date}</td>
                     <td className="px-3 py-2.5"><span className={`text-xs font-bold ${PRODUCT_COLORS[s.product].text}`}>{s.product}</span></td>
-                    <td className="px-3 py-2.5 text-gray-300">{s.qty}</td>
-                    <td className="px-3 py-2.5 text-white">{s.buyer}</td>
-                    <td className="px-3 py-2.5 text-white font-semibold">{s.amount}</td>
+                    <td className="px-3 py-2.5 text-foreground">{s.qty}</td>
+                    <td className="px-3 py-2.5 text-foreground">{s.buyer}</td>
+                    <td className="px-3 py-2.5 text-foreground font-semibold">{s.amount}</td>
                     <td className="px-3 py-2.5 text-green-400">{s.margin}</td>
                     <td className="px-3 py-2.5">
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${pctNum >= 10 ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-yellow-500/20 text-yellow-400 border-yellow-500/40"}`}>{pct}%</span>
@@ -1217,10 +1216,10 @@ function SectionProfitMargin() {
             <div key={p} className={card}>
               <span className={`inline-block text-xs font-bold px-3 py-1 rounded-lg mb-4 ${PRODUCT_COLORS[p].light} ${PRODUCT_COLORS[p].text} border ${PRODUCT_COLORS[p].border}`}>{p}</span>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Platform Price / L</span><span className="text-white">₦{buyPrice.toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Current Stock</span><span className="text-white">{tanks[p].level}M L</span></div>
-                <div className="flex justify-between border-t border-gray-800 pt-2">
-                  <span className="text-gray-500">Stock Value</span>
+                <div className="flex justify-between"><span className="text-muted">Platform Price / L</span><span className="text-foreground">₦{buyPrice.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Current Stock</span><span className="text-foreground">{tanks[p].level}M L</span></div>
+                <div className="flex justify-between border-t border-line pt-2">
+                  <span className="text-muted">Stock Value</span>
                   <span className="text-green-400 font-bold">₦{(tanks[p].level * 1_000_000 * buyPrice).toLocaleString()}</span>
                 </div>
               </div>
@@ -1229,18 +1228,18 @@ function SectionProfitMargin() {
         })}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[{ label: "Total Portfolio Value", value: `₦${totalValue.toLocaleString()}`, color: "text-white" },
+        {[{ label: "Total Portfolio Value", value: `₦${totalValue.toLocaleString()}`, color: "text-foreground" },
           { label: "Platform Prices Source", value: "Live from admin settings", color: "text-green-400" },
         ].map((s) => (
           <div key={s.label} className={`${card} text-center`}>
-            <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+            <p className="text-xs text-muted mb-1">{s.label}</p>
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
       <div className={card}>
-        <p className="text-sm font-semibold text-white mb-2">Margin History by Week</p>
-        <p className="text-xs text-gray-500 italic">Weekly margin history is not yet available. Data will appear here once transaction history builds up.</p>
+        <p className="text-sm font-semibold text-foreground mb-2">Margin History by Week</p>
+        <p className="text-xs text-muted italic">Weekly margin history is not yet available. Data will appear here once transaction history builds up.</p>
       </div>
     </div>
   );
@@ -1283,11 +1282,11 @@ function SectionLowStockAlert() {
                 </div>
               </div>
               <div className="space-y-2 text-sm mb-4">
-                <div className="flex justify-between"><span className="text-gray-500">Current Level</span><span className="text-white font-semibold">{level}M L</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Alert Threshold</span><span className={statusColor}>{t}M L</span></div>
+                <div className="flex justify-between"><span className="text-muted">Current Level</span><span className="text-foreground font-semibold">{level}M L</span></div>
+                <div className="flex justify-between"><span className="text-muted">Alert Threshold</span><span className={statusColor}>{t}M L</span></div>
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-1">Set Threshold (M L)</p>
+                <p className="text-xs text-muted mb-1">Set Threshold (M L)</p>
                 <div className="flex gap-2">
                   <input type="number" step="0.1" value={thresh[p]}
                     onChange={(e) => setThresh({ ...thresh, [p]: parseFloat(e.target.value) || 0 })}
@@ -1300,7 +1299,7 @@ function SectionLowStockAlert() {
         })}
       </div>
       <div className={card}>
-        <p className="text-sm font-semibold text-white mb-1">Current Status</p>
+        <p className="text-sm font-semibold text-foreground mb-1">Current Status</p>
         {(["PMS","ATK","AGO"] as const).some(p => tanks[p].level < thresh[p]) ? (
           <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
             <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -1316,8 +1315,8 @@ function SectionLowStockAlert() {
         )}
       </div>
       <div className={card}>
-        <p className="text-sm font-semibold text-white mb-2">Alert History</p>
-        <p className="text-xs text-gray-500 italic">No historical alert records on file.</p>
+        <p className="text-sm font-semibold text-foreground mb-2">Alert History</p>
+        <p className="text-xs text-muted italic">No historical alert records on file.</p>
       </div>
     </div>
   );
@@ -1369,11 +1368,11 @@ function SectionBuyers() {
         {[
           { label: "Total Buyers",      value: buyers.length.toString(),                              color: "text-green-400"  },
           { label: "Active",            value: buyers.filter((b) => b.status === "active").length.toString(), color: "text-green-400" },
-          { label: "Total Revenue",     value: "₦" + (totalRevenue / 1e9).toFixed(2) + "B",               color: "text-white"      },
+          { label: "Total Revenue",     value: "₦" + (totalRevenue / 1e9).toFixed(2) + "B",               color: "text-foreground"      },
           { label: "Outstanding",       value: "₦" + (totalOutstanding / 1e6).toFixed(1) + "M",           color: "text-yellow-400" },
         ].map((s) => (
           <div key={s.label} className={`${card} text-center`}>
-            <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+            <p className="text-xs text-muted mb-1">{s.label}</p>
             <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
           </div>
         ))}
@@ -1391,28 +1390,28 @@ function SectionBuyers() {
       <div className={card}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-gray-800">
+            <thead><tr className="border-b border-line">
               {["ID","Buyer","State","Contact","Products","Orders","Total Revenue","Outstanding","Status",""].map((h) => (
-                <th key={h} className="text-left px-3 py-2 text-xs text-gray-500 font-semibold uppercase whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left px-3 py-2 text-xs text-muted font-semibold uppercase whitespace-nowrap">{h}</th>
               ))}
             </tr></thead>
-            <tbody className="divide-y divide-gray-800/50">
+            <tbody className="divide-y divide-line/50">
               {filtered.map((b) => (
-                <tr key={b.id} className="hover:bg-white/5 transition">
+                <tr key={b.id} className="hover:bg-card-2 transition">
                   <td className="px-3 py-2.5 font-mono text-xs text-green-400">{b.id}</td>
-                  <td className="px-3 py-2.5 text-white font-semibold whitespace-nowrap">{b.name}</td>
-                  <td className="px-3 py-2.5 text-gray-400">{b.state}</td>
-                  <td className="px-3 py-2.5 text-gray-300 whitespace-nowrap">{b.contact}</td>
+                  <td className="px-3 py-2.5 text-foreground font-semibold whitespace-nowrap">{b.name}</td>
+                  <td className="px-3 py-2.5 text-muted">{b.state}</td>
+                  <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{b.contact}</td>
                   <td className="px-3 py-2.5">
                     <div className="flex gap-1 flex-wrap">
                       {b.products.map((p: string) => <span key={p} className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${PRODUCT_COLORS[p]?.light} ${PRODUCT_COLORS[p]?.text} border ${PRODUCT_COLORS[p]?.border}`}>{p}</span>)}
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 text-gray-300 text-center">{b.orders}</td>
-                  <td className="px-3 py-2.5 text-white font-semibold whitespace-nowrap">{b.total}</td>
-                  <td className={`px-3 py-2.5 font-semibold whitespace-nowrap ${b.outstanding === "₦0" ? "text-gray-500" : "text-yellow-400"}`}>{b.outstanding}</td>
+                  <td className="px-3 py-2.5 text-foreground text-center">{b.orders}</td>
+                  <td className="px-3 py-2.5 text-foreground font-semibold whitespace-nowrap">{b.total}</td>
+                  <td className={`px-3 py-2.5 font-semibold whitespace-nowrap ${b.outstanding === "₦0" ? "text-muted" : "text-yellow-400"}`}>{b.outstanding}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${b.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{toLabel(b.status)}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${b.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-muted border-line/40"}`}>{toLabel(b.status)}</span>
                   </td>
                   <td className="px-3 py-2.5">
                     <button onClick={() => setSelected(b)} className="text-xs text-green-400 hover:text-green-300 font-semibold transition">View</button>
@@ -1428,13 +1427,13 @@ function SectionBuyers() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSelected(null)} />
-          <div className="relative z-10 bg-gray-950 border border-gray-700 rounded-2xl w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+          <div className="relative z-10 bg-background border border-line rounded-2xl w-full max-w-lg shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-line">
               <div>
-                <p className="text-sm font-bold text-white">{selected.name}</p>
-                <p className="text-xs text-gray-500 font-mono">{selected.id}</p>
+                <p className="text-sm font-bold text-foreground">{selected.name}</p>
+                <p className="text-xs text-muted font-mono">{selected.id}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition">
+              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-card-2 transition">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -1448,24 +1447,24 @@ function SectionBuyers() {
                   { label: "Total Revenue",value: selected.total   },
                   { label: "Outstanding", value: selected.outstanding },
                 ].map((r) => (
-                  <div key={r.label} className="bg-gray-900/50 rounded-lg px-3 py-2.5">
-                    <p className="text-xs text-gray-500 mb-0.5">{r.label}</p>
-                    <p className={`text-sm font-semibold ${r.label === "Outstanding" && r.value !== "₦0" ? "text-yellow-400" : "text-white"}`}>{r.value}</p>
+                  <div key={r.label} className="bg-card/50 rounded-lg px-3 py-2.5">
+                    <p className="text-xs text-muted mb-0.5">{r.label}</p>
+                    <p className={`text-sm font-semibold ${r.label === "Outstanding" && r.value !== "₦0" ? "text-yellow-400" : "text-foreground"}`}>{r.value}</p>
                   </div>
                 ))}
               </div>
-              <div className="bg-gray-900/50 rounded-lg px-3 py-2.5">
-                <p className="text-xs text-gray-500 mb-2">Products Purchased</p>
+              <div className="bg-card/50 rounded-lg px-3 py-2.5">
+                <p className="text-xs text-muted mb-2">Products Purchased</p>
                 <div className="flex gap-2">
                   {selected.products.map((p: string) => <span key={p} className={`text-xs font-bold px-3 py-1 rounded-lg ${PRODUCT_COLORS[p]?.light} ${PRODUCT_COLORS[p]?.text} border ${PRODUCT_COLORS[p]?.border}`}>{p}</span>)}
                 </div>
               </div>
-              <div className="bg-gray-900/50 rounded-lg px-3 py-2.5">
-                <p className="text-xs text-gray-500 mb-1">Account Status</p>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${selected.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40"}`}>{toLabel(selected.status)}</span>
+              <div className="bg-card/50 rounded-lg px-3 py-2.5">
+                <p className="text-xs text-muted mb-1">Account Status</p>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${selected.status === "active" ? "bg-green-500/20 text-green-400 border-green-500/40" : "bg-gray-500/20 text-muted border-line/40"}`}>{toLabel(selected.status)}</span>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-800 flex gap-3">
+            <div className="px-6 py-4 border-t border-line flex gap-3">
               <button
                 onClick={() => {
                   setSelected(null);
@@ -1475,7 +1474,7 @@ function SectionBuyers() {
               >
                 Create Order for Buyer
               </button>
-              <button onClick={() => setSelected(null)} className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white border border-gray-700 transition">Close</button>
+              <button onClick={() => setSelected(null)} className="px-4 py-2 rounded-lg text-sm text-muted hover:text-foreground border border-line transition">Close</button>
             </div>
           </div>
         </div>
@@ -1555,7 +1554,7 @@ function SectionCustomerRequests() {
     if (selected?.id === id) setSelected(p => p ? { ...p, status } : null);
   };
 
-  const pc = (p: string) => p === "emergency" ? "bg-red-500/20 text-red-400 border-red-500/40" : p === "urgent" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40" : "bg-gray-500/20 text-gray-400 border-gray-500/40";
+  const pc = (p: string) => p === "emergency" ? "bg-red-500/20 text-red-400 border-red-500/40" : p === "urgent" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40" : "bg-gray-500/20 text-muted border-line/40";
   const sc = (s: string) => s === "delivered" ? "bg-green-500/20 text-green-400 border-green-500/40" : s === "processing" ? "bg-blue-500/20 text-blue-400 border-blue-500/40" : s === "pending" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40" : "bg-red-500/20 text-red-400 border-red-500/40";
   const prc = (p: string) => p === "PMS" ? "text-red-400" : p === "AGO" ? "text-blue-400" : "text-orange-400";
 
@@ -1566,9 +1565,9 @@ function SectionCustomerRequests() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
-        {[["Total", requests.length, "text-white"], ["Pending", counts.pending, "text-yellow-400"], ["Processing", counts.processing, "text-blue-400"], ["Delivered", counts.delivered, "text-green-400"]].map(([l, v, c]) => (
-          <div key={String(l)} className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl p-4">
-            <p className="text-gray-400 text-xs mb-1">{l}</p>
+        {[["Total", requests.length, "text-foreground"], ["Pending", counts.pending, "text-yellow-400"], ["Processing", counts.processing, "text-blue-400"], ["Delivered", counts.delivered, "text-green-400"]].map(([l, v, c]) => (
+          <div key={String(l)} className="bg-card backdrop-blur-md border border-line rounded-xl p-4">
+            <p className="text-muted text-xs mb-1">{l}</p>
             <p className={`text-2xl font-bold ${c}`}>{v}</p>
           </div>
         ))}
@@ -1577,14 +1576,14 @@ function SectionCustomerRequests() {
       <div className="flex gap-2 flex-wrap">
         {["All", "pending", "processing", "delivered", "cancelled"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${filter === f ? "bg-green-600 border-green-500 text-white" : "bg-black/40 border-gray-700 text-gray-300 hover:border-green-500"}`}>
+            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${filter === f ? "bg-green-600 border-green-500 text-white" : "bg-card border-line text-foreground hover:border-green-500"}`}>
             {f} ({f === "All" ? requests.length : counts[f] ?? 0})
           </button>
         ))}
       </div>
 
-      <div className="bg-black/40 backdrop-blur-md border border-gray-800 rounded-xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+      <div className="bg-card backdrop-blur-md border border-line rounded-xl overflow-hidden">
+        <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line text-xs text-muted uppercase tracking-wide">
           <span className="col-span-2">ID</span>
           <span className="col-span-2">Station</span>
           <span className="col-span-1">Product</span>
@@ -1594,20 +1593,20 @@ function SectionCustomerRequests() {
           <span className="col-span-1">Priority</span>
           <span className="col-span-2 text-right">Actions</span>
         </div>
-        {filtered.length === 0 && <p className="text-center text-gray-500 py-10">No requests</p>}
+        {filtered.length === 0 && <p className="text-center text-muted py-10">No requests</p>}
         {filtered.map(req => (
-          <div key={req.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800/50 hover:bg-white/5 items-center">
+          <div key={req.id} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-line/50 hover:bg-card-2 items-center">
             <div className="col-span-2">
               <span className="text-green-400 font-mono text-xs">{req.id}</span>
               {req.requestedBy.includes("External") && <span className="block text-orange-400 text-[10px]">External</span>}
             </div>
             <div className="col-span-2">
-              <p className="text-white text-xs truncate">{req.stationName.split(" - ")[0]}</p>
-              <p className="text-gray-500 text-xs truncate">{req.stationName.split(" - ")[1] || ""}</p>
+              <p className="text-foreground text-xs truncate">{req.stationName.split(" - ")[0]}</p>
+              <p className="text-muted text-xs truncate">{req.stationName.split(" - ")[1] || ""}</p>
             </div>
             <span className={`col-span-1 text-xs font-medium ${prc(req.product)}`}>{req.product}</span>
-            <span className="col-span-2 text-gray-300 text-xs truncate">{req.requestedBy}</span>
-            <span className="col-span-1 text-gray-300 text-xs">{req.quantity}</span>
+            <span className="col-span-2 text-foreground text-xs truncate">{req.requestedBy}</span>
+            <span className="col-span-1 text-foreground text-xs">{req.quantity}</span>
             <span className="col-span-1"><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(req.status)}`}>{toLabel(req.status)}</span></span>
             <span className="col-span-1"><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${pc(req.priority)}`}>{req.priority}</span></span>
             <div className="col-span-2 flex justify-end gap-1 flex-wrap">
@@ -1622,22 +1621,22 @@ function SectionCustomerRequests() {
 
       {selected && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setSelected(null)}>
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-line rounded-xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-5">
               <div>
-                <h3 className="text-white font-bold">{selected.id}</h3>
+                <h3 className="text-foreground font-bold">{selected.id}</h3>
                 {selected.requestedBy.includes("External") && <span className="text-xs text-orange-400">External / Walk-in Order</span>}
               </div>
-              <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
+              <button onClick={() => setSelected(null)} className="text-muted hover:text-foreground text-xl">✕</button>
             </div>
             <div className="space-y-3 text-sm mb-5">
               {[["Station", selected.stationName], ["Requested By", selected.requestedBy], ["Depot", selected.depot], ["Quantity", selected.quantity], ["Delivery Date", selected.deliveryDate]].map(([k, v]) => (
-                <div key={k} className="flex justify-between"><span className="text-gray-400">{k}</span><span className="text-white text-right">{v}</span></div>
+                <div key={k} className="flex justify-between"><span className="text-muted">{k}</span><span className="text-foreground text-right">{v}</span></div>
               ))}
-              <div className="flex justify-between"><span className="text-gray-400">Product</span><span className={`font-medium ${prc(selected.product)}`}>{selected.product}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Priority</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${pc(selected.priority)}`}>{selected.priority}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Status</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(selected.status)}`}>{toLabel(selected.status)}</span></div>
-              {selected.notes && <div><span className="text-gray-400 block mb-1">Notes</span><p className="text-white bg-black/30 rounded p-2 text-xs">{selected.notes}</p></div>}
+              <div className="flex justify-between"><span className="text-muted">Product</span><span className={`font-medium ${prc(selected.product)}`}>{selected.product}</span></div>
+              <div className="flex justify-between"><span className="text-muted">Priority</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${pc(selected.priority)}`}>{selected.priority}</span></div>
+              <div className="flex justify-between"><span className="text-muted">Status</span><span className={`inline-flex px-2 py-0.5 rounded text-xs border ${sc(selected.status)}`}>{toLabel(selected.status)}</span></div>
+              {selected.notes && <div><span className="text-muted block mb-1">Notes</span><p className="text-foreground bg-card rounded p-2 text-xs">{selected.notes}</p></div>}
             </div>
             {(selected.status === "pending" || selected.status === "processing") && (
               <div className="flex justify-end gap-2">
@@ -1722,11 +1721,11 @@ export default function BulkDealerDashboard() {
 
   return (
     <div
-      className="min-h-screen text-white relative"
-      style={{ backgroundImage: `url(${tower.src})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}
+      className="min-h-screen text-foreground relative"
+
     >
       <Head><title>Bulk Dealer Portal | e-Nergy</title></Head>
-      <div className="fixed inset-0 bg-black/65 z-0" />
+      <div className="fixed inset-0 bg-background z-0" />
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* ── Top Bar ── */}
@@ -1735,7 +1734,7 @@ export default function BulkDealerDashboard() {
             className="object-contain drop-shadow-[0_0_10px_rgba(34,197,94,0.4)]" />
           <div className="flex items-center gap-3">
             {/* Notification bell */}
-            <Link href="/bulk-dealer/notifications" className="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/60 transition">
+            <Link href="/bulk-dealer/notifications" className="relative p-2 rounded-lg text-muted hover:text-foreground hover:bg-card-2/60 transition">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
@@ -1747,22 +1746,22 @@ export default function BulkDealerDashboard() {
             </Link>
             {/* Profile link */}
             <Link href="/bulk-dealer/profile"
-              className="hidden sm:flex items-center gap-2 text-sm text-gray-300 bg-gray-800/60 hover:bg-gray-700/80 border border-gray-700 hover:border-green-500/40 px-3 py-1.5 rounded-full transition">
+              className="hidden sm:flex items-center gap-2 text-sm text-foreground bg-card-2/60 hover:bg-card-2/80 border border-line hover:border-green-500/40 px-3 py-1.5 rounded-full transition">
               <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user.name.charAt(0).toUpperCase()}
               </div>
-              <span>Hi, <span className="font-semibold text-white">{user.name}</span></span>
+              <span>Hi, <span className="font-semibold text-foreground">{user.name}</span></span>
             </Link>
             {user.dealerCode && (
-              <div className="hidden sm:flex items-center gap-1.5 bg-gray-800/60 border border-gray-700 px-3 py-1.5 rounded-full">
-                <span className="text-gray-400 text-xs">Code:</span>
+              <div className="hidden sm:flex items-center gap-1.5 bg-card-2/60 border border-line px-3 py-1.5 rounded-full">
+                <span className="text-muted text-xs">Code:</span>
                 <span className="text-green-400 text-xs font-bold font-mono tracking-wider">{user.dealerCode}</span>
                 <button
                   onClick={() => navigator.clipboard.writeText(user.dealerCode!).then(() => {
                     const el = document.getElementById("copy-dealer-code-tip");
                     if (el) { el.style.opacity = "1"; setTimeout(() => { el.style.opacity = "0"; }, 1500); }
                   })}
-                  className="relative ml-0.5 text-gray-500 hover:text-green-400 transition"
+                  className="relative ml-0.5 text-muted hover:text-green-400 transition"
                   title="Copy dealer code"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -1771,7 +1770,7 @@ export default function BulkDealerDashboard() {
                   </svg>
                   <span
                     id="copy-dealer-code-tip"
-                    className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 transition-opacity duration-300"
+                    className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 bg-card-2 text-foreground text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 transition-opacity duration-300"
                   >
                     Copied!
                   </span>
@@ -1801,7 +1800,7 @@ export default function BulkDealerDashboard() {
                   className={`px-5 py-2.5 rounded-lg text-sm font-semibold border transition ${
                     active === section
                       ? "bg-green-600 border-green-500 text-white shadow-lg shadow-green-500/20"
-                      : "bg-gray-900/60 border-gray-700 text-gray-300 hover:text-white hover:bg-gray-800/80 hover:border-gray-600"
+                      : "bg-card/60 border-line text-foreground hover:text-foreground hover:bg-card-2/80 hover:border-line"
                   }`}
                 >
                   {section}
@@ -1816,23 +1815,23 @@ export default function BulkDealerDashboard() {
 
         {/* ── Content Panel ── */}
         <div className="flex-1 px-6 md:px-10 pb-6">
-          <div className="bg-black/30 backdrop-blur-md border border-gray-700/60 rounded-2xl p-6">
-            <p className="text-lg font-bold text-white mb-5">{active}</p>
+          <div className="bg-card backdrop-blur-md border border-line/60 rounded-2xl p-6">
+            <p className="text-lg font-bold text-foreground mb-5">{active}</p>
             <ActiveSection />
           </div>
         </div>
 
         {/* ── Footer ── */}
-        <footer className="px-6 py-4 border-t border-gray-800/60 flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 hidden md:flex">
-          <Link href="/contact"              className="hover:text-gray-300 transition">Contact</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/terms-and-conditions" className="hover:text-gray-300 transition">Terms &amp; Conditions</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/refund-policy"        className="hover:text-gray-300 transition">Refund Policy</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/privacy-policy"       className="hover:text-gray-300 transition">Privacy Policy</Link>
-          <span className="text-gray-700">|</span>
-          <Link href="/about"                className="hover:text-gray-300 transition">About Us</Link>
+        <footer className="px-6 py-4 border-t border-line/60 flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted hidden md:flex">
+          <Link href="/contact"              className="hover:text-foreground transition">Contact</Link>
+          <span className="text-muted">|</span>
+          <Link href="/terms-and-conditions" className="hover:text-foreground transition">Terms &amp; Conditions</Link>
+          <span className="text-muted">|</span>
+          <Link href="/refund-policy"        className="hover:text-foreground transition">Refund Policy</Link>
+          <span className="text-muted">|</span>
+          <Link href="/privacy-policy"       className="hover:text-foreground transition">Privacy Policy</Link>
+          <span className="text-muted">|</span>
+          <Link href="/about"                className="hover:text-foreground transition">About Us</Link>
         </footer>
       </div>
     </div>
