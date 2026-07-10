@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { Gauge, Loader2, ShieldCheck } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 /**
  * Dedicated financer login page.
@@ -45,8 +46,12 @@ export default function FinancerLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
       <Head><title>Financer Login · e-Nergy</title></Head>
+
+      <div className="fixed top-4 right-4 z-20">
+        <ThemeToggle className="!w-9 !h-9 !rounded-lg border-line text-muted hover:text-foreground hover:bg-card-2" />
+      </div>
 
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
@@ -54,12 +59,12 @@ export default function FinancerLogin() {
             <Gauge className="w-6 h-6 text-orange-400" />
           </div>
           <h1 className="text-lg font-bold">Financer Overview</h1>
-          <p className="text-[12px] text-gray-500 mt-1 flex items-center gap-1.5">
+          <p className="text-[12px] text-muted mt-1 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" /> Restricted access
           </p>
         </div>
 
-        <form onSubmit={submit} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+        <form onSubmit={submit} className="bg-card border border-line rounded-2xl p-6 space-y-4">
           {error && (
             <div className="text-[13px] text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
               {error}
@@ -67,27 +72,27 @@ export default function FinancerLogin() {
           )}
 
           <div>
-            <label className="block text-[12px] font-medium text-gray-400 mb-1.5">Email</label>
+            <label className="block text-[12px] font-medium text-muted mb-1.5">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
               required
-              className="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none"
+              className="w-full bg-card-2 border border-line rounded-lg px-3 py-2 text-sm text-foreground focus:border-orange-500 focus:outline-none"
               placeholder="financer@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-medium text-gray-400 mb-1.5">Password</label>
+            <label className="block text-[12px] font-medium text-muted mb-1.5">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
-              className="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none"
+              className="w-full bg-card-2 border border-line rounded-lg px-3 py-2 text-sm text-foreground focus:border-orange-500 focus:outline-none"
               placeholder="••••••••"
             />
           </div>
@@ -102,7 +107,7 @@ export default function FinancerLogin() {
           </button>
         </form>
 
-        <p className="text-center text-[11px] text-gray-600 mt-4">
+        <p className="text-center text-[11px] text-muted mt-4">
           Financer accounts are provisioned by the administrator.
         </p>
       </div>

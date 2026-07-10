@@ -13,6 +13,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { Financer } from "@/lib/models/Financer";
+import { User } from "@/lib/models/User";
 import { Session } from "@/lib/models/Session";
 import { signToken, setTokenCookie } from "@/lib/auth";
 
@@ -51,24 +52,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await connectDB();
 
   const normalizedEmail = email.toLowerCase().trim();
+
+  // Resolve the identity that is allowed to sign in here. Two account types can
+  // hold financer access (mirroring the overview dashboard gate):
+  //   1. A dedicated Financer account, or
+  //   2. A normal User that an admin converted with the `financerAccess` flag.
+  // We try the dedicated account first, then fall back to a flagged user.
+  let account: {
+    id: string;
+    name?: string;
+    email: string;
+    passwordHash?: string | null;
+    suspended: boolean;
+  } | null = null;
+
   const financer = await Financer.findOne({ email: normalizedEmail });
+  if (financer) {
+    account = {
+      id: String(financer._id),
+      name: financer.name,
+      email: financer.email,
+      passwordHash: financer.passwordHash,
+      suspended: financer.status === "suspended",
+    };
+  } else {
+    const user = await User.findOne({ email: normalizedEmail });
+    if (user && user.financerAccess) {
+      account = {
+        id: String(user._id),
+        name: user.name,
+        email: user.email,
+        passwordHash: user.passwordHash,
+        suspended: user.status === "suspended",
+      };
+    }
+  }
 
   // Generic message either way — never reveal whether the account exists.
-  if (!financer || !financer.passwordHash) {
+  if (!account || !account.passwordHash) {
     return res.status(401).json({ error: "Invalid email or password" });
   }
 
-  const valid = await bcrypt.compare(password, financer.passwordHash);
+  const valid = await bcrypt.compare(password, account.passwordHash);
   if (!valid) return res.status(401).json({ error: "Invalid email or password" });
 
-  if (financer.status === "suspended") {
+  if (account.suspended) {
     return res.status(403).json({ error: "Your account has been suspended. Contact the administrator." });
   }
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session = await Session.create({
-    userEmail: financer.email,
-    userId: financer._id,
+    userEmail: account.email,
+    userId: account.id,
     token: "pending",
     role: "financer",
     ipAddress: (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress,
@@ -78,15 +113,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   const token = signToken({
-    userId: String(financer._id),
-    email: financer.email,
+    userId: account.id,
+    email: account.email,
     role: "financer",
     sessionId: String(session._id),
   });
 
   await Promise.all([
     Session.findByIdAndUpdate(session._id, { token }),
-    Financer.findByIdAndUpdate(financer._id, { lastLogin: new Date() }),
+    financer
+      ? Financer.findByIdAndUpdate(account.id, { lastLogin: new Date() })
+      : User.findByIdAndUpdate(account.id, { lastLogin: new Date() }),
   ]);
 
   setTokenCookie(res, token);
@@ -94,9 +131,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   return res.status(200).json({
     token,
     user: {
-      _id: String(financer._id),
-      name: financer.name,
-      email: financer.email,
+      _id: account.id,
+      name: account.name,
+      email: account.email,
       role: "financer",
     },
   });
