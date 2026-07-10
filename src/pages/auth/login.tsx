@@ -6,12 +6,12 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import NavBar from "@/components/NavBar";
 import BottomNavbar from "@/components/ButtomNavbar";
-import ThemeToggle from "@/components/ThemeToggle";
 import tower from "@/../public/tower.jpg";
 import { HoneypotField, useHoneypot } from "@/lib/security/honeypot";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { sanitizeString } from "@/lib/security/sanitize";
 import { api } from "@/lib/db-client";
+import { Eye, EyeOff } from "lucide-react";
 
 
 // Maps DB role values to the display/routing role strings used throughout the app
@@ -37,6 +37,7 @@ export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
@@ -84,11 +85,6 @@ export default function Login() {
       >
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/40"></div>
-
-        {/* Theme toggle (NavBar is hidden on /auth routes) */}
-        <div className="absolute top-4 right-4 z-20 text-white">
-          <ThemeToggle />
-        </div>
 
       {/* Login Container */}
       <div className="relative flex w-[90%] max-w-6xl h-[70vh] bg-card/95 backdrop-blur-sm rounded-lg shadow-2xl overflow-hidden border-4 border-orange-500 z-10 mt-10">
@@ -140,14 +136,25 @@ export default function Login() {
               required
             />
 
-            <input
-              type="password"
-              placeholder="Enter password"
-              className="w-full rounded-full bg-gray-200 dark:bg-gray-800 text-foreground placeholder:text-muted py-3 px-5 text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                className="w-full rounded-full bg-gray-200 dark:bg-gray-800 text-foreground placeholder:text-muted py-3 pl-5 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-4 flex items-center text-muted hover:text-foreground transition"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
 
             {/* Primary login button */}
             <button
