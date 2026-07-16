@@ -6,13 +6,24 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
  * These are SEPARATE from the normal `users` collection: a financer has no
  * customer/dealer/etc role and can only reach the read-only financer overview
  * dashboard. Accounts are created and revoked by an admin from the admin
- * dashboard, and are hard-capped (see MAX_FINANCER_ACCOUNTS in the API routes).
+ * dashboard. Capacity is set by MAX_FINANCER_ACCOUNTS (high default,
+ * env-configurable) in the API routes so many banks can be onboarded.
  */
 const FinancerSchema = new Schema(
   {
-    name:         { type: String, required: true, trim: true },
+    // ── Login credentials ──────────────────────────────────────────────────
+    name:         { type: String, required: true, trim: true },   // full legal bank name
     email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
+
+    // ── Bank profile (admin-managed, all optional) ─────────────────────────
+    shortCode:    { type: String, trim: true },   // short label / code, e.g. "GTB"
+    logoUrl:      { type: String, trim: true },   // branding image shown on the bank's dashboard
+    contactName:  { type: String, trim: true },   // relationship manager
+    contactPhone: { type: String, trim: true },
+    address:      { type: String, trim: true },   // HQ / office address
+
+    // ── Lifecycle ──────────────────────────────────────────────────────────
     status:       { type: String, enum: ["active", "suspended"], default: "active" },
     lastLogin:    { type: Date },
     createdBy:    { type: String },   // admin email that created the account

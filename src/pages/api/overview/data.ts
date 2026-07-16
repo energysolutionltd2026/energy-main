@@ -54,12 +54,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     //   - a super-admin-granted `financerAccess` flag on the user record.
     // Fail closed for everyone else.
     let allowed = false;
+    // When set, the viewer is ONE specific bank and every dataset below is
+    // scoped to the bulk dealers assigned to it. When null, the viewer is a
+    // platform-wide super-viewer (env allowlist or a financerAccess grantee)
+    // and sees the whole platform.
+    let scopedFinancerId: string | null = null;
     if (user.role === "financer") {
       // Dedicated Financer account, or a normal user converted to financer-only
       // via the admin toggle (backed by the financerAccess flag).
       const fin = await Financer.findById(user.userId).select("status").lean();
       if (fin) {
         allowed = (fin as { status?: string }).status !== "suspended";
+        // A real bank account only ever sees the dealers assigned to it.
+        scopedFinancerId = user.userId;
       } else {
         const grantee = await User.findById(user.userId).select("financerAccess").lean();
         allowed = Boolean((grantee as { financerAccess?: boolean } | null)?.financerAccess);
@@ -75,9 +82,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: "Forbidden" });
     }
 
+    // Fetch the (possibly scoped) dealer set first: the transaction-flow datasets
+    // below are narrowed to just these dealers' emails when a single bank is
+    // viewing, so we need their emails before querying.
+    const dealers = await User.find(
+      scopedFinancerId
+        ? { role: "bulk_dealer", financerId: scopedFinancerId }
+        : { role: "bulk_dealer" }
+    )
+      .select(
+        "name companyName email phone role status dealerCode rcNumber dprLicence state lga headOfficeAddress pmsTankMaxML agoTankMaxML atkTankMaxML financerId createdAt"
+      )
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
+
+    // For a scoped bank view, restrict every dealer-keyed dataset to these
+    // dealers' emails. `scope(field)` returns an empty-safe filter: a bank with
+    // no assigned dealers gets `{ $in: [] }` and correctly sees nothing, while a
+    // super-viewer (scopedFinancerId === null) gets the unfiltered `{}`.
+    const dealerEmails = dealers
+      .map((d) => (d as { email?: string }).email)
+      .filter((e): e is string => Boolean(e));
+    const scope = (field: string): Record<string, unknown> =>
+      scopedFinancerId ? { [field]: { $in: dealerEmails } } : {};
+
     const [
       settings,
-      dealers,
       allocations,
       transactions,
       supplyRequests,
@@ -92,41 +123,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           "platformName pmsPricePerLitre agoPricePerLitre atkPricePerLitre bulkDealerYearlyFee annualMembershipFee"
         )
         .lean(),
-      User.find({ role: "bulk_dealer" })
-        .select(
-          "name companyName email phone role status dealerCode rcNumber dprLicence state lga headOfficeAddress pmsTankMaxML agoTankMaxML atkTankMaxML createdAt"
-        )
-        .sort({ createdAt: -1 })
-        .limit(200)
-        .lean(),
-      Allocation.find({})
+      Allocation.find(scope("dealerEmail"))
         .select(
           "dealerEmail dealerName product volumeLitres usedLitres depot status validTo"
         )
         .sort({ createdAt: -1 })
         .limit(300)
         .lean(),
-      Transaction.find({})
+      Transaction.find(scope("userEmail"))
         .select(
           "txnId type user userEmail userRole product quantity totalAmount status paymentMethod depot timestamp aiFlagged aiAnomalySeverity"
         )
         .sort({ timestamp: -1 })
         .limit(300)
         .lean(),
-      SupplyRequest.find({})
+      SupplyRequest.find(scope("requestedBy"))
         .select(
           "requestId stationName product quantity depot priority status requestedBy"
         )
         .sort({ createdAt: -1 })
         .limit(300)
         .lean(),
-      PurchaseOrder.find({})
+      PurchaseOrder.find(scope("dealer"))
         .select(
-          "orderId companyName dealer productType productQuantity loadingDepot status totalAmount"
+          "orderId companyName dealer productType productQuantity loadingDepot status totalAmount createdAt"
         )
         .sort({ createdAt: -1 })
         .limit(300)
         .lean(),
+      // Fleet / depot / union stats are shared platform infrastructure, not
+      // dealer-owned, so they stay global even in a scoped bank view. (Per-dealer
+      // truck-rental and union-dues *money flow* is already captured, scoped, in
+      // the `transactions` dataset above.)
       Truck.find({}).select("status").limit(500).lean(),
       TruckRental.find({})
         .select("status paymentStatus totalAmount")
@@ -135,6 +163,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       Depot.find({}).select("name state PMS AGO ATK").limit(100).lean(),
       UnionDues.find({}).select("status").limit(500).lean(),
     ]);
+
+    // Banks available for the "by bank" filter: just this bank when scoped, or
+    // every bank for a platform-wide super-viewer.
+    const banks = await Financer.find(scopedFinancerId ? { _id: scopedFinancerId } : {})
+      .select("name shortCode logoUrl")
+      .sort({ name: 1 })
+      .lean();
 
     return res.status(200).json({
       settings: settings || null,
@@ -147,6 +182,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       truckRentals,
       depots,
       unionDues,
+      banks,
     });
   } catch (err) {
     console.error("[overview/data] query failed:", err);

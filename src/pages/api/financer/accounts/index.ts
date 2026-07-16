@@ -2,8 +2,9 @@
  * GET  /api/financer/accounts   — list financer accounts (admin only)
  * POST /api/financer/accounts   — create a financer account (admin only)
  *
- * Financer logins are a dedicated account type, managed exclusively by an admin
- * and hard-capped at MAX_FINANCER_ACCOUNTS.
+ * Financer logins are a dedicated account type, managed exclusively by an admin.
+ * Capacity is MAX_FINANCER_ACCOUNTS (high default, env-configurable) so many
+ * banks can be onboarded.
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
@@ -12,7 +13,10 @@ import { getSessionUser } from "@/lib/auth";
 import { Financer } from "@/lib/models/Financer";
 import { Session } from "@/lib/models/Session";
 
-export const MAX_FINANCER_ACCOUNTS = 2;
+// Maximum number of dedicated bank (financer) accounts. Set high by default so
+// many banks can be onboarded, and overridable via the MAX_FINANCER_ACCOUNTS
+// env var without a code change. Creation is admin-only regardless.
+export const MAX_FINANCER_ACCOUNTS = Math.max(1, Number(process.env.MAX_FINANCER_ACCOUNTS) || 100);
 
 const SAFE_PROJECTION = "-passwordHash";
 
@@ -33,9 +37,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // ── Create ──
   if (req.method === "POST") {
-    const { name, email, password } = (req.body ?? {}) as {
-      name?: string; email?: string; password?: string;
-    };
+    const { name, email, password, shortCode, logoUrl, contactName, contactPhone, address } =
+      (req.body ?? {}) as {
+        name?: string; email?: string; password?: string;
+        shortCode?: string; logoUrl?: string;
+        contactName?: string; contactPhone?: string; address?: string;
+      };
 
     if (!name?.trim() || !email?.trim() || !password) {
       return res.status(400).json({ error: "name, email and password are required" });
@@ -66,6 +73,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: name.trim(),
         email: normalizedEmail,
         passwordHash,
+        // Optional profile fields — only store non-empty values.
+        ...(shortCode?.trim()    ? { shortCode: shortCode.trim() }       : {}),
+        ...(logoUrl?.trim()      ? { logoUrl: logoUrl.trim() }           : {}),
+        ...(contactName?.trim()  ? { contactName: contactName.trim() }   : {}),
+        ...(contactPhone?.trim() ? { contactPhone: contactPhone.trim() } : {}),
+        ...(address?.trim()      ? { address: address.trim() }           : {}),
         status: "active",
         createdBy: user.email,
       });

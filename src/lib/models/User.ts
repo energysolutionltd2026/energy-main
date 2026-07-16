@@ -21,6 +21,13 @@ const UserSchema = new Schema(
     // The role held before financer conversion, restored when access is revoked.
     previousRole:   { type: String },
 
+    // For bulk dealers only: the bank (Financer account) that finances this
+    // dealer, assigned by an admin. This is what scopes the financer overview
+    // dashboard — a bank sees only the dealers whose financerId matches its own
+    // account id. Null/unset = unassigned (no bank can see this dealer). Points
+    // at the dedicated `Financer` collection, never a financerAccess user.
+    financerId:     { type: Schema.Types.ObjectId, ref: "Financer", index: true },
+
     // ── Auth ──────────────────────────────────────────────────────────────────
     passwordHash:    { type: String },                   // bcrypt hash — never returned to client
     emailVerified:   { type: Boolean, default: false },

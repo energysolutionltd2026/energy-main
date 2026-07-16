@@ -88,6 +88,13 @@ export interface User {
   /** Grants read-only access to the financer overview dashboard (admin-set). */
   financerAccess?: boolean;
 
+  /**
+   * Bulk dealers only: id of the bank (Financer account) that finances this
+   * dealer. Scopes what that bank sees on its overview dashboard. `null` clears
+   * the assignment.
+   */
+  financerId?: string | null;
+
   joinedAt: string;
   lastLogin?: string;
   updatedAt: string;

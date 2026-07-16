@@ -446,22 +446,40 @@ export interface FinancerAccount {
   name: string;
   email: string;
   status: "active" | "suspended";
+  // Bank profile (all optional).
+  shortCode?: string;
+  logoUrl?: string;
+  contactName?: string;
+  contactPhone?: string;
+  address?: string;
   lastLogin?: string;
   createdBy?: string;
   createdAt?: string;
+}
+
+// Profile fields an admin may set when creating or editing a bank.
+export interface FinancerProfileFields {
+  shortCode?: string;
+  logoUrl?: string;
+  contactName?: string;
+  contactPhone?: string;
+  address?: string;
 }
 
 const financerAccounts = {
   list: () =>
     safe(() => apiFetch<{ data: FinancerAccount[]; total: number; max: number }>("/api/financer/accounts")),
 
-  create: (body: { name: string; email: string; password: string }) =>
+  create: (body: { name: string; email: string; password: string } & FinancerProfileFields) =>
     safe(() => apiFetch<FinancerAccount>("/api/financer/accounts", {
       method: "POST",
       body: JSON.stringify(body),
     })),
 
-  update: (id: string, body: { status?: "active" | "suspended"; password?: string }) =>
+  update: (
+    id: string,
+    body: { status?: "active" | "suspended"; password?: string; name?: string } & FinancerProfileFields,
+  ) =>
     safe(() => apiFetch<FinancerAccount>(`/api/financer/accounts/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),

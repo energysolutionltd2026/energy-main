@@ -5,7 +5,9 @@ import {
   LayoutDashboard, Users, Truck, Fuel, Building2, Receipt, MapPin,
   Package, ClipboardList, LogOut, RefreshCw,
   AlertTriangle, ArrowRight, Banknote, Gauge, ShieldCheck,
+  Clock, Scale, Filter, Activity,
 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
 import { toLabel } from "@/utils/toLabel";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -125,7 +127,7 @@ const MOCK = {
   },
   dealers: [
     {
-      _id: "d1", name: "Chidi Okonkwo", companyName: "BrightFlow Petroleum Ltd",
+      _id: "d1", financerId: "b1", name: "Chidi Okonkwo", companyName: "BrightFlow Petroleum Ltd",
       email: "chidi@brightflow.ng", phone: "0803 111 2233", role: "bulk_dealer",
       status: "active", dealerCode: "BD-CH1P3T", rcNumber: "RC-482910", dprLicence: "DPR-PMS-0291",
       state: "Lagos", lga: "Amuwo-Odofin", headOfficeAddress: "14 Trans-Amadi Road, Apapa, Lagos",
@@ -133,7 +135,7 @@ const MOCK = {
       prices: { PMS: 905, AGO: 1215, ATK: 1100 }, joinedAt: "2026-01-12",
     },
     {
-      _id: "d2", name: "Amina Bello", companyName: "Sahel Energy Distribution",
+      _id: "d2", financerId: "b2", name: "Amina Bello", companyName: "Sahel Energy Distribution",
       email: "amina@sahelenergy.ng", phone: "0805 444 5566", role: "bulk_dealer",
       status: "active", dealerCode: "BD-AM7K9Z", rcNumber: "RC-661204", dprLicence: "DPR-AGO-1145",
       state: "Kano", lga: "Nassarawa", headOfficeAddress: "Zaria Road Industrial Layout, Kano",
@@ -141,7 +143,7 @@ const MOCK = {
       prices: { PMS: 899, AGO: 1205, ATK: 1098 }, joinedAt: "2026-02-03",
     },
     {
-      _id: "d3", name: "Emeka Nwosu", companyName: "Delta Prime Oil & Gas",
+      _id: "d3", financerId: "b1", name: "Emeka Nwosu", companyName: "Delta Prime Oil & Gas",
       email: "emeka@deltaprime.ng", phone: "0807 777 8899", role: "bulk_dealer",
       status: "active", dealerCode: "BD-EM4R2Q", rcNumber: "RC-330876", dprLicence: "DPR-PMS-0774",
       state: "Delta", lga: "Warri South", headOfficeAddress: "Refinery Road, Effurun, Warri",
@@ -149,7 +151,7 @@ const MOCK = {
       prices: { PMS: 910, AGO: 1220, ATK: 1105 }, joinedAt: "2025-11-28",
     },
     {
-      _id: "d4", name: "Fatima Yusuf", companyName: "Northgate Fuels Nigeria",
+      _id: "d4", financerId: "b2", name: "Fatima Yusuf", companyName: "Northgate Fuels Nigeria",
       email: "fatima@northgatefuels.ng", phone: "0809 222 3344", role: "bulk_dealer",
       status: "suspended", dealerCode: "BD-FA8T1L", rcNumber: "RC-559013", dprLicence: "DPR-ATK-0410",
       state: "Kaduna", lga: "Kaduna North", headOfficeAddress: "Ahmadu Bello Way, Kaduna",
@@ -157,7 +159,7 @@ const MOCK = {
       prices: { PMS: 915, AGO: 1225, ATK: 1090 }, joinedAt: "2026-03-19",
     },
     {
-      _id: "d5", name: "Tunde Adeyemi", companyName: "Coastline Bulk Supplies",
+      _id: "d5", financerId: "b1", name: "Tunde Adeyemi", companyName: "Coastline Bulk Supplies",
       email: "tunde@coastlinebulk.ng", phone: "0802 555 6677", role: "bulk_dealer",
       status: "active", dealerCode: "BD-TU3N6V", rcNumber: "RC-771265", dprLicence: "DPR-PMS-1330",
       state: "Rivers", lga: "Port Harcourt", headOfficeAddress: "Aba Road, GRA Phase 2, Port Harcourt",
@@ -165,7 +167,7 @@ const MOCK = {
       prices: { PMS: 902, AGO: 1210, ATK: 1102 }, joinedAt: "2026-01-30",
     },
     {
-      _id: "d6", name: "Ngozi Eze", companyName: "Enugu Valley Petroleum",
+      _id: "d6", financerId: "b2", name: "Ngozi Eze", companyName: "Enugu Valley Petroleum",
       email: "ngozi@enuguvalley.ng", phone: "0806 999 0011", role: "bulk_dealer",
       status: "pending", dealerCode: "BD-NG2W5X", rcNumber: "RC-908431", dprLicence: "DPR-AGO-2201",
       state: "Enugu", lga: "Enugu East", headOfficeAddress: "Abakaliki Road, Emene, Enugu",
@@ -199,10 +201,10 @@ const MOCK = {
     { _id: "s4", requestId: "SUP-REQ-3394", stationName: "Coastal Energy Retail", product: "ATK", quantity: 12000, depot: "Port Harcourt Terminal", priority: "normal", status: "pending", requestedBy: "coastal@retail.ng" },
   ],
   purchaseOrders: [
-    { _id: "p1", orderId: "BUY-771201", companyName: "BrightFlow Petroleum Ltd", dealer: "chidi@brightflow.ng", productType: "PMS", productQuantity: 45000, loadingDepot: "Lagos Main Depot", status: "delivered", totalAmount: 40725000 },
-    { _id: "p2", orderId: "BUY-771202", companyName: "Delta Prime Oil & Gas", dealer: "emeka@deltaprime.ng", productType: "PMS", productQuantity: 60000, loadingDepot: "Warri Storage Facility", status: "in_transit", totalAmount: 54600000 },
-    { _id: "p3", orderId: "BUY-771203", companyName: "Sahel Energy Distribution", dealer: "amina@sahelenergy.ng", productType: "AGO", productQuantity: 40000, loadingDepot: "Kano Distribution Hub", status: "processing", totalAmount: 48200000 },
-    { _id: "p4", orderId: "BUY-771204", companyName: "Coastline Bulk Supplies", dealer: "tunde@coastlinebulk.ng", productType: "PMS", productQuantity: 30000, loadingDepot: "Port Harcourt Terminal", status: "delivered", totalAmount: 27060000 },
+    { _id: "p1", orderId: "BUY-771201", companyName: "BrightFlow Petroleum Ltd", dealer: "chidi@brightflow.ng", productType: "PMS", productQuantity: 45000, loadingDepot: "Lagos Main Depot", status: "delivered", totalAmount: 40725000, createdAt: "2026-07-10" },
+    { _id: "p2", orderId: "BUY-771202", companyName: "Delta Prime Oil & Gas", dealer: "emeka@deltaprime.ng", productType: "PMS", productQuantity: 60000, loadingDepot: "Warri Storage Facility", status: "in_transit", totalAmount: 54600000, createdAt: "2026-07-08" },
+    { _id: "p3", orderId: "BUY-771203", companyName: "Sahel Energy Distribution", dealer: "amina@sahelenergy.ng", productType: "AGO", productQuantity: 40000, loadingDepot: "Kano Distribution Hub", status: "processing", totalAmount: 48200000, createdAt: "2026-05-25" },
+    { _id: "p4", orderId: "BUY-771204", companyName: "Coastline Bulk Supplies", dealer: "tunde@coastlinebulk.ng", productType: "PMS", productQuantity: 30000, loadingDepot: "Port Harcourt Terminal", status: "delivered", totalAmount: 27060000, createdAt: "2026-04-15" },
   ],
   trucks: [
     { _id: "k1", status: "approved" }, { _id: "k2", status: "approved" },
@@ -225,9 +227,16 @@ const MOCK = {
     { _id: "u1", status: "paid" }, { _id: "u2", status: "paid" },
     { _id: "u3", status: "pending" }, { _id: "u4", status: "overdue" },
   ],
+  banks: [
+    { _id: "b1", name: "First Trust Bank", shortCode: "FTB" },
+    { _id: "b2", name: "Guaranty Union Bank", shortCode: "GUB" },
+  ],
 };
 
 const PRODUCTS = ["PMS", "AGO", "ATK"] as const;
+const PRODUCT_COLORS: Record<string, string> = { PMS: "#f59e0b", AGO: "#0ea5e9", ATK: "#a855f7" };
+// Cyclic palette for by-dealer slices (last entry reserved-ish for "Others").
+const CHART_COLORS = ["#f59e0b", "#0ea5e9", "#a855f7", "#10b981", "#ef4444", "#eab308", "#6366f1"];
 
 // ─── Small UI atoms ─────────────────────────────────────────────────────────
 function StatusPill({ value }: { value: string }) {
@@ -259,25 +268,61 @@ function StatusPill({ value }: { value: string }) {
   );
 }
 
-function Stat({ icon: Icon, label, value, sub, tone = "orange" }: {
+function Stat({ icon: Icon, label, value, sub, tone = "orange", trend, goodWhenUp = true, hint }: {
   icon: any; label: string; value: string; sub?: string; tone?: string;
+  // Optional signed percentage change rendered as a coloured ▲/▼ badge.
+  trend?: number | null;
+  // Whether an increase is "good" (green up) or "bad" (red up, e.g. exposure).
+  goodWhenUp?: boolean;
+  // Basis/definition shown as a hover tooltip.
+  hint?: string;
 }) {
   const tones: Record<string, string> = {
     orange: "text-orange-400 bg-orange-500/10 border-orange-500/20",
     emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     sky: "text-sky-400 bg-sky-500/10 border-sky-500/20",
     purple: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    red: "text-red-400 bg-red-500/10 border-red-500/20",
+    amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   };
+  const up = (trend ?? 0) >= 0;
+  const trendGood = up === goodWhenUp;
   return (
-    <div className="bg-card/60 border border-line rounded-xl p-4">
+    <div className="bg-card/60 border border-line rounded-xl p-4" title={hint}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-medium text-muted">{label}</span>
         <span className={`w-8 h-8 rounded-lg border flex items-center justify-center ${tones[tone]}`}>
           <Icon className="w-4 h-4" />
         </span>
       </div>
-      <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+      <div className="flex items-end gap-2 flex-wrap">
+        <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+        {trend != null && (
+          <span className={`text-[11px] font-semibold leading-none mb-0.5 ${trendGood ? "text-emerald-400" : "text-red-400"}`}>
+            {up ? "▲" : "▼"} {Math.abs(trend).toFixed(1)}%
+          </span>
+        )}
+      </div>
       {sub && <p className="text-xs text-muted mt-1.5">{sub}</p>}
+    </div>
+  );
+}
+
+function AlertBanner({ tone, icon: Icon, title, detail }: {
+  tone: "red" | "amber" | "orange"; icon: any; title: string; detail: string;
+}) {
+  const tones: Record<string, string> = {
+    red: "bg-red-500/10 border-red-500/30 text-red-300",
+    amber: "bg-amber-500/10 border-amber-500/30 text-amber-300",
+    orange: "bg-orange-500/10 border-orange-500/30 text-orange-300",
+  };
+  return (
+    <div className={`flex items-start gap-2.5 border rounded-xl px-4 py-2.5 ${tones[tone]}`}>
+      <Icon className="w-4 h-4 mt-0.5 shrink-0" />
+      <div className="min-w-0">
+        <p className="text-sm font-semibold leading-tight">{title}</p>
+        <p className="text-[11px] opacity-80 leading-tight mt-0.5">{detail}</p>
+      </div>
     </div>
   );
 }
@@ -305,7 +350,7 @@ function EmptyState({ icon: Icon, label }: { icon: any; label: string }) {
 type Data = {
   settings: any; dealers: any[]; allocations: any[]; transactions: any[];
   supplyRequests: any[]; purchaseOrders: any[]; trucks: any[];
-  truckRentals: any[]; depots: any[]; unionDues: any[];
+  truckRentals: any[]; depots: any[]; unionDues: any[]; banks: any[];
 };
 
 /* Mock data is a DEVELOPMENT-ONLY convenience so the dashboard renders populated
@@ -334,7 +379,7 @@ function demoRequested(): boolean {
 const EMPTY: Data = {
   settings: null, dealers: [], allocations: [], transactions: [],
   supplyRequests: [], purchaseOrders: [], trucks: [],
-  truckRentals: [], depots: [], unionDues: [],
+  truckRentals: [], depots: [], unionDues: [], banks: [],
 };
 
 const INITIAL: Data = DEV
@@ -343,6 +388,7 @@ const INITIAL: Data = DEV
       transactions: MOCK.transactions, supplyRequests: MOCK.supplyRequests,
       purchaseOrders: MOCK.purchaseOrders, trucks: MOCK.trucks,
       truckRentals: MOCK.truckRentals, depots: MOCK.depots, unionDues: MOCK.unionDues,
+      banks: MOCK.banks,
     }
   : EMPTY;
 
@@ -352,6 +398,61 @@ export default function FinancerOverview() {
   const [demo, setDemo] = useState(DEV || ENV_DEMO); // true while showing mock data
   const [data, setData] = useState<Data>(INITIAL);
   const [openDealer, setOpenDealer] = useState<string | null>(null);
+
+  // ── Overview filters (bank · region · product · time period) ──
+  const [fBank, setFBank] = useState("All");
+  const [fRegion, setFRegion] = useState("All");
+  const [fProduct, setFProduct] = useState("All");
+  const [fPeriod, setFPeriod] = useState("All");
+  const [pieMode, setPieMode] = useState<"product" | "dealer">("product");
+
+  const regionOptions = useMemo(
+    () => Array.from(new Set((data.dealers as any[]).map((d) => d.state).filter(Boolean))).sort() as string[],
+    [data.dealers]
+  );
+
+  // Apply the filters, producing a scoped copy of each dealer-keyed dataset. The
+  // KPIs, widgets, and operational stats on the Overview all read from this.
+  const f = useMemo(() => {
+    const now = Date.now();
+    const DAY = 86_400_000;
+    const periodDays = fPeriod === "7d" ? 7 : fPeriod === "30d" ? 30 : fPeriod === "90d" ? 90 : 0;
+    const inPeriod = (t?: string) => {
+      if (!periodDays) return true;
+      if (!t) return false;
+      const ts = new Date(t).getTime();
+      return !Number.isNaN(ts) && now - ts <= periodDays * DAY;
+    };
+    const matchProduct = (p?: string) => fProduct === "All" || p === fProduct;
+
+    // Dealers narrow by bank and region.
+    let dealers = data.dealers as any[];
+    if (fBank !== "All") dealers = dealers.filter((d) => String(d.financerId ?? "") === fBank);
+    if (fRegion !== "All") dealers = dealers.filter((d) => d.state === fRegion);
+
+    // When bank/region narrows the dealer set, cascade to their records by email.
+    const narrowed = fBank !== "All" || fRegion !== "All";
+    const emailSet = new Set(dealers.map((d) => d.email));
+    const keepEmail = (e?: string) => !narrowed || (e != null && emailSet.has(e));
+
+    return {
+      dealers,
+      transactions: (data.transactions as any[]).filter(
+        (x) => keepEmail(x.userEmail) && matchProduct(x.product) && inPeriod(x.timestamp)
+      ),
+      allocations: (data.allocations as any[]).filter(
+        (x) => keepEmail(x.dealerEmail) && matchProduct(x.product)
+      ),
+      purchaseOrders: (data.purchaseOrders as any[]).filter(
+        (x) => keepEmail(x.dealer) && matchProduct(x.productType) && inPeriod(x.createdAt)
+      ),
+      supplyRequests: (data.supplyRequests as any[]).filter(
+        (x) => keepEmail(x.requestedBy) && matchProduct(x.product)
+      ),
+    };
+  }, [data, fBank, fRegion, fProduct, fPeriod]);
+
+  const filtersActive = fBank !== "All" || fRegion !== "All" || fProduct !== "All" || fPeriod !== "All";
 
   async function load() {
     setLoading(true);
@@ -376,6 +477,7 @@ export default function FinancerOverview() {
     const r = pick(res?.truckRentals, MOCK.truckRentals);
     const dp = pick(res?.depots, MOCK.depots);
     const u = pick(res?.unionDues, MOCK.unionDues);
+    const b = pick(res?.banks, MOCK.banks);
 
     // Base "live" on real operational datasets only — platform settings (prices)
     // almost always exist even on an otherwise-empty DB, so they must not by
@@ -387,7 +489,7 @@ export default function FinancerOverview() {
       settings: res?.settings || (useMock ? MOCK.settings : null),
       dealers: d.rows, allocations: a.rows, transactions: t.rows,
       supplyRequests: s.rows, purchaseOrders: p.rows, trucks: k.rows,
-      truckRentals: r.rows, depots: dp.rows, unionDues: u.rows,
+      truckRentals: r.rows, depots: dp.rows, unionDues: u.rows, banks: b.rows,
     });
     setLoading(false);
   }
@@ -398,24 +500,141 @@ export default function FinancerOverview() {
 
   // ── Derived metrics ──
   const m = useMemo(() => {
-    const tx = data.transactions;
+    const tx = f.transactions;
+    const dealerTx = tx.filter((x) => x.userRole === "bulk_dealer");
     const completed = tx.filter((x) => x.status === "completed");
     const totalValue = completed.reduce((s, x) => s + (x.totalAmount || 0), 0);
     const dealerValue = completed.filter((x) => x.userRole === "bulk_dealer").reduce((s, x) => s + (x.totalAmount || 0), 0);
     const flagged = tx.filter((x) => x.aiFlagged).length;
-    const activeDealers = data.dealers.filter((x) => x.status === "active").length;
-    const pendingSupply = data.supplyRequests.filter((x) => ["pending", "processing"].includes(x.status)).length;
-    const inTransit = data.supplyRequests.filter((x) => x.status === "in_transit").length;
+    const failed = tx.filter((x) => x.status === "failed").length;
+    const activeDealers = f.dealers.filter((x) => x.status === "active").length;
+    const suspendedDealers = f.dealers.filter((x) => x.status === "suspended").length;
+    const pendingSupply = f.supplyRequests.filter((x) => ["pending", "processing"].includes(x.status)).length;
+    const inTransit = f.supplyRequests.filter((x) => x.status === "in_transit").length;
     const approvedTrucks = data.trucks.filter((x) => x.status === "approved").length;
-    const allocVol = data.allocations.reduce((s, x) => s + (x.volumeLitres || 0), 0);
-    const allocUsed = data.allocations.reduce((s, x) => s + (x.usedLitres || 0), 0);
-    return {
-      totalValue, dealerValue, flagged, activeDealers, pendingSupply, inTransit,
-      approvedTrucks, allocVol, allocUsed,
-      poCount: data.purchaseOrders.length,
-      poVolume: data.purchaseOrders.reduce((s, x) => s + (x.productQuantity || 0), 0),
+    const allocVol = f.allocations.reduce((s, x) => s + (x.volumeLitres || 0), 0);
+    const allocUsed = f.allocations.reduce((s, x) => s + (x.usedLitres || 0), 0);
+
+    // Per-litre price from live platform settings (with sensible fallbacks).
+    const price = (p: string) =>
+      p === "PMS" ? (data.settings?.pmsPricePerLitre ?? 897)
+      : p === "AGO" ? (data.settings?.agoPricePerLitre ?? 1200)
+      : p === "ATK" ? (data.settings?.atkPricePerLitre ?? 1095)
+      : 0;
+
+    // ── Financing KPIs — the bank's credit view over its dealers' activity ──
+    // NOTE: the platform models fuel *transactions*, not a formal loan ledger,
+    // so these are transparent proxies derived from that activity. A dedicated
+    // credit ledger (disbursement / repayment / due dates) would make them exact.
+
+    // Outstanding credit exposure: value of dealer purchase orders financed but
+    // not yet settled — any PO whose status is not "delivered" is capital still
+    // at risk.
+    const openPOs = f.purchaseOrders.filter((x) => x.status !== "delivered");
+    const outstandingExposure = openPOs.reduce((s, x) => s + (x.totalAmount || 0), 0);
+
+    // % change proxy: dealer financing throughput in the trailing 30 days vs the
+    // prior 30 days (null when there is no prior-period baseline yet).
+    const now = Date.now();
+    const DAY = 86_400_000;
+    const inWindow = (t: string | undefined, loDays: number, hiDays: number) => {
+      if (!t) return false;
+      const ts = new Date(t).getTime();
+      if (Number.isNaN(ts)) return false;
+      const age = now - ts;
+      return age >= loDays * DAY && age < hiDays * DAY;
     };
-  }, [data]);
+    const last30 = dealerTx.filter((x) => inWindow(x.timestamp, 0, 30)).reduce((s, x) => s + (x.totalAmount || 0), 0);
+    const prev30 = dealerTx.filter((x) => inWindow(x.timestamp, 30, 60)).reduce((s, x) => s + (x.totalAmount || 0), 0);
+    const exposurePct = prev30 > 0 ? ((last30 - prev30) / prev30) * 100 : null;
+
+    // Total financed volume (litres): fuel bought through financed purchase orders.
+    const financedVolume = f.purchaseOrders.reduce((s, x) => s + (x.productQuantity || 0), 0);
+
+    // Average trade cycle time (days): mean age of still-open dealer trades
+    // (pending transactions). Proxy for capital-deployment duration until a
+    // formal settlement timestamp is tracked.
+    const openTrades = dealerTx.filter((x) => x.status === "pending" && x.timestamp);
+    const avgCycleDays = openTrades.length
+      ? openTrades.reduce((s, x) => s + Math.max(0, (now - new Date(x.timestamp as string).getTime()) / DAY), 0) / openTrades.length
+      : null;
+
+    // Collateral value: dealers' remaining (unlifted) fuel allocations priced at
+    // platform rates — stock the bank can claim against.
+    const collateralValue = f.allocations.reduce((s, x) => {
+      const remaining = Math.max(0, (x.volumeLitres || 0) - (x.usedLitres || 0));
+      return s + remaining * price(x.product as string);
+    }, 0);
+    // Collateral coverage ratio: collateral value ÷ outstanding exposure.
+    // > 1 means loans are over-collateralised (healthy).
+    const coverageRatio = outstandingExposure > 0 ? collateralValue / outstandingExposure : null;
+
+    // Composite risk score (0–100, higher = riskier): weighted blend of AI-flag
+    // rate, failed-transaction rate, suspended-dealer share, and any collateral
+    // shortfall.
+    const txN = tx.length || 1;
+    const dealerN = f.dealers.length || 1;
+    const coverageShortfall = coverageRatio != null && coverageRatio < 1 ? (1 - Math.min(1, coverageRatio)) : 0;
+    const riskScore = Math.round(Math.max(0, Math.min(100,
+      (flagged / txN) * 30 + (failed / txN) * 30 + (suspendedDealers / dealerN) * 20 + coverageShortfall * 20
+    )));
+    const riskBand = riskScore < 30 ? "Low" : riskScore < 60 ? "Moderate" : "High";
+
+    // ── Widget datasets ──
+    // Exposure split by product (pie chart).
+    const exposureByProduct = PRODUCTS.map((p) => ({
+      name: p,
+      value: openPOs.filter((x) => x.productType === p).reduce((s, x) => s + (x.totalAmount || 0), 0),
+    })).filter((d) => d.value > 0);
+
+    // Exposure concentration by dealer (top slices + an "Others" bucket) — the
+    // bank's single-name concentration risk.
+    const byDealer = new Map<string, number>();
+    for (const x of openPOs) {
+      const key = (x.companyName || x.dealer || "Unknown") as string;
+      byDealer.set(key, (byDealer.get(key) || 0) + (x.totalAmount || 0));
+    }
+    const dealerRows = Array.from(byDealer, ([name, value]) => ({ name, value }))
+      .filter((d) => d.value > 0)
+      .sort((a, b) => b.value - a.value);
+    const TOP_DEALERS = 6;
+    const exposureByDealer = dealerRows.length > TOP_DEALERS
+      ? [...dealerRows.slice(0, TOP_DEALERS), { name: "Others", value: dealerRows.slice(TOP_DEALERS).reduce((s, d) => s + d.value, 0) }]
+      : dealerRows;
+
+    // Inventory (collateral stock) by product: allocated vs remaining litres.
+    const inventoryByProduct = PRODUCTS.map((p) => {
+      const rows = f.allocations.filter((x) => x.product === p);
+      const allocated = rows.reduce((s, x) => s + (x.volumeLitres || 0), 0);
+      const used = rows.reduce((s, x) => s + (x.usedLitres || 0), 0);
+      const remaining = Math.max(0, allocated - used);
+      return { product: p, allocated, remaining, value: remaining * price(p) };
+    });
+
+    // Alert signals.
+    // Overdue: financed orders still open (not delivered) beyond 30 days.
+    const OVERDUE_DAYS = 30;
+    const overdueList = openPOs.filter((x) => {
+      if (!x.createdAt) return false;
+      const ts = new Date(x.createdAt).getTime();
+      return !Number.isNaN(ts) && now - ts > OVERDUE_DAYS * DAY;
+    });
+    const overdueValue = overdueList.reduce((s, x) => s + (x.totalAmount || 0), 0);
+    const lowCollateral = coverageRatio != null && coverageRatio < 1.2;
+
+    return {
+      totalValue, dealerValue, flagged, failed, activeDealers, suspendedDealers,
+      pendingSupply, inTransit, approvedTrucks, allocVol, allocUsed,
+      poCount: f.purchaseOrders.length,
+      poVolume: f.purchaseOrders.reduce((s, x) => s + (x.productQuantity || 0), 0),
+      // Financing KPIs
+      outstandingExposure, exposurePct, financedVolume, avgCycleDays,
+      collateralValue, coverageRatio, riskScore, riskBand,
+      // Widgets
+      exposureByProduct, exposureByDealer, inventoryByProduct,
+      overdueCount: overdueList.length, overdueValue, lowCollateral,
+    };
+  }, [f, data.settings, data.trucks]);
 
   const settings = data.settings;
   const productPrice: Record<string, number> = {
@@ -493,15 +712,231 @@ export default function FinancerOverview() {
         {/* ── OVERVIEW ── */}
         {tab === "Overview" && (
           <div className="space-y-6">
+            {/* Filters: bank · region · product · time period */}
+            <div className="bg-card/60 border border-line rounded-xl p-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted mr-1">
+                <Filter className="w-3.5 h-3.5" /> Filters
+              </span>
+              {data.banks.length > 1 && (
+                <select value={fBank} onChange={(e) => setFBank(e.target.value)}
+                  className="bg-card border border-line rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-orange-500">
+                  <option value="All">All banks</option>
+                  {(data.banks as any[]).map((b) => (
+                    <option key={b._id} value={b._id}>{b.shortCode ? `${b.shortCode} — ${b.name}` : b.name}</option>
+                  ))}
+                </select>
+              )}
+              <select value={fRegion} onChange={(e) => setFRegion(e.target.value)}
+                className="bg-card border border-line rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-orange-500">
+                <option value="All">All regions</option>
+                {regionOptions.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <select value={fProduct} onChange={(e) => setFProduct(e.target.value)}
+                className="bg-card border border-line rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-orange-500">
+                <option value="All">All products</option>
+                {PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <select value={fPeriod} onChange={(e) => setFPeriod(e.target.value)}
+                className="bg-card border border-line rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-orange-500">
+                {["All", "7d", "30d", "90d"].map((p) => <option key={p} value={p}>{p === "All" ? "All time" : `Last ${p}`}</option>)}
+              </select>
+              {filtersActive && (
+                <button onClick={() => { setFBank("All"); setFRegion("All"); setFProduct("All"); setFPeriod("All"); }}
+                  className="text-xs text-muted hover:text-foreground border border-line rounded-lg px-2.5 py-1.5">Clear</button>
+              )}
+              <span className="ml-auto text-[11px] text-muted">{num(f.dealers.length)} dealers · {num(f.transactions.length)} txns</span>
+            </div>
+
+            {/* Alert banners */}
+            {(m.overdueCount > 0 || m.lowCollateral || m.flagged > 0) && (
+              <div className="space-y-2">
+                {m.overdueCount > 0 && (
+                  <AlertBanner tone="red" icon={AlertTriangle}
+                    title={`${m.overdueCount} overdue repayment${m.overdueCount > 1 ? "s" : ""}`}
+                    detail={`${naira(m.overdueValue)} in financed orders still open beyond 30 days`} />
+                )}
+                {m.lowCollateral && (
+                  <AlertBanner tone="amber" icon={Scale}
+                    title="Low collateral coverage"
+                    detail={`Coverage ${m.coverageRatio != null ? m.coverageRatio.toFixed(2) : "—"}× is below the 1.20× safety threshold`} />
+                )}
+                {m.flagged > 0 && (
+                  <AlertBanner tone="orange" icon={Activity}
+                    title={`${m.flagged} unusual ${m.flagged > 1 ? "activities" : "activity"} flagged`}
+                    detail="AI anomaly detection flagged these transactions for review" />
+                )}
+              </div>
+            )}
+
+            {/* Credit portfolio KPIs */}
+            <div>
+              <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-3">Credit Portfolio</p>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <Stat
+                  icon={Banknote} tone="orange"
+                  label="Outstanding Credit Exposure"
+                  value={naira(m.outstandingExposure)}
+                  trend={m.exposurePct} goodWhenUp={false}
+                  sub={m.exposurePct != null ? "open financed orders · vs prev 30d" : "open financed orders · no prior 30d baseline"}
+                  hint="Value of dealer purchase orders that are financed but not yet delivered/settled. % change = dealer financing throughput, last 30 days vs the prior 30 days."
+                />
+                <Stat
+                  icon={Fuel} tone="sky"
+                  label="Total Financed Volume"
+                  value={`${num(m.financedVolume)} L`}
+                  sub={`across ${num(m.poCount)} financed order${m.poCount === 1 ? "" : "s"}`}
+                  hint="Total litres purchased through financed purchase orders."
+                />
+                <Stat
+                  icon={Building2} tone="emerald"
+                  label="Active Dealers"
+                  value={num(m.activeDealers)}
+                  sub={`${num(f.dealers.length)} total${m.suspendedDealers ? ` · ${m.suspendedDealers} suspended` : ""}`}
+                  hint="Dealers assigned to this bank with an active account status."
+                />
+                <Stat
+                  icon={Clock} tone="purple"
+                  label="Avg Trade Cycle Time"
+                  value={m.avgCycleDays != null ? `${m.avgCycleDays.toFixed(1)} days` : "—"}
+                  sub={m.avgCycleDays != null ? "avg age of open trades" : "no open trades"}
+                  hint="Mean age of still-open (pending) dealer trades — a proxy for how long capital stays deployed, until formal settlement timestamps are tracked."
+                />
+                <Stat
+                  icon={AlertTriangle}
+                  tone={m.riskBand === "High" ? "red" : m.riskBand === "Moderate" ? "amber" : "emerald"}
+                  label="Portfolio Risk Score"
+                  value={`${m.riskScore}/100`}
+                  sub={`${m.riskBand} risk`}
+                  hint="Composite 0–100 (higher = riskier): weighted blend of AI-flagged rate, failed-transaction rate, suspended-dealer share, and collateral shortfall."
+                />
+                <Stat
+                  icon={Scale}
+                  tone={m.coverageRatio == null ? "orange" : m.coverageRatio >= 1 ? "emerald" : m.coverageRatio >= 0.7 ? "amber" : "red"}
+                  label="Collateral Coverage Ratio"
+                  value={m.coverageRatio != null ? `${m.coverageRatio.toFixed(2)}×` : "—"}
+                  sub={`${naira(m.collateralValue)} stock vs ${naira(m.outstandingExposure)} owed`}
+                  hint="Value of dealers' remaining (unlifted) fuel allocations ÷ outstanding credit exposure. Above 1.0× means loans are over-collateralised."
+                />
+              </div>
+            </div>
+
+            {/* Operational stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Stat icon={Building2} label="Bulk Dealers" value={num(data.dealers.length)} sub={`${m.activeDealers} active`} tone="orange" />
+              <Stat icon={Building2} label="Bulk Dealers" value={num(f.dealers.length)} sub={`${m.activeDealers} active`} tone="orange" />
               <Stat icon={Banknote} label="Completed Value" value={naira(m.totalValue)} sub={`${naira(m.dealerValue)} from dealers`} tone="emerald" />
-              <Stat icon={ClipboardList} label="Supply Requests" value={num(data.supplyRequests.length)} sub={`${m.pendingSupply} pending · ${m.inTransit} in transit`} tone="sky" />
-              <Stat icon={Receipt} label="Transactions" value={num(data.transactions.length)} sub={`${m.flagged} AI-flagged`} tone="purple" />
+              <Stat icon={ClipboardList} label="Supply Requests" value={num(f.supplyRequests.length)} sub={`${m.pendingSupply} pending · ${m.inTransit} in transit`} tone="sky" />
+              <Stat icon={Receipt} label="Transactions" value={num(f.transactions.length)} sub={`${m.flagged} AI-flagged`} tone="purple" />
               <Stat icon={Package} label="Purchase Orders" value={num(m.poCount)} sub={`${num(m.poVolume)} L ordered`} tone="orange" />
               <Stat icon={Truck} label="Approved Trucks" value={num(m.approvedTrucks)} sub={`${num(data.truckRentals.length)} rentals`} tone="sky" />
               <Stat icon={Gauge} label="Allocated Volume" value={`${num(m.allocVol)} L`} sub={`${num(m.allocUsed)} L lifted`} tone="emerald" />
               <Stat icon={Fuel} label="Depots" value={num(data.depots.length)} sub="across Nigeria" tone="purple" />
+            </div>
+
+            {/* Portfolio exposure + inventory levels */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Exposure pie — switchable by product / by dealer concentration */}
+              {(() => {
+                const pieData = pieMode === "product" ? m.exposureByProduct : m.exposureByDealer;
+                const sliceColor = (name: string, i: number) =>
+                  pieMode === "product"
+                    ? (PRODUCT_COLORS[name] ?? "#f59e0b")
+                    : (name === "Others" ? "#64748b" : CHART_COLORS[i % CHART_COLORS.length]);
+                return (
+              <div className="bg-card/60 border border-line rounded-xl p-5">
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                  <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">
+                    Portfolio Exposure by {pieMode === "product" ? "Product" : "Dealer"}
+                  </p>
+                  <div className="flex bg-card border border-line rounded-lg p-0.5 text-xs">
+                    {(["product", "dealer"] as const).map((mode) => (
+                      <button key={mode} onClick={() => setPieMode(mode)}
+                        className={`px-2.5 py-1 rounded-md font-semibold capitalize transition ${pieMode === mode ? "bg-orange-500 text-white" : "text-muted hover:text-foreground"}`}>
+                        {mode === "product" ? "Product" : "Dealer"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {pieData.length ? (
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <div style={{ width: 180, height: 180 }} className="shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2} stroke="none">
+                            {pieData.map((d, i) => <Cell key={d.name} fill={sliceColor(d.name, i)} />)}
+                          </Pie>
+                          <RTooltip formatter={(v) => naira(Number(v) || 0)} contentStyle={{ background: "var(--card, #1a1a1a)", border: "1px solid var(--line, #333)", borderRadius: 8, fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="space-y-2 flex-1 min-w-[140px]">
+                      {pieData.map((d, i) => {
+                        const pct = m.outstandingExposure > 0 ? (d.value / m.outstandingExposure) * 100 : 0;
+                        return (
+                          <div key={d.name} className="flex items-center gap-2 text-sm">
+                            <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: sliceColor(d.name, i) }} />
+                            <span className={`text-foreground font-medium truncate ${pieMode === "product" ? "w-10" : "flex-1 max-w-[10rem]"}`} title={d.name}>{d.name}</span>
+                            <span className="text-muted flex-1 text-right">{naira(d.value)}</span>
+                            <span className="text-muted text-xs w-9 text-right">{pct.toFixed(0)}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted py-8 text-center">No outstanding exposure in the current view.</p>
+                )}
+              </div>
+                );
+              })()}
+
+              {/* Inventory levels (collateral stock) */}
+              <div className="bg-card/60 border border-line rounded-xl p-5">
+                <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Inventory Levels (Collateral Stock)</p>
+                <div className="space-y-4">
+                  {m.inventoryByProduct.map((inv) => {
+                    const util = inv.allocated > 0 ? Math.round((inv.remaining / inv.allocated) * 100) : 0;
+                    return (
+                      <div key={inv.product}>
+                        <div className="flex items-center justify-between text-sm mb-1.5">
+                          <span className="text-foreground font-medium">{inv.product}</span>
+                          <span className="text-muted text-xs">{num(inv.remaining)} L left · {naira(inv.value)}</span>
+                        </div>
+                        <LevelBar level={util} />
+                        <p className="text-[11px] text-muted mt-1">{num(inv.remaining)} of {num(inv.allocated)} L allocated remaining ({util}%)</p>
+                      </div>
+                    );
+                  })}
+                  {!m.inventoryByProduct.some((i) => i.allocated > 0) && (
+                    <p className="text-xs text-muted py-4 text-center">No allocation inventory in the current view.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent transactions feed */}
+            <div className="bg-card/60 border border-line rounded-xl p-5">
+              <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Recent Transactions</p>
+              <div className="divide-y divide-line">
+                {f.transactions.slice(0, 8).map((t: any) => (
+                  <div key={t._id ?? t.txnId} className="flex items-center gap-3 py-2.5">
+                    <span className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${t.aiFlagged ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-sky-400 bg-sky-500/10 border-sky-500/20"}`}>
+                      {t.aiFlagged ? <AlertTriangle className="w-4 h-4" /> : <Receipt className="w-4 h-4" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground font-medium truncate">
+                        {t.user}
+                        <span className="text-muted font-normal"> · {toLabel(t.type)}</span>
+                      </p>
+                      <p className="text-[11px] text-muted truncate">{t.txnId}{t.product ? ` · ${t.product}` : ""} · {timeAgo(t.timestamp)}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-foreground">{naira(t.totalAmount)}</p>
+                      <p className="text-[11px]"><StatusPill value={t.status} /></p>
+                    </div>
+                  </div>
+                ))}
+                {!f.transactions.length && <p className="text-xs text-muted py-6 text-center">No transactions in the current view.</p>}
+              </div>
             </div>
 
             {/* Product prices */}
@@ -521,11 +956,11 @@ export default function FinancerOverview() {
             <div className="bg-card/60 border border-line rounded-xl p-5">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Top Bulk Dealers by Completed Value</p>
               <div className="space-y-2.5">
-                {!data.dealers.length && <p className="text-xs text-muted">No dealer activity to rank yet.</p>}
-                {[...data.dealers]
+                {!f.dealers.length && <p className="text-xs text-muted">No dealer activity to rank yet.</p>}
+                {[...f.dealers]
                   .map((d) => ({
                     d,
-                    val: data.transactions
+                    val: f.transactions
                       .filter((t) => t.userEmail === d.email && t.status === "completed")
                       .reduce((s, t) => s + (t.totalAmount || 0), 0),
                   }))
