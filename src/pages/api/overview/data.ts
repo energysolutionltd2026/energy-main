@@ -132,7 +132,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .lean(),
       Transaction.find(scope("userEmail"))
         .select(
-          "txnId type user userEmail userRole product quantity totalAmount status paymentMethod depot timestamp aiFlagged aiAnomalySeverity"
+          "txnId type user userEmail userRole product quantity totalAmount status paymentMethod depot timestamp aiFlagged aiAnomalySeverity aiAnomalyDesc"
         )
         .sort({ timestamp: -1 })
         .limit(300)

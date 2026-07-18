@@ -308,20 +308,47 @@ function Stat({ icon: Icon, label, value, sub, tone = "orange", trend, goodWhenU
   );
 }
 
-function AlertBanner({ tone, icon: Icon, title, detail }: {
+function AlertBanner({ tone, icon: Icon, title, detail, onClick, actionLabel }: {
   tone: "red" | "amber" | "orange"; icon: any; title: string; detail: string;
+  // When provided, the banner becomes a button (e.g. to open a drill-down).
+  onClick?: () => void; actionLabel?: string;
 }) {
   const tones: Record<string, string> = {
     red: "bg-red-500/10 border-red-500/30 text-red-300",
     amber: "bg-amber-500/10 border-amber-500/30 text-amber-300",
     orange: "bg-orange-500/10 border-orange-500/30 text-orange-300",
   };
+  const clickable = onClick
+    ? "w-full text-left hover:brightness-125 focus:outline-none focus:ring-1 focus:ring-current cursor-pointer transition"
+    : "";
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className={`flex items-start gap-2.5 border rounded-xl px-4 py-2.5 ${tones[tone]}`}>
-      <Icon className="w-4 h-4 mt-0.5 shrink-0" />
-      <div className="min-w-0">
+    <Tag onClick={onClick} className={`flex items-center gap-2.5 border rounded-xl px-4 py-2.5 ${tones[tone]} ${clickable}`}>
+      <Icon className="w-4 h-4 shrink-0" />
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold leading-tight">{title}</p>
         <p className="text-[11px] opacity-80 leading-tight mt-0.5">{detail}</p>
+      </div>
+      {onClick && (
+        <span className="text-[11px] font-semibold shrink-0 inline-flex items-center gap-1 opacity-90">
+          {actionLabel ?? "View"} <ArrowRight className="w-3.5 h-3.5" />
+        </span>
+      )}
+    </Tag>
+  );
+}
+
+// Compact inline metric for the secondary "Platform Activity" strip — a lighter
+// alternative to a full Stat card when a figure is context, not a headline.
+function InlineMetric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="w-8 h-8 rounded-lg border border-line bg-card flex items-center justify-center shrink-0 text-muted">
+        <Icon className="w-4 h-4" />
+      </span>
+      <div className="leading-tight">
+        <p className="text-sm font-bold text-foreground">{value}</p>
+        <p className="text-[11px] text-muted">{label}</p>
       </div>
     </div>
   );
@@ -408,6 +435,8 @@ export default function FinancerOverview() {
   const [fProduct, setFProduct] = useState("All");
   const [fPeriod, setFPeriod] = useState("All");
   const [pieMode, setPieMode] = useState<"product" | "dealer">("product");
+  // Flagged-transactions drill-down panel.
+  const [showFlagged, setShowFlagged] = useState(false);
 
   const regionOptions = useMemo(
     () => Array.from(new Set((data.dealers as any[]).map((d) => d.state).filter(Boolean))).sort() as string[],
@@ -768,7 +797,8 @@ export default function FinancerOverview() {
                 {m.flagged > 0 && (
                   <AlertBanner tone="orange" icon={Activity}
                     title={`${m.flagged} unusual ${m.flagged > 1 ? "activities" : "activity"} flagged`}
-                    detail="AI anomaly detection flagged these transactions for review" />
+                    detail="AI anomaly detection flagged these transactions for review"
+                    onClick={() => setShowFlagged(true)} actionLabel="See reasons" />
                 )}
               </div>
             )}
@@ -825,21 +855,25 @@ export default function FinancerOverview() {
               </div>
             </div>
 
-            {/* Operational stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Stat icon={Building2} label="Bulk Dealers" value={num(f.dealers.length)} sub={`${m.activeDealers} active`} tone="orange" />
-              <Stat icon={Banknote} label="Completed Value" value={naira(m.totalValue)} sub={`${naira(m.dealerValue)} from dealers`} tone="emerald" />
-              {/* Supply requests are customer-generated and have no bank linkage,
-                  so they can't be scoped to a single bank — hide the tile in the
-                  scoped view rather than show a permanently-empty metric. */}
-              {!data.scoped && (
-                <Stat icon={ClipboardList} label="Supply Requests" value={num(f.supplyRequests.length)} sub={`${m.pendingSupply} pending · ${m.inTransit} in transit`} tone="sky" />
+            {/* Platform activity — secondary figures, shown as a slim strip rather
+                than a wall of cards so the Credit Portfolio above stays the focus.
+                (Bulk-dealer count, allocated volume and approved trucks were
+                dropped here: the first two duplicate the KPIs / inventory panel,
+                and trucks are platform infrastructure, not a bank concern. Supply
+                requests can't be scoped to a bank, so they're omitted too.) */}
+            <div className="bg-card/60 border border-line rounded-xl px-5 py-3.5 flex flex-wrap items-center gap-x-8 gap-y-3">
+              <InlineMetric icon={Banknote} label="Completed value" value={naira(m.totalValue)} />
+              <InlineMetric icon={Receipt} label="Transactions" value={num(f.transactions.length)} />
+              <InlineMetric icon={Package} label="Purchase orders" value={`${num(m.poCount)} · ${num(m.poVolume)} L`} />
+              <InlineMetric icon={Fuel} label="Depots" value={num(data.depots.length)} />
+              {m.flagged > 0 && (
+                <button onClick={() => setShowFlagged(true)}
+                  className="ml-auto inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 px-3 py-1.5 text-xs font-semibold hover:bg-red-500/20 transition">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {num(m.flagged)} AI-flagged
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               )}
-              <Stat icon={Receipt} label="Transactions" value={num(f.transactions.length)} sub={`${m.flagged} AI-flagged`} tone="purple" />
-              <Stat icon={Package} label="Purchase Orders" value={num(m.poCount)} sub={`${num(m.poVolume)} L ordered`} tone="orange" />
-              <Stat icon={Truck} label="Approved Trucks" value={num(m.approvedTrucks)} sub={`${num(data.truckRentals.length)} rentals`} tone="sky" />
-              <Stat icon={Gauge} label="Allocated Volume" value={`${num(m.allocVol)} L`} sub={`${num(m.allocUsed)} L lifted`} tone="emerald" />
-              <Stat icon={Fuel} label="Depots" value={num(data.depots.length)} sub="across Nigeria" tone="purple" />
             </div>
 
             {/* Portfolio exposure + inventory levels */}
@@ -1250,6 +1284,63 @@ export default function FinancerOverview() {
           <span>{demo ? "Showing demo data" : "Connected to live data"}</span>
         </div>
       </div>
+
+      {/* Flagged-transactions drill-down: why each transaction was flagged. */}
+      {showFlagged && (() => {
+        const flaggedTxns = (f.transactions as any[]).filter((t) => t.aiFlagged);
+        const sevTone: Record<string, string> = {
+          high: "bg-red-500/15 text-red-400",
+          medium: "bg-amber-500/15 text-amber-400",
+          low: "bg-sky-500/15 text-sky-400",
+        };
+        return (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
+            onClick={() => setShowFlagged(false)}>
+            <div className="bg-card border border-line rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-4.5 h-4.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">Flagged transactions</p>
+                    <p className="text-[11px] text-muted">{num(flaggedTxns.length)} flagged by AI anomaly detection · why each was flagged</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowFlagged(false)}
+                  className="text-xs text-muted hover:text-foreground border border-line rounded-lg px-3 py-1.5 shrink-0">Close</button>
+              </div>
+              <div className="overflow-y-auto divide-y divide-line px-5">
+                {flaggedTxns.length === 0 && (
+                  <p className="text-xs text-muted py-8 text-center">No flagged transactions in the current view.</p>
+                )}
+                {flaggedTxns.map((t) => {
+                  const sev = (t.aiAnomalySeverity as string) || "medium";
+                  return (
+                    <div key={t._id ?? t.txnId} className="py-3.5">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <p className="text-sm text-foreground font-medium truncate">
+                          {t.user}
+                          <span className="text-muted font-normal"> · {t.product || toLabel(t.type)}</span>
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold uppercase ${sevTone[sev] ?? sevTone.medium}`}>{sev}</span>
+                          <span className="text-sm font-bold text-foreground">{naira(t.totalAmount)}</span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-muted mt-0.5">{t.txnId} · {timeAgo(t.timestamp)}</p>
+                      <p className="text-xs text-foreground/90 mt-1.5 bg-red-500/5 border border-red-500/15 rounded-lg px-3 py-2">
+                        {t.aiAnomalyDesc || "Flagged by anomaly detection; no detailed reason was recorded for this transaction."}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
