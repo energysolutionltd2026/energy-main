@@ -183,6 +183,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       depots,
       unionDues,
       banks,
+      // True when the viewer is a single bank (data is scoped to its dealers).
+      // The client hides dealer-unscopable widgets (e.g. supply requests, which
+      // are customer-generated and have no bank linkage) in this mode.
+      scoped: Boolean(scopedFinancerId),
     });
   } catch (err) {
     console.error("[overview/data] query failed:", err);

@@ -351,6 +351,9 @@ type Data = {
   settings: any; dealers: any[]; allocations: any[]; transactions: any[];
   supplyRequests: any[]; purchaseOrders: any[]; trucks: any[];
   truckRentals: any[]; depots: any[]; unionDues: any[]; banks: any[];
+  // True when the viewer is a single bank (data scoped to its dealers). Used to
+  // hide widgets that can't be scoped to a bank, like supply requests.
+  scoped: boolean;
 };
 
 /* Mock data is a DEVELOPMENT-ONLY convenience so the dashboard renders populated
@@ -379,7 +382,7 @@ function demoRequested(): boolean {
 const EMPTY: Data = {
   settings: null, dealers: [], allocations: [], transactions: [],
   supplyRequests: [], purchaseOrders: [], trucks: [],
-  truckRentals: [], depots: [], unionDues: [], banks: [],
+  truckRentals: [], depots: [], unionDues: [], banks: [], scoped: false,
 };
 
 const INITIAL: Data = DEV
@@ -388,7 +391,7 @@ const INITIAL: Data = DEV
       transactions: MOCK.transactions, supplyRequests: MOCK.supplyRequests,
       purchaseOrders: MOCK.purchaseOrders, trucks: MOCK.trucks,
       truckRentals: MOCK.truckRentals, depots: MOCK.depots, unionDues: MOCK.unionDues,
-      banks: MOCK.banks,
+      banks: MOCK.banks, scoped: false,
     }
   : EMPTY;
 
@@ -490,6 +493,8 @@ export default function FinancerOverview() {
       dealers: d.rows, allocations: a.rows, transactions: t.rows,
       supplyRequests: s.rows, purchaseOrders: p.rows, trucks: k.rows,
       truckRentals: r.rows, depots: dp.rows, unionDues: u.rows, banks: b.rows,
+      // Only live scoped responses set this; demo/mock never scopes, so the tile stays.
+      scoped: Boolean(res?.scoped),
     });
     setLoading(false);
   }
@@ -824,7 +829,12 @@ export default function FinancerOverview() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Stat icon={Building2} label="Bulk Dealers" value={num(f.dealers.length)} sub={`${m.activeDealers} active`} tone="orange" />
               <Stat icon={Banknote} label="Completed Value" value={naira(m.totalValue)} sub={`${naira(m.dealerValue)} from dealers`} tone="emerald" />
-              <Stat icon={ClipboardList} label="Supply Requests" value={num(f.supplyRequests.length)} sub={`${m.pendingSupply} pending · ${m.inTransit} in transit`} tone="sky" />
+              {/* Supply requests are customer-generated and have no bank linkage,
+                  so they can't be scoped to a single bank — hide the tile in the
+                  scoped view rather than show a permanently-empty metric. */}
+              {!data.scoped && (
+                <Stat icon={ClipboardList} label="Supply Requests" value={num(f.supplyRequests.length)} sub={`${m.pendingSupply} pending · ${m.inTransit} in transit`} tone="sky" />
+              )}
               <Stat icon={Receipt} label="Transactions" value={num(f.transactions.length)} sub={`${m.flagged} AI-flagged`} tone="purple" />
               <Stat icon={Package} label="Purchase Orders" value={num(m.poCount)} sub={`${num(m.poVolume)} L ordered`} tone="orange" />
               <Stat icon={Truck} label="Approved Trucks" value={num(m.approvedTrucks)} sub={`${num(data.truckRentals.length)} rentals`} tone="sky" />
