@@ -237,6 +237,20 @@ const PRODUCTS = ["PMS", "AGO", "ATK"] as const;
 const PRODUCT_COLORS: Record<string, string> = { PMS: "#f59e0b", AGO: "#0ea5e9", ATK: "#a855f7" };
 // Cyclic palette for by-dealer slices (last entry reserved-ish for "Others").
 const CHART_COLORS = ["#f59e0b", "#0ea5e9", "#a855f7", "#10b981", "#ef4444", "#eab308", "#6366f1"];
+// Risk-band slice colors (borrower-segment exposure pie): green → amber → red.
+const RISK_COLORS: Record<string, string> = { Low: "#10b981", Moderate: "#f59e0b", High: "#ef4444" };
+
+// Heatmap cell color by stock level (0–100): critical red → low amber → healthy green.
+function heatColor(level: number): string {
+  if (level < 25) return "#ef4444";
+  if (level < 50) return "#f59e0b";
+  if (level < 75) return "#10b981";
+  return "#059669";
+}
+// Legible text over a heatmap cell of the given level.
+function heatTextColor(level: number): string {
+  return level < 25 || level >= 75 ? "#ffffff" : "#0b0b0b";
+}
 
 // ─── Small UI atoms ─────────────────────────────────────────────────────────
 function StatusPill({ value }: { value: string }) {
@@ -434,7 +448,7 @@ export default function FinancerOverview() {
   const [fRegion, setFRegion] = useState("All");
   const [fProduct, setFProduct] = useState("All");
   const [fPeriod, setFPeriod] = useState("All");
-  const [pieMode, setPieMode] = useState<"product" | "dealer">("product");
+  const [pieMode, setPieMode] = useState<"product" | "dealer" | "risk">("product");
   // Flagged-transactions drill-down panel.
   const [showFlagged, setShowFlagged] = useState(false);
 
@@ -636,6 +650,29 @@ export default function FinancerOverview() {
       ? [...dealerRows.slice(0, TOP_DEALERS), { name: "Others", value: dealerRows.slice(TOP_DEALERS).reduce((s, d) => s + d.value, 0) }]
       : dealerRows;
 
+    // Exposure by borrower risk band: classify each dealer, then bucket their
+    // open-PO exposure into Low / Moderate / High. The per-dealer band mirrors
+    // the portfolio risk blend — a suspended dealer is High; otherwise the
+    // dealer's own AI-flagged + failed transaction rate sets the band. POs whose
+    // dealer can't be matched fall back to Moderate so exposure is never dropped.
+    const dealerBandByEmail = new Map<string, "Low" | "Moderate" | "High">();
+    for (const d of f.dealers) {
+      const email = (d as { email?: string }).email;
+      if (!email) continue;
+      if (d.status === "suspended") { dealerBandByEmail.set(email, "High"); continue; }
+      const dtx = tx.filter((x) => x.userEmail === email);
+      const n = dtx.length || 1;
+      const bad = dtx.filter((x) => (x as { aiFlagged?: boolean }).aiFlagged || x.status === "failed").length;
+      const rate = bad / n;
+      dealerBandByEmail.set(email, rate >= 0.34 ? "High" : rate > 0 ? "Moderate" : "Low");
+    }
+    const exposureByRisk = (["Low", "Moderate", "High"] as const).map((band) => ({
+      name: band,
+      value: openPOs
+        .filter((x) => (dealerBandByEmail.get((x.dealer as string) ?? "") ?? "Moderate") === band)
+        .reduce((s, x) => s + (x.totalAmount || 0), 0),
+    })).filter((d) => d.value > 0);
+
     // Inventory (collateral stock) by product: allocated vs remaining litres.
     const inventoryByProduct = PRODUCTS.map((p) => {
       const rows = f.allocations.filter((x) => x.product === p);
@@ -665,7 +702,7 @@ export default function FinancerOverview() {
       outstandingExposure, exposurePct, financedVolume, avgCycleDays,
       collateralValue, coverageRatio, riskScore, riskBand,
       // Widgets
-      exposureByProduct, exposureByDealer, inventoryByProduct,
+      exposureByProduct, exposureByDealer, exposureByRisk, inventoryByProduct,
       overdueCount: overdueList.length, overdueValue, lowCollateral,
     };
   }, [f, data.settings, data.trucks]);
@@ -880,22 +917,26 @@ export default function FinancerOverview() {
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Exposure pie — switchable by product / by dealer concentration */}
               {(() => {
-                const pieData = pieMode === "product" ? m.exposureByProduct : m.exposureByDealer;
+                const pieData = pieMode === "product" ? m.exposureByProduct
+                  : pieMode === "dealer" ? m.exposureByDealer
+                  : m.exposureByRisk;
                 const sliceColor = (name: string, i: number) =>
                   pieMode === "product"
                     ? (PRODUCT_COLORS[name] ?? "#f59e0b")
+                    : pieMode === "risk"
+                    ? (RISK_COLORS[name] ?? "#64748b")
                     : (name === "Others" ? "#64748b" : CHART_COLORS[i % CHART_COLORS.length]);
                 return (
               <div className="bg-card/60 border border-line rounded-xl p-5">
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                   <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">
-                    Portfolio Exposure by {pieMode === "product" ? "Product" : "Dealer"}
+                    Portfolio Exposure by {pieMode === "product" ? "Product" : pieMode === "dealer" ? "Dealer" : "Risk Band"}
                   </p>
                   <div className="flex bg-card border border-line rounded-lg p-0.5 text-xs">
-                    {(["product", "dealer"] as const).map((mode) => (
+                    {(["product", "dealer", "risk"] as const).map((mode) => (
                       <button key={mode} onClick={() => setPieMode(mode)}
                         className={`px-2.5 py-1 rounded-md font-semibold capitalize transition ${pieMode === mode ? "bg-orange-500 text-white" : "text-muted hover:text-foreground"}`}>
-                        {mode === "product" ? "Product" : "Dealer"}
+                        {mode === "product" ? "Product" : mode === "dealer" ? "Dealer" : "Risk"}
                       </button>
                     ))}
                   </div>
@@ -918,7 +959,7 @@ export default function FinancerOverview() {
                         return (
                           <div key={d.name} className="flex items-center gap-2 text-sm">
                             <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: sliceColor(d.name, i) }} />
-                            <span className={`text-foreground font-medium truncate ${pieMode === "product" ? "w-10" : "flex-1 max-w-[10rem]"}`} title={d.name}>{d.name}</span>
+                            <span className={`text-foreground font-medium truncate ${pieMode === "dealer" ? "flex-1 max-w-[10rem]" : "w-20"}`} title={d.name}>{d.name}</span>
                             <span className="text-muted flex-1 text-right">{naira(d.value)}</span>
                             <span className="text-muted text-xs w-9 text-right">{pct.toFixed(0)}%</span>
                           </div>
@@ -957,11 +998,59 @@ export default function FinancerOverview() {
               </div>
             </div>
 
+            {/* Depot inventory heatmap — collateral stock levels across depots */}
+            {data.depots.length > 0 && (
+              <div className="bg-card/60 border border-line rounded-xl p-5">
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                  <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Depot Inventory Levels</p>
+                  <div className="flex items-center gap-3 text-[11px] text-muted">
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm" style={{ background: heatColor(10) }} />Critical</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm" style={{ background: heatColor(35) }} />Low</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm" style={{ background: heatColor(80) }} />Healthy</span>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-separate border-spacing-1">
+                    <thead>
+                      <tr>
+                        <th className="text-left text-[11px] font-medium text-muted px-2 py-1">Depot</th>
+                        {PRODUCTS.map((p) => (
+                          <th key={p} className="text-center text-[11px] font-medium text-muted px-2 py-1 w-20">{p}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.depots.map((dp: any) => (
+                        <tr key={dp.name}>
+                          <td className="text-foreground text-xs px-2 py-1 whitespace-nowrap">
+                            {dp.name}
+                            {dp.state && <span className="text-muted ml-1">· {dp.state}</span>}
+                          </td>
+                          {PRODUCTS.map((p) => {
+                            const lvl = Number(dp[p]?.level ?? 0);
+                            return (
+                              <td key={p} className="px-1 py-1">
+                                <div className="rounded-md text-center text-xs font-semibold py-2"
+                                  style={{ background: heatColor(lvl), color: heatTextColor(lvl) }}
+                                  title={`${dp.name} · ${p}: ${lvl}%`}>
+                                  {lvl}%
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Recent transactions feed */}
             <div className="bg-card/60 border border-line rounded-xl p-5">
               <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-4">Recent Transactions</p>
               <div className="divide-y divide-line">
-                {f.transactions.slice(0, 8).map((t: any) => (
+                {f.transactions.slice(0, 15).map((t: any) => (
                   <div key={t._id ?? t.txnId} className="flex items-center gap-3 py-2.5">
                     <span className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${t.aiFlagged ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-sky-400 bg-sky-500/10 border-sky-500/20"}`}>
                       {t.aiFlagged ? <AlertTriangle className="w-4 h-4" /> : <Receipt className="w-4 h-4" />}
