@@ -231,7 +231,7 @@ export default function BackendSummary() {
                 <p><span className="text-foreground font-semibold">CRUD factory pattern:</span> <code className="text-orange-300 text-xs">collectionHandler</code> and <code className="text-orange-300 text-xs">documentHandler</code> in <code className="text-xs text-muted">src/lib/crud.ts</code> — every collection gets full REST from two lines.</p>
                 <p><span className="text-foreground font-semibold">API client:</span> <code className="text-orange-300 text-xs">api</code> namespace in <code className="text-xs text-muted">src/lib/db-client.ts</code> wraps every route with a <code className="text-orange-300 text-xs">safe()</code> helper that returns <code className="text-orange-300 text-xs">null</code> on error — no uncaught exceptions.</p>
                 <p><span className="text-foreground font-semibold">Migration strategy:</span> API-first with localStorage fallback. All pages try the real API; on null response fall back to localStorage. Dual-write keeps both in sync during transition.</p>
-                <p><span className="text-foreground font-semibold">Seeding:</span> <code className="text-muted text-xs">POST /api/db/seed</code> with <code className="text-orange-300 text-xs">SEED_SECRET</code> header seeds admin, demo dealer, demo customer, depot stock, and platform settings.</p>
+                <p><span className="text-foreground font-semibold">Seeding:</span> two <code className="text-orange-300 text-xs">SEED_SECRET</code>-protected routes — <code className="text-muted text-xs">POST /api/db/users/seed-admin</code> creates the initial admin from an operator-supplied <code className="text-orange-300 text-xs">name/email/password</code> (only if none exists), and <code className="text-muted text-xs">POST /api/db/depots/seed</code> seeds depot stock. No demo dealer/customer accounts are seeded.</p>
               </div>
             </div>
 
@@ -299,20 +299,8 @@ export default function BackendSummary() {
               </div>
             ))}
             <div className="bg-card-2/40 border border-line rounded-xl p-4 mt-4">
-              <p className="text-xs font-bold text-foreground mb-2">Seeded credentials (from <code className="text-orange-300">POST /api/db/seed</code>)</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                {[
-                  { role: "Admin",       email: "admin@e-nergy.ng",      pass: "Admin@2026!" },
-                  { role: "Bulk Dealer", email: "dealer@e-nergy.ng",     pass: "Dealer@2026!" },
-                  { role: "Customer",    email: "customer@e-nergy.ng",   pass: "Customer@2026!" },
-                ].map(({ role, email, pass }) => (
-                  <div key={role} className="bg-card/60 rounded-lg p-3">
-                    <p className="text-orange-400 font-semibold mb-1">{role}</p>
-                    <p className="text-foreground">{email}</p>
-                    <p className="text-muted font-mono">{pass}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs font-bold text-foreground mb-2">Initial admin (from <code className="text-orange-300">POST /api/db/users/seed-admin</code>)</p>
+              <p className="text-xs text-muted">The seed route creates a single admin from the <code className="text-orange-300">name/email/password</code> you pass in the request body (min 8-char password), and only when no admin exists yet — there are no hardcoded default credentials, and no dealer/customer accounts are pre-seeded. All other users self-register via signup.</p>
             </div>
           </div>
         )}

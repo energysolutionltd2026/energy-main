@@ -1,5 +1,7 @@
 /**
- * PATCH  /api/financer/accounts/[id]  — update a financer (status / password), admin only
+ * PATCH  /api/financer/accounts/[id]  — update a financer (status / password /
+ *                                       profile: name, shortCode, logoUrl,
+ *                                       contactName, contactPhone, address), admin only
  * DELETE /api/financer/accounts/[id]  — delete a financer account, admin only
  *
  * Revoking (delete) or suspending also invalidates the financer's active
@@ -27,9 +29,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { id } = req.query as { id: string };
 
-  // ── Update: status and/or password ──
+  // ── Update: status, password, and/or profile fields ──
   if (req.method === "PATCH" || req.method === "PUT") {
-    const { status, password } = (req.body ?? {}) as { status?: string; password?: string };
+    const {
+      status, password,
+      name, shortCode, logoUrl, contactName, contactPhone, address,
+    } = (req.body ?? {}) as {
+      status?: string; password?: string;
+      name?: string; shortCode?: string; logoUrl?: string;
+      contactName?: string; contactPhone?: string; address?: string;
+    };
     const updates: Record<string, unknown> = {};
 
     if (status !== undefined) {
@@ -44,6 +53,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       updates.passwordHash = await bcrypt.hash(password, 10);
     }
+
+    // Profile fields. The full legal name must stay non-empty; the rest may be
+    // cleared by sending an empty string.
+    if (name !== undefined) {
+      if (!name.trim()) return res.status(400).json({ error: "name cannot be empty" });
+      updates.name = name.trim();
+    }
+    for (const [key, value] of Object.entries({ shortCode, logoUrl, contactName, contactPhone, address })) {
+      if (value !== undefined) updates[key] = value.trim();
+    }
+
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: "Nothing to update" });
     }

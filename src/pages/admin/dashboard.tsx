@@ -33,6 +33,8 @@ interface AdminUser {
   agoTankMaxML?: number;
   atkTankMaxML?: number;
   financerAccess?: boolean;
+  // Bulk dealers only: id of the bank (Financer account) that finances them.
+  financerId?: string;
 }
 
 // Maximum number of users who may hold financer dashboard access. Mirrors the
@@ -444,17 +446,39 @@ interface FinAccount {
   name: string;
   email: string;
   status: "active" | "suspended";
+  shortCode?: string;
+  logoUrl?: string;
+  contactName?: string;
+  contactPhone?: string;
+  address?: string;
   lastLogin?: string;
   createdAt?: string;
 }
 
+// Editable profile fields shared by the create and inline-edit forms.
+type BankProfile = {
+  name: string; shortCode: string; contactName: string; contactPhone: string; address: string; logoUrl: string;
+};
+const EMPTY_PROFILE: BankProfile = { name: "", shortCode: "", contactName: "", contactPhone: "", address: "", logoUrl: "" };
+
+const finInputCls =
+  "bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-orange-500";
+
 function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) {
   const [accounts, setAccounts] = useState<FinAccount[]>([]);
-  const [max, setMax] = useState(2);
+  const [max, setMax] = useState(100);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  // Create form = login credentials (email/password) + bank profile.
+  const [form, setForm] = useState<{ email: string; password: string } & BankProfile>({
+    email: "", password: "", ...EMPTY_PROFILE,
+  });
   const [busy, setBusy] = useState(false);
+  const [logoBusy, setLogoBusy] = useState(false);
+  // Inline profile editing.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<BankProfile>(EMPTY_PROFILE);
+  const [editBusy, setEditBusy] = useState(false);
 
   const load = async () => {
     const { api } = await import("@/lib/db-client");
@@ -466,18 +490,83 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
 
   const capReached = accounts.length >= max;
 
+  // Read a chosen image file, upload it, and hand back the hosted URL.
+  const uploadLogo = (file: File, setter: (url: string) => void) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string;
+      if (!base64) return;
+      setLogoBusy(true);
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: base64, folder: "financers" }),
+        });
+        const json = (await res.json()) as { url?: string; error?: string };
+        if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+        setter(json.url);
+      } catch {
+        setToast("Logo upload failed — please try again");
+      } finally {
+        setLogoBusy(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const create = async () => {
     if (!form.name.trim() || !form.email.trim() || form.password.length < 8) {
-      setToast("Enter a name, email, and password (min 8 characters)."); return;
+      setToast("Enter a bank name, email, and password (min 8 characters)."); return;
     }
     setBusy(true);
     const { api } = await import("@/lib/db-client");
-    const res = await api.financerAccounts.create({ name: form.name.trim(), email: form.email.trim(), password: form.password });
+    const res = await api.financerAccounts.create({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      password: form.password,
+      shortCode: form.shortCode.trim() || undefined,
+      logoUrl: form.logoUrl || undefined,
+      contactName: form.contactName.trim() || undefined,
+      contactPhone: form.contactPhone.trim() || undefined,
+      address: form.address.trim() || undefined,
+    });
     setBusy(false);
     if (!res) { setToast("Could not create account — the limit may be reached or the email is taken."); return; }
-    setForm({ name: "", email: "", password: "" });
+    setForm({ email: "", password: "", ...EMPTY_PROFILE });
     setOpen(false);
-    setToast(`Financer account created for ${res.email}`);
+    setToast(`Bank account created for ${res.email}`);
+    load();
+  };
+
+  const startEdit = (a: FinAccount) => {
+    setEditingId(a._id);
+    setEditForm({
+      name: a.name ?? "",
+      shortCode: a.shortCode ?? "",
+      contactName: a.contactName ?? "",
+      contactPhone: a.contactPhone ?? "",
+      address: a.address ?? "",
+      logoUrl: a.logoUrl ?? "",
+    });
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editForm.name.trim()) { setToast("Bank name cannot be empty."); return; }
+    setEditBusy(true);
+    const { api } = await import("@/lib/db-client");
+    const res = await api.financerAccounts.update(id, {
+      name: editForm.name.trim(),
+      shortCode: editForm.shortCode.trim(),
+      contactName: editForm.contactName.trim(),
+      contactPhone: editForm.contactPhone.trim(),
+      address: editForm.address.trim(),
+      logoUrl: editForm.logoUrl,
+    });
+    setEditBusy(false);
+    if (!res) { setToast("Could not save the bank profile. Please try again."); return; }
+    setEditingId(null);
+    setToast("Bank profile updated.");
     load();
   };
 
@@ -485,7 +574,7 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
     const { api } = await import("@/lib/db-client");
     const res = await api.financerAccounts.delete(a._id);
     if (!res) { setToast("Could not delete account."); return; }
-    setToast(`Financer account ${a.email} removed`);
+    setToast(`Bank account ${a.email} removed`);
     load();
   };
 
@@ -494,7 +583,7 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
     const { api } = await import("@/lib/db-client");
     const res = await api.financerAccounts.update(a._id, { status: next });
     if (!res) { setToast("Could not update account."); return; }
-    setToast(`Financer account ${next === "suspended" ? "suspended" : "reactivated"}`);
+    setToast(`Bank account ${next === "suspended" ? "suspended" : "reactivated"}`);
     load();
   };
 
@@ -512,9 +601,9 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
     <div className="bg-card backdrop-blur-md border border-orange-500/20 rounded-xl p-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-foreground font-semibold text-sm">Financer Login Accounts</p>
+          <p className="text-foreground font-semibold text-sm">Bank (Financer) Accounts</p>
           <p className="text-muted text-xs mt-0.5">
-            Dedicated logins for the read-only financer dashboard · {accounts.length}/{max} used
+            Bank profiles &amp; logins for the read-only financer dashboard · {accounts.length} bank{accounts.length === 1 ? "" : "s"} onboarded
           </p>
         </div>
         <button
@@ -523,22 +612,38 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
           title={capReached ? `Limit of ${max} reached — delete one first` : undefined}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold text-white ${capReached && !open ? "bg-card-2 opacity-50 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-600"}`}
         >
-          {open ? "Cancel" : "+ New account"}
+          {open ? "Cancel" : "+ New bank"}
         </button>
       </div>
 
       {open && !capReached && (
-        <div className="mt-3 grid gap-2 sm:grid-cols-3">
-          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Full name"
-            className="bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-orange-500" />
-          <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Email" type="email"
-            className="bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-orange-500" />
-          <div className="flex gap-2">
-            <input value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Password (min 8)" type="text"
-              className="flex-1 min-w-0 bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-orange-500" />
-            <button onClick={create} disabled={busy}
-              className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold shrink-0">
-              {busy ? "…" : "Create"}
+        <div className="mt-3 space-y-2">
+          <p className="text-[11px] text-muted font-semibold uppercase tracking-wider">Login credentials</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Bank name *" className={finInputCls} />
+            <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Login email *" type="email" className={finInputCls} />
+            <input value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Password (min 8) *" type="text" className={finInputCls} />
+          </div>
+          <p className="text-[11px] text-muted font-semibold uppercase tracking-wider pt-1">Profile</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <input value={form.shortCode} onChange={e => setForm(f => ({ ...f, shortCode: e.target.value }))} placeholder="Short code (e.g. GTB)" className={finInputCls} />
+            <input value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} placeholder="Contact person" className={finInputCls} />
+            <input value={form.contactPhone} onChange={e => setForm(f => ({ ...f, contactPhone: e.target.value }))} placeholder="Contact phone" className={finInputCls} />
+          </div>
+          <input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="HQ / office address" className={`${finInputCls} w-full`} />
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="flex items-center gap-2 text-xs text-foreground border border-line rounded-lg px-3 py-2 cursor-pointer hover:border-orange-500">
+              {form.logoUrl
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={form.logoUrl} alt="logo" className="w-6 h-6 rounded object-cover" />
+                : <span className="w-6 h-6 rounded bg-card-2 grid place-items-center text-muted">🏦</span>}
+              <span className="text-muted">{logoBusy ? "Uploading…" : form.logoUrl ? "Logo added — change" : "Upload logo"}</span>
+              <input type="file" accept="image/*" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f, url => setForm(p => ({ ...p, logoUrl: url }))); }} />
+            </label>
+            <button onClick={create} disabled={busy || logoBusy}
+              className="ml-auto px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold shrink-0">
+              {busy ? "…" : "Create bank"}
             </button>
           </div>
         </div>
@@ -547,27 +652,72 @@ function FinancerAccountsPanel({ setToast }: { setToast: (m: string) => void }) 
       {!loading && accounts.length > 0 && (
         <div className="mt-3 space-y-2">
           {accounts.map(a => (
-            <div key={a._id} className="flex items-center justify-between gap-3 bg-card rounded-lg px-3 py-2 flex-wrap">
-              <div className="min-w-0">
-                <p className="text-foreground text-sm font-medium">
-                  {a.name}
-                  <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${a.status === "active" ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"}`}>{a.status}</span>
-                </p>
-                <p className="text-muted text-xs truncate">
-                  {a.email}{a.lastLogin ? ` · last login ${new Date(a.lastLogin).toLocaleDateString()}` : " · never logged in"}
-                </p>
+            <div key={a._id} className="bg-card rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  {a.logoUrl
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={a.logoUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+                    : <span className="w-8 h-8 rounded bg-card-2 grid place-items-center text-muted shrink-0">🏦</span>}
+                  <div className="min-w-0">
+                    <p className="text-foreground text-sm font-medium truncate">
+                      {a.name}
+                      {a.shortCode ? <span className="ml-1.5 text-muted font-normal">({a.shortCode})</span> : null}
+                      <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${a.status === "active" ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"}`}>{a.status}</span>
+                    </p>
+                    <p className="text-muted text-xs truncate">
+                      {a.email}
+                      {a.contactName ? ` · ${a.contactName}` : ""}
+                      {a.contactPhone ? ` · ${a.contactPhone}` : ""}
+                      {a.lastLogin ? ` · last login ${new Date(a.lastLogin).toLocaleDateString()}` : " · never logged in"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => (editingId === a._id ? setEditingId(null) : startEdit(a))} className="text-xs text-foreground hover:text-foreground border border-line hover:border-line rounded-lg px-2 py-1">{editingId === a._id ? "Close" : "Edit"}</button>
+                  <button onClick={() => resetPassword(a)} className="text-xs text-foreground hover:text-foreground border border-line hover:border-line rounded-lg px-2 py-1">Reset password</button>
+                  <button onClick={() => toggleStatus(a)} className="text-xs text-foreground hover:text-foreground border border-line hover:border-line rounded-lg px-2 py-1">{a.status === "active" ? "Suspend" : "Reactivate"}</button>
+                  <button onClick={() => remove(a)} className="text-xs text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 rounded-lg px-2 py-1">Delete</button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => resetPassword(a)} className="text-xs text-foreground hover:text-foreground border border-line hover:border-line rounded-lg px-2 py-1">Reset password</button>
-                <button onClick={() => toggleStatus(a)} className="text-xs text-foreground hover:text-foreground border border-line hover:border-line rounded-lg px-2 py-1">{a.status === "active" ? "Suspend" : "Reactivate"}</button>
-                <button onClick={() => remove(a)} className="text-xs text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 rounded-lg px-2 py-1">Delete</button>
-              </div>
+
+              {editingId === a._id && (
+                <div className="mt-3 pt-3 border-t border-line space-y-2">
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="Bank name *" className={finInputCls} />
+                    <input value={editForm.shortCode} onChange={e => setEditForm(f => ({ ...f, shortCode: e.target.value }))} placeholder="Short code" className={finInputCls} />
+                    <input value={editForm.contactName} onChange={e => setEditForm(f => ({ ...f, contactName: e.target.value }))} placeholder="Contact person" className={finInputCls} />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <input value={editForm.contactPhone} onChange={e => setEditForm(f => ({ ...f, contactPhone: e.target.value }))} placeholder="Contact phone" className={finInputCls} />
+                    <input value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} placeholder="HQ / office address" className={`${finInputCls} sm:col-span-2`} />
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="flex items-center gap-2 text-xs text-foreground border border-line rounded-lg px-3 py-2 cursor-pointer hover:border-orange-500">
+                      {editForm.logoUrl
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={editForm.logoUrl} alt="logo" className="w-6 h-6 rounded object-cover" />
+                        : <span className="w-6 h-6 rounded bg-card-2 grid place-items-center text-muted">🏦</span>}
+                      <span className="text-muted">{logoBusy ? "Uploading…" : editForm.logoUrl ? "Change logo" : "Upload logo"}</span>
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f, url => setEditForm(p => ({ ...p, logoUrl: url }))); }} />
+                    </label>
+                    {editForm.logoUrl && (
+                      <button onClick={() => setEditForm(p => ({ ...p, logoUrl: "" }))} className="text-xs text-red-400 hover:text-red-300">Remove logo</button>
+                    )}
+                    <div className="ml-auto flex items-center gap-2">
+                      <button onClick={() => setEditingId(null)} className="text-xs text-muted hover:text-foreground border border-line rounded-lg px-3 py-2">Cancel</button>
+                      <button onClick={() => saveEdit(a._id)} disabled={editBusy || logoBusy} className="text-xs px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold">{editBusy ? "…" : "Save profile"}</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
       {!loading && accounts.length === 0 && (
-        <p className="text-muted text-xs mt-3">No financer accounts yet. Create one to grant dashboard access.</p>
+        <p className="text-muted text-xs mt-3">No bank accounts yet. Create one to grant dashboard access.</p>
       )}
     </div>
   );
@@ -588,6 +738,9 @@ function SectionUsers({ users, setUsers, setToast }: {
   const [onlineEmails, setOnlineEmails] = useState<Set<string>>(new Set());
   const [tankEdit, setTankEdit] = useState<{ PMS: string; AGO: string; ATK: string } | null>(null);
   const [tankSaving, setTankSaving] = useState(false);
+  // Banks (financer accounts) available to assign a dealer to.
+  const [banks, setBanks] = useState<FinAccount[]>([]);
+  const [bankSaving, setBankSaving] = useState(false);
 
   useEffect(() => {
     const refresh = () => setOnlineEmails(new Set(getOnlineUsers().map(u => u.email)));
@@ -595,6 +748,40 @@ function SectionUsers({ users, setUsers, setToast }: {
     const id = setInterval(refresh, 15_000);
     return () => clearInterval(id);
   }, []);
+
+  // Load the list of banks so a dealer can be assigned to one.
+  useEffect(() => {
+    import("@/lib/db-client").then(({ api }) => {
+      api.financerAccounts.list().then(res => {
+        if (res) setBanks(res.data as FinAccount[]);
+      });
+    });
+  }, []);
+
+  // Assign (or clear) the bank that finances a bulk dealer. Scopes what that
+  // bank sees on the financer overview dashboard. Optimistic, reverts on failure.
+  const assignBank = async (user: AdminUser, financerId: string) => {
+    if (!user._id) return;
+    const prevId = user.financerId;
+    const nextId = financerId || undefined;
+    setBankSaving(true);
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, financerId: nextId } : u));
+    setSelected(prev => prev && prev.id === user.id ? { ...prev, financerId: nextId } : prev);
+    const { api } = await import("@/lib/db-client");
+    // Send null (not undefined) to clear the field server-side.
+    const result = await api.users.update(user._id, { financerId: financerId || null });
+    setBankSaving(false);
+    if (!result) {
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, financerId: prevId } : u));
+      setSelected(prev => prev && prev.id === user.id ? { ...prev, financerId: prevId } : prev);
+      setToast("Could not update the dealer's bank. Please try again.");
+      return;
+    }
+    const bankName = banks.find(b => b._id === financerId)?.name;
+    setToast(financerId
+      ? `${user.name} assigned to ${bankName ?? "bank"} — that bank now sees this dealer.`
+      : `${user.name} unassigned from its bank.`);
+  };
 
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
@@ -844,6 +1031,39 @@ function SectionUsers({ users, setUsers, setToast }: {
               >
                 {tankSaving ? "Saving…" : "Save Tank Volumes"}
               </button>
+            </div>
+          )}
+
+          {/* ── Assigned bank (financer) — Bulk Dealer only ────────────────── */}
+          {selected.role === "bulk_dealer" && (
+            <div className="mt-5 border-t border-line pt-4">
+              <p className="text-xs text-muted font-semibold uppercase tracking-wider mb-2">
+                Assigned Bank
+              </p>
+              <p className="text-[11px] text-muted mb-3 max-w-[20rem]">
+                The financing bank that monitors this dealer. Only the assigned
+                bank sees this dealer&apos;s transaction flow on its overview
+                dashboard.
+              </p>
+              {banks.length === 0 ? (
+                <p className="text-[11px] text-muted italic">
+                  No bank accounts yet — create one in “Financer Login Accounts” above.
+                </p>
+              ) : (
+                <select
+                  value={selected.financerId ?? ""}
+                  disabled={bankSaving}
+                  onChange={e => assignBank(selected, e.target.value)}
+                  className="w-full bg-card border border-line rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500 disabled:opacity-60"
+                >
+                  <option value="">— Unassigned —</option>
+                  {banks.map(b => (
+                    <option key={b._id} value={b._id}>
+                      {b.name}{b.status === "suspended" ? " (suspended)" : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
 
@@ -4232,6 +4452,7 @@ export default function AdminDashboard() {
               agoTankMaxML: u.agoTankMaxML,
               atkTankMaxML: u.atkTankMaxML,
               financerAccess: Boolean(u.financerAccess),
+              financerId: u.financerId ? String(u.financerId) : undefined,
             }));
             setUsers(apiUsers);
           } else {

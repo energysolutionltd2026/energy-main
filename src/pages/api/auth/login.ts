@@ -122,12 +122,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: "Your account has been suspended. Contact support." });
     }
 
+    // A normal User an admin converted with the `financerAccess` flag is a
+    // financer-only identity — mirror the dedicated /api/financer/login and the
+    // overview dashboard gate by signing them in as "financer" here too, so the
+    // general login routes them to the bank view rather than their legacy role.
+    const effectiveRole = user.financerAccess ? "financer" : user.role;
+
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const session = await Session.create({
       userEmail: user.email,
       userId: user._id,
       token: "pending",
-      role: user.role,
+      role: effectiveRole,
       ipAddress: req.headers["x-forwarded-for"] as string || req.socket.remoteAddress,
       userAgent: req.headers["user-agent"],
       expiresAt,
@@ -137,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = signToken({
       userId: String(user._id),
       email: user.email,
-      role: user.role as any,
+      role: effectiveRole as any,
       sessionId: String(session._id),
     });
 
@@ -154,7 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         _id: String(user._id),
         name: user.name,
         email: user.email,
-        role: user.role,
+        role: effectiveRole,
         emailVerified: user.emailVerified,
         status: user.status,
         companyName: user.companyName,
