@@ -24,6 +24,7 @@ import { Allocation } from "@/lib/models/Allocation";
 import { Transaction } from "@/lib/models/Transaction";
 import { SupplyRequest } from "@/lib/models/SupplyRequest";
 import { PurchaseOrder } from "@/lib/models/PurchaseOrder";
+import { LoadingRecord } from "@/lib/models/LoadingRecord";
 import { Truck } from "@/lib/models/Truck";
 import { TruckRental } from "@/lib/models/TruckRental";
 import { Depot } from "@/lib/models/Depot";
@@ -148,7 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .lean(),
       PurchaseOrder.find(scope("dealer"))
         .select(
-          "orderId companyName dealer productType productQuantity loadingDepot status totalAmount createdAt"
+          "orderId companyName dealer productType productQuantity loadingDepot status totalAmount paymentMethod transactionId createdAt"
         )
         .sort({ createdAt: -1 })
         .limit(300)
@@ -173,6 +174,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .sort({ name: 1 })
       .lean();
 
+    // Loading records power the Trade Monitoring lifecycle (order → payment →
+    // loading → delivery). They carry no dealer email, so we scope them to the
+    // trades this viewer can already see, by the purchase-order ids above. A
+    // scoped bank with no orders gets `{ $in: [] }` and correctly sees none.
+    const orderIds = purchaseOrders
+      .map((o) => (o as { orderId?: string }).orderId)
+      .filter((id): id is string => Boolean(id));
+    const loadingRecords = await LoadingRecord.find(
+      scopedFinancerId ? { orderId: { $in: orderIds } } : {}
+    )
+      .select("loadId orderId product depot truckRegNumber companyName loadingDate totalLitresLoaded status")
+      .sort({ loadingDate: -1 })
+      .limit(300)
+      .lean();
+
     return res.status(200).json({
       settings: settings || null,
       dealers,
@@ -180,6 +196,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       transactions,
       supplyRequests,
       purchaseOrders,
+      loadingRecords,
       trucks,
       truckRentals,
       depots,

@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Truck, Fuel, Building2, Receipt, MapPin,
   Package, ClipboardList, LogOut, RefreshCw,
   AlertTriangle, ArrowRight, Banknote, Gauge, ShieldCheck,
-  Clock, Scale, Filter, Activity, Search, ChevronDown,
+  Clock, Scale, Filter, Activity, Search, ChevronDown, Download,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
 import { toLabel } from "@/utils/toLabel";
@@ -206,6 +206,11 @@ const MOCK = {
     { _id: "p3", orderId: "BUY-771203", companyName: "Sahel Energy Distribution", dealer: "amina@sahelenergy.ng", productType: "AGO", productQuantity: 40000, loadingDepot: "Kano Distribution Hub", status: "processing", totalAmount: 48200000, createdAt: "2026-05-25" },
     { _id: "p4", orderId: "BUY-771204", companyName: "Coastline Bulk Supplies", dealer: "tunde@coastlinebulk.ng", productType: "PMS", productQuantity: 30000, loadingDepot: "Port Harcourt Terminal", status: "delivered", totalAmount: 27060000, createdAt: "2026-04-15" },
   ],
+  loadingRecords: [
+    { _id: "l1", loadId: "LOAD-551201", orderId: "BUY-771201", product: "PMS", depot: "Lagos Main Depot", truckRegNumber: "LAG-482-XA", companyName: "BrightFlow Petroleum Ltd", loadingDate: "2026-07-11", totalLitresLoaded: 45000, status: "completed" },
+    { _id: "l2", loadId: "LOAD-551202", orderId: "BUY-771202", product: "PMS", depot: "Warri Storage Facility", truckRegNumber: "DEL-771-QP", companyName: "Delta Prime Oil & Gas", loadingDate: "2026-07-09", totalLitresLoaded: 60000, status: "completed" },
+    { _id: "l4", loadId: "LOAD-551204", orderId: "BUY-771204", product: "PMS", depot: "Port Harcourt Terminal", truckRegNumber: "RIV-330-KK", companyName: "Coastline Bulk Supplies", loadingDate: "2026-04-16", totalLitresLoaded: 30000, status: "completed" },
+  ],
   trucks: [
     { _id: "k1", status: "approved" }, { _id: "k2", status: "approved" },
     { _id: "k3", status: "pending_review" }, { _id: "k4", status: "rejected" },
@@ -255,24 +260,24 @@ function heatTextColor(level: number): string {
 // ─── Small UI atoms ─────────────────────────────────────────────────────────
 function StatusPill({ value }: { value: string }) {
   const map: Record<string, string> = {
-    active: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    completed: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    delivered: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    paid: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    approved: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    available: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    pending: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    pending_review: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    processing: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    in_transit: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-    confirmed: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-    limited: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    suspended: "bg-red-500/15 text-red-300 border-red-500/30",
-    failed: "bg-red-500/15 text-red-300 border-red-500/30",
-    rejected: "bg-red-500/15 text-red-300 border-red-500/30",
-    revoked: "bg-red-500/15 text-red-300 border-red-500/30",
-    overdue: "bg-red-500/15 text-red-300 border-red-500/30",
-    unavailable: "bg-red-500/15 text-red-300 border-red-500/30",
+    active: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    completed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    delivered: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    paid: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    approved: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    available: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    pending: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+    pending_review: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+    processing: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+    in_transit: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
+    confirmed: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
+    limited: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+    suspended: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
+    failed: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
+    rejected: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
+    revoked: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
+    overdue: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
+    unavailable: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
     exhausted: "bg-gray-600/30 text-foreground border-line",
   };
   return (
@@ -330,7 +335,7 @@ function AlertBanner({ tone, icon: Icon, title, detail, onClick, actionLabel }: 
   const tones: Record<string, string> = {
     red: "bg-red-500/10 border-red-500/30 text-red-300",
     amber: "bg-amber-500/10 border-amber-500/30 text-amber-300",
-    orange: "bg-orange-500/10 border-orange-500/30 text-orange-300",
+    orange: "bg-orange-500/10 border-orange-500/30 text-orange-600 dark:text-orange-300",
   };
   const clickable = onClick
     ? "w-full text-left hover:brightness-125 focus:outline-none focus:ring-1 focus:ring-current cursor-pointer transition"
@@ -440,6 +445,65 @@ function TradeTrend({ txns }: { txns: { totalAmount?: number; status?: string; t
   );
 }
 
+// Current lifecycle stage of a trade (purchase order), combining its delivery
+// status with any loading record. "Live" = current DB state on refresh, not push.
+function tradeStage(poStatus?: string, loadStatus?: string): string {
+  if (poStatus === "cancelled") return "Cancelled";
+  if (poStatus === "delivered") return "Delivered";
+  if (poStatus === "in_transit") return "In transit";
+  if (loadStatus === "completed" || loadStatus === "in_progress") return "Loaded";
+  if (poStatus === "processing") return "Reserved";
+  return "Placed";
+}
+const STAGE_COLORS: Record<string, string> = {
+  Placed: "#64748b", Reserved: "#f59e0b", Loaded: "#0ea5e9",
+  "In transit": "#6366f1", Delivered: "#10b981", Cancelled: "#ef4444",
+};
+function StageBadge({ stage }: { stage: string }) {
+  const c = STAGE_COLORS[stage] ?? "#64748b";
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap"
+      style={{ color: c, borderColor: `${c}55`, background: `${c}1a` }}>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
+      {stage}
+    </span>
+  );
+}
+
+// Horizontal lifecycle stepper: placed → paid → loaded → delivered.
+function TradeLifecycle({ steps }: { steps: { label: string; at?: string; done: boolean; note?: string }[] }) {
+  return (
+    <div className="flex items-start gap-1 overflow-x-auto pb-1">
+      {steps.map((s, i) => (
+        <React.Fragment key={s.label}>
+          <div className="flex flex-col items-center text-center min-w-[76px]">
+            <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${s.done ? "bg-emerald-500 text-white" : "bg-card-2 text-muted border border-line"}`}>{s.done ? "✓" : i + 1}</span>
+            <p className={`text-xs font-semibold mt-1 ${s.done ? "text-foreground" : "text-muted"}`}>{s.label}</p>
+            <p className="text-[11px] text-muted">{s.at ? new Date(s.at).toLocaleDateString() : (s.note || "Pending")}</p>
+          </div>
+          {i < steps.length - 1 && <div className={`flex-1 h-0.5 mt-3.5 min-w-[16px] ${s.done ? "bg-emerald-500/60" : "bg-line"}`} />}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+// Client-side CSV download — no dependency. Values are RFC-4180 escaped.
+function downloadCsv(filename: string, headers: string[], rows: (string | number)[][]) {
+  const esc = (v: string | number) => {
+    const s = String(v ?? "");
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function EmptyState({ icon: Icon, label }: { icon: any; label: string }) {
   return (
     <div className="bg-card/40 border border-dashed border-line rounded-xl py-12 flex flex-col items-center justify-center text-center">
@@ -453,7 +517,7 @@ function EmptyState({ icon: Icon, label }: { icon: any; label: string }) {
 // ─── Main page ──────────────────────────────────────────────────────────────
 type Data = {
   settings: any; dealers: any[]; allocations: any[]; transactions: any[];
-  supplyRequests: any[]; purchaseOrders: any[]; trucks: any[];
+  supplyRequests: any[]; purchaseOrders: any[]; loadingRecords: any[]; trucks: any[];
   truckRentals: any[]; depots: any[]; unionDues: any[]; banks: any[];
   // True when the viewer is a single bank (data scoped to its dealers). Used to
   // hide widgets that can't be scoped to a bank, like supply requests.
@@ -485,7 +549,7 @@ function demoRequested(): boolean {
 
 const EMPTY: Data = {
   settings: null, dealers: [], allocations: [], transactions: [],
-  supplyRequests: [], purchaseOrders: [], trucks: [],
+  supplyRequests: [], purchaseOrders: [], loadingRecords: [], trucks: [],
   truckRentals: [], depots: [], unionDues: [], banks: [], scoped: false,
 };
 
@@ -493,7 +557,7 @@ const INITIAL: Data = DEV
   ? {
       settings: MOCK.settings, dealers: MOCK.dealers, allocations: MOCK.allocations,
       transactions: MOCK.transactions, supplyRequests: MOCK.supplyRequests,
-      purchaseOrders: MOCK.purchaseOrders, trucks: MOCK.trucks,
+      purchaseOrders: MOCK.purchaseOrders, loadingRecords: MOCK.loadingRecords, trucks: MOCK.trucks,
       truckRentals: MOCK.truckRentals, depots: MOCK.depots, unionDues: MOCK.unionDues,
       banks: MOCK.banks, scoped: false,
     }
@@ -506,6 +570,15 @@ export default function FinancerOverview() {
   const [data, setData] = useState<Data>(INITIAL);
   const [openDealer, setOpenDealer] = useState<string | null>(null);
   const [dealerSearch, setDealerSearch] = useState("");
+  // Trade Monitoring tab filters.
+  const [openTrade, setOpenTrade] = useState<string | null>(null);
+  const [tmSearch, setTmSearch] = useState("");
+  const [tmProduct, setTmProduct] = useState("All");
+  const [tmStatus, setTmStatus] = useState("All");
+  const [tmDepot, setTmDepot] = useState("All");
+  const [tmPeriod, setTmPeriod] = useState("All");
+  const [tmRiskOnly, setTmRiskOnly] = useState(false);
+  const [tmSort, setTmSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "placed", dir: "desc" });
 
   // ── Overview filters (bank · region · product · time period) ──
   const [fBank, setFBank] = useState("All");
@@ -583,6 +656,7 @@ export default function FinancerOverview() {
     const t = pick(res?.transactions, MOCK.transactions);
     const s = pick(res?.supplyRequests, MOCK.supplyRequests);
     const p = pick(res?.purchaseOrders, MOCK.purchaseOrders);
+    const lr = pick(res?.loadingRecords, MOCK.loadingRecords);
     const k = pick(res?.trucks, MOCK.trucks);
     const r = pick(res?.truckRentals, MOCK.truckRentals);
     const dp = pick(res?.depots, MOCK.depots);
@@ -598,7 +672,7 @@ export default function FinancerOverview() {
     setData({
       settings: res?.settings || (useMock ? MOCK.settings : null),
       dealers: d.rows, allocations: a.rows, transactions: t.rows,
-      supplyRequests: s.rows, purchaseOrders: p.rows, trucks: k.rows,
+      supplyRequests: s.rows, purchaseOrders: p.rows, loadingRecords: lr.rows, trucks: k.rows,
       truckRentals: r.rows, depots: dp.rows, unionDues: u.rows, banks: b.rows,
       // Only live scoped responses set this; demo/mock never scopes, so the tile stays.
       scoped: Boolean(res?.scoped),
@@ -783,6 +857,7 @@ export default function FinancerOverview() {
     { id: "Bulk Dealers", icon: Building2 },
     { id: "Operations Flow", icon: ClipboardList },
     { id: "Transactions", icon: Receipt },
+    { id: "Trade Monitoring", icon: Activity },
     { id: "Depots & Pricing", icon: Fuel },
   ];
 
@@ -1245,7 +1320,7 @@ export default function FinancerOverview() {
                                 <td className="py-2.5 px-3">
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-foreground">{d.companyName || d.name}</span>
-                                    {d.dealerCode && <code className="text-[10px] text-orange-300 bg-orange-500/10 px-1 py-0.5 rounded hidden md:inline">{d.dealerCode}</code>}
+                                    {d.dealerCode && <code className="text-[10px] text-orange-600 dark:text-orange-300 bg-orange-500/10 px-1 py-0.5 rounded hidden md:inline">{d.dealerCode}</code>}
                                   </div>
                                   <span className="text-[11px] text-muted inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{d.state || "—"}</span>
                                 </td>
@@ -1270,7 +1345,7 @@ export default function FinancerOverview() {
                                       <div className="flex items-center justify-between gap-3 flex-wrap border-b border-line pb-3">
                                         <div className="flex items-center gap-2 flex-wrap">
                                           <span className="text-sm font-bold text-foreground">{d.companyName || d.name}</span>
-                                          {d.dealerCode && <code className="text-[10px] text-orange-300 bg-orange-500/10 px-1.5 py-0.5 rounded">{d.dealerCode}</code>}
+                                          {d.dealerCode && <code className="text-[10px] text-orange-600 dark:text-orange-300 bg-orange-500/10 px-1.5 py-0.5 rounded">{d.dealerCode}</code>}
                                           <RiskPill band={r.band} />
                                           <StatusPill value={d.status} />
                                         </div>
@@ -1473,6 +1548,272 @@ export default function FinancerOverview() {
             )}
           </div>
         )}
+
+        {/* ── TRADE MONITORING ── */}
+        {tab === "Trade Monitoring" && (() => {
+          // Join each trade (purchase order) with its payment (transaction) and
+          // loading record to reconstruct the order → payment → loading → delivery
+          // lifecycle. "Live status" reflects current DB state on refresh.
+          const txById = new Map((data.transactions as any[]).map((t) => [String(t._id), t]));
+          const loadByOrder = new Map<string, any>();
+          for (const l of data.loadingRecords as any[]) {
+            if (l.orderId && !loadByOrder.has(l.orderId)) loadByOrder.set(l.orderId, l);
+          }
+          const AGING_DAYS = 21;
+          const nowMs = Date.now();
+          const trades = (data.purchaseOrders as any[]).map((po) => {
+            const txn = po.transactionId ? txById.get(String(po.transactionId)) : undefined;
+            const load = loadByOrder.get(po.orderId);
+            const volume = po.productQuantity || 0;
+            const totalValue = po.totalAmount || 0;
+            const unitPrice = volume > 0 ? totalValue / volume : 0;
+            const paymentStatus = txn?.status
+              ? txn.status
+              : (po.status === "delivered" || po.status === "in_transit") ? "completed"
+              : po.status === "cancelled" ? "failed"
+              : "pending";
+            const stage = tradeStage(po.status, load?.status);
+            const ageDays = po.createdAt
+              ? Math.max(0, Math.floor((nowMs - new Date(po.createdAt).getTime()) / 86_400_000))
+              : 0;
+            // Risk = fuel released without settlement (delivered but unpaid) OR an
+            // AI-flagged payment. Aging = still open well beyond the settlement window.
+            const riskReasons: string[] = [];
+            if (stage === "Delivered" && paymentStatus !== "completed") riskReasons.push("Delivered but unpaid");
+            if (txn?.aiFlagged) riskReasons.push("AI-flagged payment");
+            const aging = stage !== "Delivered" && stage !== "Cancelled" && ageDays > AGING_DAYS;
+            return { po, txn, load, volume, totalValue, unitPrice, paymentStatus, stage, ageDays, riskReasons, risk: riskReasons.length > 0, aging };
+          });
+
+          const depotOptions = Array.from(new Set(trades.map((r) => r.po.loadingDepot).filter(Boolean)));
+          const q = tmSearch.trim().toLowerCase();
+          const periodDays = tmPeriod === "7d" ? 7 : tmPeriod === "30d" ? 30 : tmPeriod === "90d" ? 90 : 0;
+          const STAGE_ORDER = ["Placed", "Reserved", "Loaded", "In transit", "Delivered", "Cancelled"];
+          const filtered = trades.filter((r) =>
+            (tmProduct === "All" || r.po.productType === tmProduct) &&
+            (tmStatus === "All" || r.po.status === tmStatus) &&
+            (tmDepot === "All" || r.po.loadingDepot === tmDepot) &&
+            (!tmRiskOnly || r.risk) &&
+            (periodDays === 0 || r.ageDays <= periodDays) &&
+            (!q || [r.po.orderId, r.po.companyName, r.po.dealer].some((v: string) => (v || "").toLowerCase().includes(q)))
+          );
+
+          const sortVal = (r: typeof trades[number]): number | string => {
+            switch (tmSort.key) {
+              case "buyer": return (r.po.companyName || r.po.dealer || "").toLowerCase();
+              case "volume": return r.volume;
+              case "unitPrice": return r.unitPrice;
+              case "totalValue": return r.totalValue;
+              case "payment": return r.paymentStatus;
+              case "stage": return STAGE_ORDER.indexOf(r.stage);
+              default: return r.po.createdAt ? new Date(r.po.createdAt).getTime() : 0; // placed
+            }
+          };
+          filtered.sort((a, b) => {
+            const va = sortVal(a), vb = sortVal(b);
+            const cmp = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb));
+            return tmSort.dir === "asc" ? cmp : -cmp;
+          });
+          const sortBy = (key: string) =>
+            setTmSort((s) => ({ key, dir: s.key === key && s.dir === "desc" ? "asc" : "desc" }));
+
+          const sum = (f: (r: typeof trades[number]) => number) => filtered.reduce((s, r) => s + f(r), 0);
+          const delivered = filtered.filter((r) => r.stage === "Delivered").length;
+          const inTransit = filtered.filter((r) => r.stage === "In transit").length;
+          const unpaid = filtered.filter((r) => r.paymentStatus !== "completed").length;
+          const atRisk = filtered.filter((r) => r.risk).length;
+          const agingCount = filtered.filter((r) => r.aging).length;
+          const stageCounts = STAGE_ORDER.map((st) => ({ stage: st, count: filtered.filter((r) => r.stage === st).length })).filter((s) => s.count > 0);
+
+          const exportCsv = () =>
+            downloadCsv(
+              `trade-monitoring-${new Date().toISOString().slice(0, 10)}.csv`,
+              ["Trade ID", "Buyer", "Seller (Depot)", "Product", "Volume (L)", "Unit Price", "Total Value", "Payment", "Live Status", "Placed", "Age (days)", "Risk"],
+              filtered.map((r) => [
+                r.po.orderId || "", r.po.companyName || r.po.dealer || "", r.po.loadingDepot || "",
+                r.po.productType || "", r.volume, Math.round(r.unitPrice), r.totalValue,
+                r.paymentStatus, r.stage, r.po.createdAt ? new Date(r.po.createdAt).toLocaleDateString() : "",
+                r.ageDays, r.riskReasons.join("; "),
+              ])
+            );
+
+          const selCls = "bg-card border border-line rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-orange-500/50";
+
+          return (
+            <div className="space-y-4">
+              {/* Summary strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-card/60 border border-line rounded-xl p-3"><p className="text-xs text-muted">Trades</p><p className="text-base font-bold text-foreground">{num(filtered.length)}</p></div>
+                <div className="bg-card/60 border border-line rounded-xl p-3"><p className="text-xs text-muted">Total value</p><p className="text-base font-bold text-foreground">{naira(sum((r) => r.totalValue))}</p></div>
+                <div className="bg-card/60 border border-line rounded-xl p-3"><p className="text-xs text-muted">Total volume</p><p className="text-base font-bold text-foreground">{num(sum((r) => r.volume))} L</p></div>
+                <div className="bg-card/60 border border-line rounded-xl p-3"><p className="text-xs text-muted">Delivered</p><p className="text-base font-bold text-emerald-400">{num(delivered)}</p></div>
+                <div className="bg-card/60 border border-line rounded-xl p-3"><p className="text-xs text-muted">In transit</p><p className="text-base font-bold text-indigo-300">{num(inTransit)}</p></div>
+                <div className="bg-card/60 border border-line rounded-xl p-3"><p className="text-xs text-muted">Unpaid</p><p className="text-base font-bold text-amber-300">{num(unpaid)}</p></div>
+                <button onClick={() => setTmRiskOnly((v) => !v)} title="Toggle risk-only filter"
+                  className={`text-left bg-card/60 border rounded-xl p-3 transition ${atRisk ? "border-red-500/40" : "border-line"} ${tmRiskOnly ? "ring-1 ring-red-500/50" : "hover:border-red-500/40"}`}>
+                  <p className="text-xs text-muted">At risk</p><p className={`text-base font-bold ${atRisk ? "text-red-400" : "text-foreground"}`}>{num(atRisk)}</p>
+                </button>
+                <div className="bg-card/60 border border-line rounded-xl p-3"><p className="text-xs text-muted">Aging</p><p className={`text-base font-bold ${agingCount ? "text-amber-300" : "text-foreground"}`}>{num(agingCount)}</p></div>
+              </div>
+
+              {/* Stage pipeline bar */}
+              {filtered.length > 0 && (
+                <div className="bg-card/60 border border-line rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Lifecycle Pipeline</p>
+                    <span className="text-[11px] text-muted">{num(filtered.length)} trades</span>
+                  </div>
+                  <div className="flex h-2.5 rounded-full overflow-hidden bg-card-2">
+                    {stageCounts.map((s) => (
+                      <div key={s.stage} style={{ width: `${(s.count / filtered.length) * 100}%`, background: STAGE_COLORS[s.stage] }}
+                        title={`${s.stage}: ${s.count}`} />
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                    {stageCounts.map((s) => (
+                      <span key={s.stage} className="inline-flex items-center gap-1.5 text-[11px] text-muted">
+                        <span className="w-2 h-2 rounded-sm" style={{ background: STAGE_COLORS[s.stage] }} />
+                        {s.stage} <span className="text-foreground font-semibold">{s.count}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Filter bar */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input value={tmSearch} onChange={(e) => setTmSearch(e.target.value)} placeholder="Search trade ID or buyer…"
+                    className="bg-card border border-line rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500/50 w-56" />
+                </div>
+                <select value={tmProduct} onChange={(e) => setTmProduct(e.target.value)} className={selCls}>
+                  <option value="All">All products</option>{PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <select value={tmStatus} onChange={(e) => setTmStatus(e.target.value)} className={selCls}>
+                  {["All", "pending", "processing", "in_transit", "delivered", "cancelled"].map((s) => <option key={s} value={s}>{s === "All" ? "All delivery status" : toLabel(s)}</option>)}
+                </select>
+                <select value={tmDepot} onChange={(e) => setTmDepot(e.target.value)} className={selCls}>
+                  <option value="All">All depots</option>{depotOptions.map((dep) => <option key={dep} value={dep}>{dep}</option>)}
+                </select>
+                <select value={tmPeriod} onChange={(e) => setTmPeriod(e.target.value)} className={selCls}>
+                  {["All", "7d", "30d", "90d"].map((p) => <option key={p} value={p}>{p === "All" ? "All time" : `Last ${p}`}</option>)}
+                </select>
+                {tmRiskOnly && (
+                  <button onClick={() => setTmRiskOnly(false)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-2.5 py-1.5">
+                    Risk only ✕
+                  </button>
+                )}
+                <button onClick={exportCsv} disabled={!filtered.length}
+                  className="ml-auto inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 text-white text-xs font-semibold rounded-lg px-3 py-1.5 transition">
+                  <Download className="w-3.5 h-3.5" /> Export CSV
+                </button>
+              </div>
+
+              {/* Trades table */}
+              {!filtered.length ? (
+                <EmptyState icon={Activity} label="No trades match the current filters." />
+              ) : (
+                <div className="bg-card/60 border border-line rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="text-muted text-left bg-card/80 text-xs">
+                        <tr>
+                          {(() => {
+                            const caret = (key: string) => tmSort.key === key ? (tmSort.dir === "asc" ? " ▲" : " ▼") : "";
+                            const SortTh = ({ k, label, extra = "" }: { k: string; label: string; extra?: string }) => (
+                              <th className={`py-2.5 px-3 font-medium cursor-pointer select-none hover:text-foreground ${extra}`} onClick={() => sortBy(k)}>{label}{caret(k)}</th>
+                            );
+                            return (
+                              <>
+                                <th className="py-2.5 px-3 font-medium">Trade ID</th>
+                                <SortTh k="buyer" label="Buyer" />
+                                <th className="py-2.5 px-3 font-medium">Seller</th>
+                                <th className="py-2.5 px-3 font-medium">Product</th>
+                                <SortTh k="volume" label="Volume" extra="whitespace-nowrap" />
+                                <SortTh k="unitPrice" label="Unit Price" extra="whitespace-nowrap" />
+                                <SortTh k="totalValue" label="Total Value" extra="whitespace-nowrap" />
+                                <SortTh k="payment" label="Payment" />
+                                <SortTh k="stage" label="Live Status" />
+                                <th className="py-2.5 px-3 font-medium w-8"></th>
+                              </>
+                            );
+                          })()}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((r) => {
+                          const po = r.po;
+                          const rowId = po._id || po.orderId;
+                          const open = openTrade === rowId;
+                          const steps = [
+                            { label: "Placed", at: po.createdAt, done: true },
+                            { label: "Paid", at: r.txn?.timestamp, done: r.paymentStatus === "completed", note: r.paymentStatus === "completed" ? undefined : "Awaiting payment" },
+                            { label: "Loaded", at: r.load?.loadingDate, done: !!r.load && r.load.status !== "cancelled", note: r.load ? undefined : "Not loaded" },
+                            { label: "Delivered", at: undefined, done: po.status === "delivered", note: po.status === "delivered" ? "Confirmed" : "In progress" },
+                          ];
+                          return (
+                            <React.Fragment key={rowId}>
+                              <tr onClick={() => setOpenTrade(open ? null : rowId)}
+                                className={`border-t border-line cursor-pointer transition-all ${open ? "bg-orange-500/10" : openTrade ? "opacity-40 hover:opacity-100 hover:bg-card" : "hover:bg-card"}`}>
+                                <td className="py-2.5 px-3 font-mono text-orange-600 dark:text-orange-300 whitespace-nowrap">
+                                  <span className="inline-flex items-center gap-1.5">
+                                    {po.orderId}
+                                    {r.risk && <span title={r.riskReasons.join(" · ")}><AlertTriangle className="w-3.5 h-3.5 text-red-400" /></span>}
+                                    {r.aging && <span title={`Open ${r.ageDays} days`}><Clock className="w-3.5 h-3.5 text-amber-400" /></span>}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3"><span className="text-foreground font-medium">{po.companyName || po.dealer || "—"}</span></td>
+                                <td className="py-2.5 px-3 text-muted whitespace-nowrap">{po.loadingDepot || "—"}</td>
+                                <td className="py-2.5 px-3">{po.productType || "—"}</td>
+                                <td className="py-2.5 px-3 whitespace-nowrap">{num(r.volume)} L</td>
+                                <td className="py-2.5 px-3 whitespace-nowrap text-muted">{r.unitPrice ? perL(r.unitPrice) : "—"}</td>
+                                <td className="py-2.5 px-3 font-semibold text-foreground whitespace-nowrap">{naira(r.totalValue)}</td>
+                                <td className="py-2.5 px-3"><StatusPill value={r.paymentStatus} /></td>
+                                <td className="py-2.5 px-3"><StageBadge stage={r.stage} /></td>
+                                <td className="py-2.5 px-3 text-muted"><ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} /></td>
+                              </tr>
+                              {open && (
+                                <tr>
+                                  <td colSpan={10} className="p-0 pb-2">
+                                    <div className="animate-dealer-open mx-1 mb-1 rounded-xl border border-orange-500/30 bg-background/80 p-5 shadow-2xl ring-1 ring-orange-500/10 space-y-5">
+                                      {r.risk && (
+                                        <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5">
+                                          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                                          <p className="text-xs text-red-200"><span className="font-semibold">Risk:</span> {r.riskReasons.join(" · ")}</p>
+                                        </div>
+                                      )}
+                                      <div>
+                                        <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-3">Trade Lifecycle</p>
+                                        <TradeLifecycle steps={steps} />
+                                      </div>
+                                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-line pt-4">
+                                        <Field label="Buyer" value={po.companyName || po.dealer || "—"} sub={po.dealer || undefined} />
+                                        <Field label="Seller / Depot" value={po.loadingDepot || "—"} />
+                                        <Field label="Product / Volume" value={`${po.productType || "—"} · ${num(r.volume)} L`} />
+                                        <Field label="Total Value" value={naira(r.totalValue)} sub={r.unitPrice ? `${perL(r.unitPrice)} unit` : undefined} />
+                                        <Field label="Payment" value={toLabel(r.paymentStatus)} sub={po.paymentMethod ? toLabel(po.paymentMethod) : undefined} />
+                                        <Field label="Loading" value={r.load ? `${num(r.load.totalLitresLoaded || 0)} L loaded` : "Not loaded"} sub={r.load?.truckRegNumber || undefined} />
+                                        <Field label="Delivery Status" value={toLabel(po.status)} />
+                                        <Field label="Order Placed" value={po.createdAt ? new Date(po.createdAt).toLocaleDateString() : "—"} sub={`${r.ageDays} day${r.ageDays === 1 ? "" : "s"} ago${r.aging ? " · aging" : ""}`} />
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              <p className="text-[11px] text-muted">Live status reflects current records on refresh (order → payment → loading → delivery); it is not a real-time push feed.</p>
+            </div>
+          );
+        })()}
 
         {/* ── DEPOTS & PRICING ── */}
         {tab === "Depots & Pricing" && (
