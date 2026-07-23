@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Truck, Fuel, Building2, Receipt, MapPin,
   Package, ClipboardList, LogOut, RefreshCw,
   AlertTriangle, ArrowRight, Banknote, Gauge, ShieldCheck,
-  Clock, Scale, Filter, Activity,
+  Clock, Scale, Filter, Activity, Search, ChevronDown,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
 import { toLabel } from "@/utils/toLabel";
@@ -377,6 +377,69 @@ function LevelBar({ level }: { level: number }) {
   );
 }
 
+// Per-dealer risk band (Low/Moderate/High): a suspended dealer is High; otherwise
+// the dealer's own AI-flagged + failed transaction rate sets the band. Mirrors the
+// portfolio-level risk blend used by the exposure widget.
+function dealerRiskBand(
+  status: string | undefined,
+  dealerTx: { aiFlagged?: boolean; status?: string }[]
+): "Low" | "Moderate" | "High" {
+  if (status === "suspended") return "High";
+  const n = dealerTx.length || 1;
+  const bad = dealerTx.filter((x) => x.aiFlagged || x.status === "failed").length;
+  const rate = bad / n;
+  return rate >= 0.34 ? "High" : rate > 0 ? "Moderate" : "Low";
+}
+
+function RiskPill({ band }: { band: "Low" | "Moderate" | "High" }) {
+  const c = RISK_COLORS[band] ?? "#64748b";
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border"
+      style={{ color: c, borderColor: `${c}55`, background: `${c}1a` }}>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
+      {band}
+    </span>
+  );
+}
+
+// Compact monthly trade-volume trend (completed transaction value, last 6 months).
+function TradeTrend({ txns }: { txns: { totalAmount?: number; status?: string; timestamp?: string }[] }) {
+  const now = new Date();
+  const keys: string[] = [];
+  const buckets = new Map<string, number>();
+  for (let i = 5; i >= 0; i--) {
+    const dt = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = dt.toLocaleString("en", { month: "short" });
+    keys.push(key);
+    buckets.set(key, 0);
+  }
+  for (const t of txns) {
+    if (t.status !== "completed" || !t.timestamp) continue;
+    const dt = new Date(t.timestamp);
+    if (Number.isNaN(dt.getTime())) continue;
+    const monthsAgo = (now.getFullYear() - dt.getFullYear()) * 12 + (now.getMonth() - dt.getMonth());
+    if (monthsAgo < 0 || monthsAgo > 5) continue;
+    const key = dt.toLocaleString("en", { month: "short" });
+    buckets.set(key, (buckets.get(key) || 0) + (t.totalAmount || 0));
+  }
+  const vals = keys.map((k) => buckets.get(k) || 0);
+  const max = Math.max(1, ...vals);
+  if (vals.reduce((s, v) => s + v, 0) === 0) {
+    return <p className="text-xs text-muted py-4">No completed trades in the last 6 months.</p>;
+  }
+  return (
+    <div className="flex items-end gap-2 h-24">
+      {keys.map((k, i) => (
+        <div key={k} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
+          <div className="w-full rounded-t bg-orange-500/70" style={{ height: `${(vals[i] / max) * 100}%` }}
+            title={`${k}: ${naira(vals[i])}`} />
+          <span className="text-[10px] text-muted">{k}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function EmptyState({ icon: Icon, label }: { icon: any; label: string }) {
   return (
     <div className="bg-card/40 border border-dashed border-line rounded-xl py-12 flex flex-col items-center justify-center text-center">
@@ -442,6 +505,7 @@ export default function FinancerOverview() {
   const [demo, setDemo] = useState(DEV || ENV_DEMO); // true while showing mock data
   const [data, setData] = useState<Data>(INITIAL);
   const [openDealer, setOpenDealer] = useState<string | null>(null);
+  const [dealerSearch, setDealerSearch] = useState("");
 
   // ── Overview filters (bank · region · product · time period) ──
   const [fBank, setFBank] = useState("All");
@@ -1115,130 +1179,215 @@ export default function FinancerOverview() {
         {/* ── BULK DEALERS ── */}
         {tab === "Bulk Dealers" && (
           <div className="space-y-3">
-            <p className="text-xs text-muted mb-2">
-              {data.dealers.length} registered bulk dealers — their business identity, location, storage capacity, set prices, allocations and transaction activity. Click a dealer to expand.
-            </p>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs text-muted">
+                {data.dealers.length} registered bulk dealers — click a row to expand full profile, KYC, credit facility and trade history.
+              </p>
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  value={dealerSearch}
+                  onChange={(e) => setDealerSearch(e.target.value)}
+                  placeholder="Search dealers…"
+                  className="bg-card border border-line rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500/50 w-56"
+                />
+              </div>
+            </div>
             {!data.dealers.length && <EmptyState icon={Building2} label="No bulk dealers registered yet." />}
-            {data.dealers.map((d) => {
-              const dealerTx = data.transactions.filter((t) => t.userEmail === d.email);
-              const dealerAlloc = data.allocations.filter((a) => a.dealerEmail === d.email);
-              const dealerValue = dealerTx.filter((t) => t.status === "completed").reduce((s, t) => s + (t.totalAmount || 0), 0);
-              const lifted = dealerAlloc.reduce((s, a) => s + (a.usedLitres || 0), 0);
-              const allocated = dealerAlloc.reduce((s, a) => s + (a.volumeLitres || 0), 0);
-              const open = openDealer === d._id;
+            {!!data.dealers.length && (() => {
+              const q = dealerSearch.trim().toLowerCase();
+              const rows = data.dealers.map((d) => {
+                const dealerTx = data.transactions.filter((t) => t.userEmail === d.email);
+                const dealerAlloc = data.allocations.filter((a) => a.dealerEmail === d.email);
+                const dealerPOs = data.purchaseOrders.filter((p) => p.dealer === d.email);
+                const allocated = dealerAlloc.reduce((s, a) => s + (a.volumeLitres || 0), 0);
+                const lifted = dealerAlloc.reduce((s, a) => s + (a.usedLitres || 0), 0);
+                const remaining = Math.max(0, allocated - lifted);
+                const outstanding = dealerPOs.filter((p) => p.status !== "delivered").reduce((s, p) => s + (p.totalAmount || 0), 0);
+                const allocUtil = allocated > 0 ? Math.round((lifted / allocated) * 100) : 0;
+                const completedValue = dealerTx.filter((t) => t.status === "completed").reduce((s, t) => s + (t.totalAmount || 0), 0);
+                const collateral = dealerAlloc.reduce((s, a) => s + Math.max(0, (a.volumeLitres || 0) - (a.usedLitres || 0)) * (productPrice[a.product as string] || 0), 0);
+                const financedVol = dealerPOs.reduce((s, p) => s + (p.productQuantity || 0), 0);
+                const lastTradeTs = dealerTx.reduce((mx, t) => {
+                  const ts = t.timestamp ? new Date(t.timestamp).getTime() : 0;
+                  return ts > mx ? ts : mx;
+                }, 0);
+                const band = dealerRiskBand(d.status, dealerTx);
+                return { d, dealerTx, dealerAlloc, dealerPOs, allocated, lifted, remaining, outstanding, allocUtil, completedValue, collateral, financedVol, lastTradeTs, band };
+              }).filter((r) => !q || [r.d.companyName, r.d.name, r.d.email, r.d.dealerCode, r.d.state].some((v: string) => (v || "").toLowerCase().includes(q)));
+
+              if (!rows.length) return <p className="text-xs text-muted py-6 text-center">No dealers match “{dealerSearch}”.</p>;
+
               return (
-                <div key={d._id} className="bg-card/60 border border-line rounded-xl overflow-hidden">
-                  <button onClick={() => setOpenDealer(open ? null : d._id)}
-                    className="w-full text-left p-4 hover:bg-card transition flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-sm font-bold text-foreground truncate">{d.companyName}</span>
-                        <StatusPill value={d.status} />
-                        {d.dealerCode && <code className="text-[11px] text-orange-300 bg-orange-500/10 px-1.5 py-0.5 rounded">{d.dealerCode}</code>}
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted flex-wrap">
-                        <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{d.state}{d.lga ? `, ${d.lga}` : ""}</span>
-                        <span>{d.name}</span>
-                        <span className="hidden sm:inline">{d.email}</span>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-bold text-emerald-400">{naira(dealerValue)}</p>
-                      <p className="text-[11px] text-muted">{dealerTx.length} txns</p>
-                    </div>
-                  </button>
+                <div className="bg-card/60 border border-line rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="text-muted text-left bg-card/80 text-xs">
+                        <tr>
+                          <th className="py-2.5 px-3 font-medium">Company</th>
+                          <th className="py-2.5 px-3 font-medium">Account Manager</th>
+                          <th className="py-2.5 px-3 font-medium whitespace-nowrap">Outstanding <span className="text-[10px] opacity-60">(proxy)</span></th>
+                          <th className="py-2.5 px-3 font-medium whitespace-nowrap">Alloc. Util.</th>
+                          <th className="py-2.5 px-3 font-medium whitespace-nowrap">Last Trade</th>
+                          <th className="py-2.5 px-3 font-medium">Risk</th>
+                          <th className="py-2.5 px-3 font-medium">Status</th>
+                          <th className="py-2.5 px-3 font-medium w-8"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((r) => {
+                          const d = r.d;
+                          const open = openDealer === d._id;
+                          return (
+                            <React.Fragment key={d._id}>
+                              <tr onClick={() => setOpenDealer(open ? null : d._id)}
+                                className={`border-t border-line cursor-pointer transition-all ${open ? "bg-orange-500/10" : openDealer ? "opacity-40 hover:opacity-100 hover:bg-card" : "hover:bg-card"}`}>
+                                <td className="py-2.5 px-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-foreground">{d.companyName || d.name}</span>
+                                    {d.dealerCode && <code className="text-[10px] text-orange-300 bg-orange-500/10 px-1 py-0.5 rounded hidden md:inline">{d.dealerCode}</code>}
+                                  </div>
+                                  <span className="text-[11px] text-muted inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{d.state || "—"}</span>
+                                </td>
+                                <td className="py-2.5 px-3 text-muted italic">Unassigned</td>
+                                <td className="py-2.5 px-3 font-semibold text-foreground whitespace-nowrap">{naira(r.outstanding)}</td>
+                                <td className="py-2.5 px-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-14 hidden sm:block"><LevelBar level={r.allocUtil} /></span>
+                                    <span className="text-muted">{r.allocUtil}%</span>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-3 text-muted whitespace-nowrap">{r.lastTradeTs ? new Date(r.lastTradeTs).toLocaleDateString() : "—"}</td>
+                                <td className="py-2.5 px-3"><RiskPill band={r.band} /></td>
+                                <td className="py-2.5 px-3"><StatusPill value={d.status} /></td>
+                                <td className="py-2.5 px-3 text-muted"><ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} /></td>
+                              </tr>
+                              {open && (
+                                <tr>
+                                  <td colSpan={8} className="p-0 pb-2">
+                                    <div className="animate-dealer-open mx-1 mb-1 rounded-xl border border-orange-500/30 bg-background/80 p-5 shadow-2xl ring-1 ring-orange-500/10 space-y-5">
+                                      {/* Focus header */}
+                                      <div className="flex items-center justify-between gap-3 flex-wrap border-b border-line pb-3">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="text-sm font-bold text-foreground">{d.companyName || d.name}</span>
+                                          {d.dealerCode && <code className="text-[10px] text-orange-300 bg-orange-500/10 px-1.5 py-0.5 rounded">{d.dealerCode}</code>}
+                                          <RiskPill band={r.band} />
+                                          <StatusPill value={d.status} />
+                                        </div>
+                                        <button onClick={() => setOpenDealer(null)} className="text-[11px] text-muted hover:text-foreground inline-flex items-center gap-1 shrink-0">
+                                          Close <ChevronDown className="w-3.5 h-3.5 rotate-180" />
+                                        </button>
+                                      </div>
+                                      {/* Company details + KYC */}
+                                      <div>
+                                        <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-3">Company Details &amp; KYC</p>
+                                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                          <Field label="Registered Name" value={d.companyName || d.name} sub={d.dealerCode ? `Code: ${d.dealerCode}` : undefined} />
+                                          <Field label="Contact" value={d.name} sub={d.phone} />
+                                          <Field label="Email" value={d.email} />
+                                          <Field label="Location" value={`${d.state || "—"}${d.lga ? ", " + d.lga : ""}`} sub={d.headOfficeAddress || undefined} />
+                                          <Field label="RC Number" value={d.rcNumber || "—"} sub={d.cacRegNo ? `CAC: ${d.cacRegNo}` : undefined} />
+                                          <Field label="DPR Licence" value={d.dprLicence || "—"} sub={d.dprRegNo ? `Reg: ${d.dprRegNo}` : undefined} />
+                                          <Field label="Tax ID (TIN)" value={d.tinNumber || "—"} />
+                                          <Field label="Onboarded" value={d.joinedAt ? new Date(d.joinedAt).toLocaleDateString() : "—"} />
+                                        </div>
+                                      </div>
 
-                  {open && (
-                    <div className="border-t border-line p-4 space-y-5 bg-background/40">
-                      {/* Identity + location */}
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                        <Field label="Contact" value={d.name} sub={d.phone} />
-                        <Field label="Email" value={d.email} />
-                        <Field label="RC Number" value={d.rcNumber || "—"} sub={d.dprLicence ? `DPR: ${d.dprLicence}` : undefined} />
-                        <Field label="Head Office" value={d.headOfficeAddress || `${d.state}${d.lga ? ", " + d.lga : ""}`} />
-                      </div>
+                                      {/* Credit facility (proxy) */}
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider">Credit Facility Summary</p>
+                                          <span className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5">Proxy — from platform activity, not a loan ledger</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                          <div className="bg-card/60 border border-line rounded-lg p-3"><p className="text-xs text-muted">Outstanding exposure</p><p className="text-base font-bold text-foreground">{naira(r.outstanding)}</p><p className="text-[11px] text-muted">open financed orders</p></div>
+                                          <div className="bg-card/60 border border-line rounded-lg p-3"><p className="text-xs text-muted">Collateral value</p><p className="text-base font-bold text-foreground">{naira(r.collateral)}</p><p className="text-[11px] text-muted">unlifted allocation stock</p></div>
+                                          <div className="bg-card/60 border border-line rounded-lg p-3"><p className="text-xs text-muted">Financed volume</p><p className="text-base font-bold text-foreground">{num(r.financedVol)} L</p><p className="text-[11px] text-muted">across {r.dealerPOs.length} orders</p></div>
+                                          <div className="bg-card/60 border border-line rounded-lg p-3"><p className="text-xs text-muted">Completed value</p><p className="text-base font-bold text-emerald-400">{naira(r.completedValue)}</p><p className="text-[11px] text-muted">{r.dealerTx.length} transactions</p></div>
+                                        </div>
+                                        <p className="text-[10px] text-muted mt-2">Credit limit, drawdown schedule and repayment history require a formal credit ledger (not yet modelled on the platform).</p>
+                                      </div>
 
-                      {/* Set prices + storage */}
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="bg-card/60 border border-line rounded-lg p-4">
-                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-3">Dealer Set Prices (₦/L)</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            {PRODUCTS.map((p) => (
-                              <div key={p} className="text-center">
-                                <p className="text-[11px] text-muted">{p}</p>
-                                <p className="text-sm font-bold text-foreground">{d.prices?.[p] ? perL(d.prices[p]) : "—"}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="bg-card/60 border border-line rounded-lg p-4">
-                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-3">Tank Storage (Mega-Litres)</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div className="text-center"><p className="text-[11px] text-muted">PMS</p><p className="text-sm font-bold text-foreground">{d.pmsTankMaxML ?? "—"} ML</p></div>
-                            <div className="text-center"><p className="text-[11px] text-muted">AGO</p><p className="text-sm font-bold text-foreground">{d.agoTankMaxML ?? "—"} ML</p></div>
-                            <div className="text-center"><p className="text-[11px] text-muted">ATK</p><p className="text-sm font-bold text-foreground">{d.atkTankMaxML ?? "—"} ML</p></div>
-                          </div>
-                        </div>
-                      </div>
+                                      {/* Storage + inventory positions */}
+                                      <div className="grid lg:grid-cols-3 gap-4">
+                                        <div className="bg-card/60 border border-line rounded-lg p-4">
+                                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-3">Tank Storage (ML)</p>
+                                          <div className="grid grid-cols-3 gap-2">
+                                            <div className="text-center"><p className="text-xs text-muted">PMS</p><p className="text-base font-bold text-foreground">{d.pmsTankMaxML ?? "—"}</p></div>
+                                            <div className="text-center"><p className="text-xs text-muted">AGO</p><p className="text-base font-bold text-foreground">{d.agoTankMaxML ?? "—"}</p></div>
+                                            <div className="text-center"><p className="text-xs text-muted">ATK</p><p className="text-base font-bold text-foreground">{d.atkTankMaxML ?? "—"}</p></div>
+                                          </div>
+                                          <p className="text-[10px] text-muted mt-3">{num(r.remaining)} L unlifted of {num(r.allocated)} L allocated</p>
+                                        </div>
+                                        <div className="lg:col-span-2">
+                                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-2">Inventory Positions (Depot Allocations)</p>
+                                          {r.dealerAlloc.length ? (
+                                            <div className="overflow-x-auto">
+                                              <table className="w-full text-sm">
+                                                <thead className="text-muted text-left text-xs">
+                                                  <tr><th className="py-1.5 pr-3 font-medium">Product</th><th className="py-1.5 pr-3 font-medium">Depot</th><th className="py-1.5 pr-3 font-medium">Volume</th><th className="py-1.5 pr-3 font-medium">Used</th><th className="py-1.5 pr-3 font-medium">Valid To</th><th className="py-1.5 font-medium">Status</th></tr>
+                                                </thead>
+                                                <tbody className="text-foreground">
+                                                  {r.dealerAlloc.map((a) => (
+                                                    <tr key={a._id} className="border-t border-line">
+                                                      <td className="py-2 pr-3 font-semibold text-foreground">{a.product}</td>
+                                                      <td className="py-2 pr-3">{a.depot}</td>
+                                                      <td className="py-2 pr-3">{num(a.volumeLitres)} L</td>
+                                                      <td className="py-2 pr-3">{num(a.usedLitres)} L</td>
+                                                      <td className="py-2 pr-3">{a.validTo ? new Date(a.validTo).toLocaleDateString() : "—"}</td>
+                                                      <td className="py-2"><StatusPill value={a.status} /></td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          ) : <p className="text-xs text-muted">No allocations on record.</p>}
+                                        </div>
+                                      </div>
 
-                      {/* Allocations */}
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider">Depot Allocations</p>
-                          <p className="text-[11px] text-muted">{num(lifted)} / {num(allocated)} L lifted</p>
-                        </div>
-                        {dealerAlloc.length ? (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
-                              <thead className="text-muted text-left">
-                                <tr><th className="py-1.5 pr-3 font-medium">Product</th><th className="py-1.5 pr-3 font-medium">Depot</th><th className="py-1.5 pr-3 font-medium">Volume</th><th className="py-1.5 pr-3 font-medium">Used</th><th className="py-1.5 pr-3 font-medium">Valid To</th><th className="py-1.5 font-medium">Status</th></tr>
-                              </thead>
-                              <tbody className="text-foreground">
-                                {dealerAlloc.map((a) => (
-                                  <tr key={a._id} className="border-t border-line">
-                                    <td className="py-2 pr-3 font-semibold text-foreground">{a.product}</td>
-                                    <td className="py-2 pr-3">{a.depot}</td>
-                                    <td className="py-2 pr-3">{num(a.volumeLitres)} L</td>
-                                    <td className="py-2 pr-3">{num(a.usedLitres)} L</td>
-                                    <td className="py-2 pr-3">{a.validTo ? new Date(a.validTo).toLocaleDateString() : "—"}</td>
-                                    <td className="py-2"><StatusPill value={a.status} /></td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : <p className="text-xs text-muted">No allocations on record.</p>}
-                      </div>
-
-                      {/* Recent transactions */}
-                      <div>
-                        <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-2">Recent Transactions</p>
-                        {dealerTx.length ? (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
-                              <thead className="text-muted text-left">
-                                <tr><th className="py-1.5 pr-3 font-medium">Ref</th><th className="py-1.5 pr-3 font-medium">Type</th><th className="py-1.5 pr-3 font-medium">Amount</th><th className="py-1.5 pr-3 font-medium">Method</th><th className="py-1.5 font-medium">Status</th></tr>
-                              </thead>
-                              <tbody className="text-foreground">
-                                {dealerTx.slice(0, 6).map((t) => (
-                                  <tr key={t._id} className="border-t border-line">
-                                    <td className="py-2 pr-3 font-mono text-muted">{t.txnId}</td>
-                                    <td className="py-2 pr-3">{toLabel(t.type)}</td>
-                                    <td className="py-2 pr-3 font-semibold text-foreground">{naira(t.totalAmount)}</td>
-                                    <td className="py-2 pr-3">{t.paymentMethod ? toLabel(t.paymentMethod) : "—"}</td>
-                                    <td className="py-2"><StatusPill value={t.status} /></td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : <p className="text-xs text-muted">No transactions on record.</p>}
-                      </div>
-                    </div>
-                  )}
+                                      {/* Trade history + volume trend */}
+                                      <div className="grid lg:grid-cols-3 gap-4">
+                                        <div className="lg:col-span-2">
+                                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-2">Trade History</p>
+                                          {r.dealerTx.length ? (
+                                            <div className="overflow-x-auto">
+                                              <table className="w-full text-sm">
+                                                <thead className="text-muted text-left text-xs">
+                                                  <tr><th className="py-1.5 pr-3 font-medium">Ref</th><th className="py-1.5 pr-3 font-medium">Type</th><th className="py-1.5 pr-3 font-medium">Amount</th><th className="py-1.5 pr-3 font-medium">Method</th><th className="py-1.5 font-medium">Status</th></tr>
+                                                </thead>
+                                                <tbody className="text-foreground">
+                                                  {r.dealerTx.slice(0, 8).map((t) => (
+                                                    <tr key={t._id} className="border-t border-line">
+                                                      <td className="py-2 pr-3 font-mono text-muted">{t.txnId}</td>
+                                                      <td className="py-2 pr-3">{toLabel(t.type)}</td>
+                                                      <td className="py-2 pr-3 font-semibold text-foreground">{naira(t.totalAmount)}</td>
+                                                      <td className="py-2 pr-3">{t.paymentMethod ? toLabel(t.paymentMethod) : "—"}</td>
+                                                      <td className="py-2"><StatusPill value={t.status} /></td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          ) : <p className="text-xs text-muted">No transactions on record.</p>}
+                                        </div>
+                                        <div>
+                                          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wider mb-2">Trade Volume Trend</p>
+                                          <TradeTrend txns={r.dealerTx} />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               );
-            })}
+            })()}
           </div>
         )}
 
@@ -1437,9 +1586,9 @@ export default function FinancerOverview() {
 function Field({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
-      <p className="text-[11px] text-muted mb-0.5">{label}</p>
-      <p className="text-sm text-foreground break-words">{value}</p>
-      {sub && <p className="text-[11px] text-muted mt-0.5">{sub}</p>}
+      <p className="text-xs text-muted mb-0.5">{label}</p>
+      <p className="text-base text-foreground break-words">{value}</p>
+      {sub && <p className="text-xs text-muted mt-0.5">{sub}</p>}
     </div>
   );
 }

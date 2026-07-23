@@ -90,8 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? { role: "bulk_dealer", financerId: scopedFinancerId }
         : { role: "bulk_dealer" }
     )
+      // Corporate KYC only (RC/CAC/DPR/TIN) — deliberately NO personal ID numbers
+      // or bank-account details, per this endpoint's no-PII/no-secrets contract.
       .select(
-        "name companyName email phone role status dealerCode rcNumber dprLicence state lga headOfficeAddress pmsTankMaxML agoTankMaxML atkTankMaxML financerId createdAt"
+        "name companyName email phone role status dealerCode rcNumber dprLicence dprRegNo cacRegNo tinNumber state lga headOfficeAddress pmsTankMaxML agoTankMaxML atkTankMaxML financerId joinedAt createdAt"
       )
       .sort({ createdAt: -1 })
       .limit(200)
