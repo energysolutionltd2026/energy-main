@@ -479,7 +479,7 @@ function TradeLifecycle({ steps }: { steps: { label: string; at?: string; done: 
           <div className="flex flex-col items-center text-center min-w-[76px]">
             <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${s.done ? "bg-emerald-500 text-white" : "bg-card-2 text-muted border border-line"}`}>{s.done ? "✓" : i + 1}</span>
             <p className={`text-xs font-semibold mt-1 ${s.done ? "text-foreground" : "text-muted"}`}>{s.label}</p>
-            <p className="text-[11px] text-muted">{s.at ? new Date(s.at).toLocaleDateString() : (s.note || "Pending")}</p>
+            <p className="text-[11px] text-muted">{s.at ? new Date(s.at).toLocaleDateString() : s.done ? (s.note || "Confirmed") : (s.note || "Pending")}</p>
           </div>
           {i < steps.length - 1 && <div className={`flex-1 h-0.5 mt-3.5 min-w-[16px] ${s.done ? "bg-emerald-500/60" : "bg-line"}`} />}
         </React.Fragment>
